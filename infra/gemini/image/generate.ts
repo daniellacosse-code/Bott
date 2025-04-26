@@ -4,7 +4,7 @@ import { decodeBase64 } from "jsr:@std/encoding";
 import _gemini from "../client.ts";
 import type { PromptParameters } from "../types.ts";
 
-export async function image(prompt: string, {
+export async function generateImage(prompt: string, {
   model = "imagen-3.0-fast-generate-001",
   gemini = _gemini,
 }: PromptParameters = {}): Promise<Uint8Array> {

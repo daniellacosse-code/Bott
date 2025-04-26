@@ -3,7 +3,8 @@
   "exports": "./main.ts",
   "compilerOptions": {
     "lib": [
-      "deno.ns"
+      "deno.ns",
+      "dom"
     ]
   }
 }

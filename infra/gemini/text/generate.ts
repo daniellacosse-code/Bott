@@ -1,7 +1,7 @@
 import _gemini from "../client.ts";
 import type { PromptParameters } from "../types.ts";
 
-export async function text(prompt: string, {
+export async function generateText(prompt: string, {
   context = [],
   instructions,
   model = "gemini-2.5-flash-preview-04-17",

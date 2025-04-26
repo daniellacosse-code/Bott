@@ -1,4 +1,7 @@
-import { GenerateVideosOperation, PersonGeneration } from "npm:@google/genai";
+import {
+  type GenerateVideosOperation,
+  PersonGeneration,
+} from "npm:@google/genai";
 import { decodeBase64 } from "jsr:@std/encoding";
 
 import _gemini from "../client.ts";
@@ -25,7 +28,7 @@ function doVideoJob(
   });
 }
 
-export async function video(
+export async function generateVideo(
   prompt: string,
   { model = "veo-2.0-generate-001", gemini = _gemini }: PromptParameters = {},
 ) {

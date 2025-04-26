@@ -1,3 +1,3 @@
-export * from "./text/text.ts";
-export * from "./image/image.ts";
-export * from "./video/video.ts";
+export * from "./text/generate.ts";
+export * from "./image/generate.ts";
+export * from "./video/generate.ts";
