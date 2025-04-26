@@ -1,5 +1,4 @@
 {
-  "name": "@app/gemini-bot",
   "tasks": {
     "setup": "sh ./setup.sh",
     "start": "deno ./main.ts"

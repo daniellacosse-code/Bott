@@ -16,7 +16,8 @@ export const createErrorEmbed = (error: Error) => {
   }
 
   if (description.length > DESCRIPTION_LENGTH_LIMIT) {
-    description = description.substring(0, DESCRIPTION_LENGTH_LIMIT - 3) + "...";
+    description = description.substring(0, DESCRIPTION_LENGTH_LIMIT - 3) +
+      "...";
   }
 
   return new EmbedBuilder()

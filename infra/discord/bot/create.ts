@@ -8,9 +8,8 @@ import {
   SlashCommandBuilder,
 } from "npm:discord.js";
 import { classifyMessage, MessageClass } from "../message/classify.ts";
-import { parseMessage } from "../message/parse.ts";
 import { createErrorEmbed } from "../message/embed/error.ts";
-import type { CommandObject, CommandOptionType } from "./types.ts";
+import { type CommandObject, CommandOptionType } from "./types.ts";
 
 const defaultIntents = [
   GatewayIntentBits.Guilds,
@@ -27,12 +26,12 @@ type BotOptions = {
   intents?: GatewayIntentBits[];
 };
 
-// TODO: rate limiting and history
+// TODO(#1): rate limiting by channel
 export async function createBot({
   commands,
-  channelMessage: chatMessage,
-  channelReply: chatReply,
-  channelMention: chatMention,
+  channelMessage,
+  channelReply,
+  channelMention,
   intents = defaultIntents,
 }: BotOptions): Promise<Client> {
   const token = Deno.env.get("DISCORD_TOKEN");
@@ -51,18 +50,22 @@ export async function createBot({
 
   const botHandle = client.user.id;
 
-  // handle messages
+  // delegate messages
   client.on(Events.MessageCreate, async (message) => {
     try {
       const messageClass = await classifyMessage(message, botHandle);
 
-      const chatHandler = {
-        [MessageClass.REPLY]: chatReply,
-        [MessageClass.MENTION]: chatMention,
-        [MessageClass.USER]: chatMessage,
-      };
+      if (messageClass === MessageClass.MENTION) {
+        return channelMention?.(message as Message<true>);
+      }
 
-      chatHandler[messageClass]?.(parseMessage(message, messageClass));
+      if (messageClass === MessageClass.REPLY) {
+        return channelReply?.(message as Message<true>);
+      }
+
+      if (messageClass === MessageClass.USER) {
+        return channelMessage?.(message as Message<true>);
+      }
     } catch (error) {
       await message.reply({ embeds: [createErrorEmbed(error as Error)] });
     }
@@ -72,7 +75,7 @@ export async function createBot({
     return client;
   }
 
-  // handle commands
+  // delegate commands
   client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand()) {
       return;
@@ -111,15 +114,7 @@ function getCommandJson(name: string, {
 
   if (options && options.length) {
     for (const { name, description, type, required } of options) {
-      const builderFunction = {
-        [CommandOptionType.STRING]: builder.addStringOption,
-        [CommandOptionType.INTEGER]: builder.addIntegerOption,
-        [CommandOptionType.BOOLEAN]: builder.addBooleanOption,
-        [CommandOptionType.USER]: builder.addUserOption,
-        [CommandOptionType.CHANNEL]: builder.addChannelOption,
-      }[type];
-
-      builderFunction((option) => {
+      const buildOption = (option: any) => {
         if (name) {
           option.setName(name);
         }
@@ -131,7 +126,21 @@ function getCommandJson(name: string, {
         if (required) {
           option.setRequired(required);
         }
-      });
+
+        return option;
+      };
+
+      switch (type) {
+        case CommandOptionType.STRING:
+          builder.addStringOption(buildOption);
+          break;
+        case CommandOptionType.INTEGER:
+          builder.addIntegerOption(buildOption);
+          break;
+        case CommandOptionType.BOOLEAN:
+          builder.addBooleanOption(buildOption);
+          break;
+      }
     }
   }
 

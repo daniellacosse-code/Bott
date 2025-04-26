@@ -4,8 +4,6 @@ export enum CommandOptionType {
   STRING = "string",
   INTEGER = "integer",
   BOOLEAN = "boolean",
-  USER = "user",
-  CHANNEL = "channel",
 }
 
 export type CommandOption = {

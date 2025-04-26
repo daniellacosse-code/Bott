@@ -1,6 +1,4 @@
 #!/bin/sh
 
 brew bundle
-gcloud # login
-
-# ...
+gcloud auth application-default login

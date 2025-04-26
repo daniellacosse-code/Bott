@@ -1,22 +1,38 @@
-import { type CommandObject, CommandOptionType, createInfoEmbed } from "@infra/discord";
+import {
+  type CommandObject,
+  CommandOptionType,
+  createInfoEmbed,
+} from "@infra/discord";
+import {
+  generateImage,
+  generateText,
+  generateVideo,
+} from "../../infra/gemini/main.ts";
+import { AttachmentBuilder, InteractionReplyOptions } from "npm:discord.js";
+import { Buffer } from "node:buffer";
 
 export const help: CommandObject = {
   description: "List the Gemini bot commands",
   command(interaction) {
     return interaction.reply({
-      embeds: [createInfoEmbed({
-        /* TODO */
+      embeds: [createInfoEmbed("Help Menu", {
+        description: "Get information about the Gemini AI bot",
+        fields: [
+          { name: "/help", value: "Display this help menu" },
+          { name: "/generate", value: generate.description as string },
+        ],
       })],
     });
   },
 };
 
+// TODO(#1): configure settings per channel
 // export const config: CommandObject = {
 //   description: "Tweak Gemini AI behavior in the current channel",
 //   options: [{
 //     name: "config",
 //     type: CommandOptionType.STRING,
-//     description: "The configuration you'd like to change.",
+//     description: "The configuration value you'd like to change.",
 //     required: true
 //   }, {
 //     name: "value",
@@ -24,24 +40,53 @@ export const help: CommandObject = {
 //     description: "The value you'd like to set.",
 //     required: true
 //   }],
-//   command(interaction) {
-//     // TODO
-//   }
+//   command(interaction) { }
 // };
 
 export const generate: CommandObject = {
-  description: "",
+  description: "Generate text, images, or video",
   options: [{
     name: "prompt",
     type: CommandOptionType.STRING,
     description: "The description of what you want to generate.",
-    required: true
+    required: true,
   }, {
     name: "type",
     type: CommandOptionType.BOOLEAN,
-    description: "The type of thing you want to generate: text, image, or video (defaults to text)"
+    description:
+      "The type of thing you want to generate: text, image, or video (defaults to text)",
   }],
-  command(interaction) {
-    // TODO
-  }
-}
+  async command(interaction) {
+    const prompt = interaction.options.get("prompt")?.value as string;
+    const type = interaction.options.get("type")?.value;
+
+    const reply: InteractionReplyOptions = {
+      content: `Here's the ${type} for your prompt: ${prompt}`,
+    };
+
+    if (!type || type === "text") {
+      reply.content += "\n\n" + await generateText(prompt);
+
+      return interaction.reply(reply);
+    }
+
+    let attachmentData;
+    let attachmentFile;
+
+    if (type === "image") {
+      attachmentData = await generateImage(prompt);
+      attachmentFile = "generated.png";
+    } else { // video
+      attachmentData = await generateVideo(prompt);
+      attachmentFile = "generated.mp4";
+    }
+
+    reply.files = [
+      new AttachmentBuilder(Buffer.from(attachmentData), {
+        name: attachmentFile,
+      }),
+    ];
+
+    return interaction.reply(reply);
+  },
+};
