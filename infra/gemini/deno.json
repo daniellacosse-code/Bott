@@ -1,0 +1,9 @@
+{
+  "name": "@infra/gemini",
+  "exports": "./main.ts",
+  "compilerOptions": {
+    "lib": [
+      "deno.ns"
+    ]
+  }
+}
