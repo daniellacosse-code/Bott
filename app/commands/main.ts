@@ -9,108 +9,137 @@ import {
   generateText,
   generateVideo,
 } from "../../infra/gemini/main.ts";
-import { AttachmentBuilder, InteractionEditReplyOptions } from "npm:discord.js";
-import { Buffer } from "node:buffer";
+import { AttachmentBuilder } from "npm:discord.js";
 
-export const help: CommandObject = {
-  description: "List the Gemini bot commands",
-  command(interaction) {
-    return interaction.editReply({
-      embeds: [createInfoEmbed("Help Menu", {
-        fields: [
-          { name: "/help", value: "Display this help menu." },
-          { name: "/generate", value: generate.description as string },
-        ],
-      })],
+const DISCORD_MESSAGE_LIMIT = 2000;
+
+export const prompt: CommandObject = {
+  description:
+    `Prompt @Bott directly as much as you like. Remember that Discord limits messages to ${DISCORD_MESSAGE_LIMIT} characters.`,
+  options: [{
+    name: "prompt",
+    type: CommandOptionType.STRING,
+    description: "Your prompt or question for @Bott.",
+    required: true,
+  }],
+  async command(interaction) {
+    const prompt = interaction.options.get("prompt")!.value as string;
+
+    const response = await generateText(prompt as string, {
+      instructions:
+        `Try to keep your response under ${DISCORD_MESSAGE_LIMIT} characters.`,
     });
+
+    let result = `
+      Here's my response to your prompt: **"${prompt}"**
+      
+      ${response}
+    `.trim();
+
+    if (result.length > DISCORD_MESSAGE_LIMIT) {
+      result = result.slice(0, DISCORD_MESSAGE_LIMIT - 1) + "…";
+    }
+
+    return interaction.editReply(result);
   },
 };
 
-// TODO(#1): configure settings per channel
-// export const config: CommandObject = {
-//   description: "Tweak Gemini AI behavior in the current channel",
-//   options: [{
-//     name: "config",
-//     type: CommandOptionType.STRING,
-//     description: "The configuration value you'd like to change.",
-//     required: true
-//   }, {
-//     name: "value",
-//     type: CommandOptionType.STRING,
-//     description: "The value you'd like to set.",
-//     required: true
-//   }],
-//   command(interaction) { }
-// };
-
 const FOUR_WEEKS_MS = 4 * 7 * 24 * 60 * 60 * 1000;
 const IMAGES_PER_USER_PER_MONTH = 100;
-const VIDEOS_PER_USER_PER_MONTH = 10;
 
 const imageThrottler = new ActionThrottler(
   FOUR_WEEKS_MS,
   IMAGES_PER_USER_PER_MONTH,
 );
+
+export const image: CommandObject = {
+  description:
+    `Ask @Bott to generate an image: you can generate ${IMAGES_PER_USER_PER_MONTH} images a month. @Bott won't generate images containing people or sensitive subjects.`,
+  options: [{
+    name: "prompt",
+    type: CommandOptionType.STRING,
+    description: "A description of the image you want to generate.",
+    required: true,
+  }],
+  async command(interaction) {
+    if (!imageThrottler.attemptAction(interaction.user.id)) {
+      throw new Error(
+        `You have generated the maximum number of videos this month (${IMAGES_PER_USER_PER_MONTH}).`,
+      );
+    }
+
+    const prompt = interaction.options.get("prompt")!.value as string;
+
+    return interaction.editReply({
+      content: `Here's my image for your prompt: **"${prompt}"**`,
+      files: [
+        new AttachmentBuilder(await generateImage(prompt), {
+          name: "generated.png",
+        }),
+      ],
+    });
+  },
+};
+
+const VIDEOS_PER_USER_PER_MONTH = 10;
+
 const videoThrottler = new ActionThrottler(
   FOUR_WEEKS_MS,
   VIDEOS_PER_USER_PER_MONTH,
 );
 
-export const generate: CommandObject = {
-  description: "Generate text, images, or video!",
+export const video: CommandObject = {
+  description:
+    `Ask @Bott to generate a short 6-second video: you can generate up to ${VIDEOS_PER_USER_PER_MONTH} videos a month.`,
   options: [{
     name: "prompt",
     type: CommandOptionType.STRING,
-    description: "The description of what you want to generate.",
+    description: "A description of the video you want to generate.",
     required: true,
-  }, {
-    name: "type",
-    type: CommandOptionType.STRING,
-    description: "`text`, `image`, or `video` (defaults to `text`)",
   }],
   async command(interaction) {
-    const prompt = interaction.options.get("prompt")?.value as string;
-    const type = interaction.options.get("type")?.value;
-
-    const reply: InteractionEditReplyOptions = {
-      content: `Here's the ${type ?? "text"} for your prompt: **"${prompt}"**`,
-    };
-
-    if (!type || type === "text") {
-      reply.content += "\n\n" + await generateText(prompt);
-
-      return interaction.editReply(reply);
+    if (!videoThrottler.attemptAction(interaction.user.id)) {
+      throw new Error(
+        `You have generated the maximum number of videos this month (${VIDEOS_PER_USER_PER_MONTH}).`,
+      );
     }
 
-    let attachmentData;
-    let attachmentFile;
+    const prompt = interaction.options.get("prompt")!.value as string;
 
-    if (type === "image") {
-      if (!imageThrottler.attemptAction(interaction.user.id)) {
-        throw new Error(
-          "You have generated the maximum number of images this month.",
-        );
-      }
+    return interaction.editReply({
+      content: `Here's my video for your prompt: **"${prompt}"**`,
+      files: [
+        new AttachmentBuilder(await generateVideo(prompt), {
+          name: "generated.mp4",
+        }),
+      ],
+    });
+  },
+};
 
-      attachmentData = await generateImage(prompt);
-      attachmentFile = "generated.png";
-    } else { // video
-      if (!videoThrottler.attemptAction(interaction.user.id)) {
-        throw new Error(
-          "You have generated the maximum number of videos this month.",
-        );
-      }
-
-      attachmentData = await generateVideo(prompt);
-      attachmentFile = "generated.mp4";
-    }
-
-    reply.files = [
-      new AttachmentBuilder(Buffer.from(attachmentData), {
-        name: attachmentFile,
-      }),
-    ];
-
-    return interaction.editReply(reply);
+export const help: CommandObject = {
+  description: "Get help with @Bott.",
+  command(interaction) {
+    return interaction.editReply({
+      embeds: [createInfoEmbed("Help Menu", {
+        fields: [
+          {
+            name: "About",
+            value:
+              "@Bott is a helpful agent that responds to your messages and generates images and videos.",
+          },
+          {
+            name: "Limitations",
+            value:
+              "Currently, @Bott can only read text when responding, and does not look at the chat when generating media.",
+          },
+          { name: "/prompt", value: prompt.description! },
+          { name: "/image", value: image.description! },
+          { name: "/video", value: video.description! },
+          { name: "/help", value: "Display this Help Menu." },
+        ],
+        footer: "@Bott written by DanielLaCos.se ᛫ Powered by Google Gemini",
+      })],
+    });
   },
 };

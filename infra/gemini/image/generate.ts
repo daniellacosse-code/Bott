@@ -1,5 +1,6 @@
 import { SafetyFilterLevel } from "npm:@google/genai";
 import { decodeBase64 } from "jsr:@std/encoding";
+import { Buffer } from "node:buffer";
 
 import _gemini from "../client.ts";
 import type { PromptParameters } from "../types.ts";
@@ -7,7 +8,7 @@ import type { PromptParameters } from "../types.ts";
 export async function generateImage(prompt: string, {
   model = "imagen-3.0-fast-generate-001",
   gemini = _gemini,
-}: PromptParameters = {}): Promise<Uint8Array> {
+}: PromptParameters = {}): Promise<Buffer> {
   const response = await gemini.models.generateImages({
     model,
     prompt,
@@ -38,5 +39,5 @@ export async function generateImage(prompt: string, {
     throw new Error("No image bytes");
   }
 
-  return decodeBase64(imageData.image.imageBytes);
+  return Buffer.from(decodeBase64(imageData.image.imageBytes));
 }

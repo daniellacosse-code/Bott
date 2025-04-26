@@ -5,22 +5,28 @@ import * as commands from "./commands/main.ts";
 import * as instructions from "./instructions/main.ts";
 import { HISTORY_LENGTH } from "./constants.ts";
 
-const formatMessage = (message: Message) => {
+const formatMessage = (message: Message, focus?: boolean) => {
   const content = message.content.trim();
 
   if (!content) return undefined;
 
-  return `${message.author.id}: ${message.content.trim()}`;
+  let log = `<@${message.author.id}>: ${content}`;
+
+  if (focus) {
+    log = `${instructions.focusMarker} ${log}`;
+  }
+
+  return log;
 };
 
 const formatMessageCollection = (collection: Collection<string, Message>) => {
-  return collection.map(formatMessage).slice(1).filter((text) =>
+  return collection.map(message => formatMessage(message)).slice(1).filter((text) =>
     text !== undefined
   );
 };
 
 async function standardResponse(message: Message<true>, client: Client) {
-  const formattedMessage = formatMessage(message);
+  const formattedMessage = formatMessage(message, true);
 
   if (!formattedMessage) return;
 
@@ -51,7 +57,7 @@ startBot({
       return;
     }
 
-    const formattedMessage = formatMessage(message);
+    const formattedMessage = formatMessage(message, true);
 
     if (!formattedMessage) return;
 

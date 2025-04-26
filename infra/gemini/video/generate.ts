@@ -3,6 +3,7 @@ import {
   PersonGeneration,
 } from "npm:@google/genai";
 import { decodeBase64 } from "jsr:@std/encoding";
+import { Buffer } from "node:buffer";
 
 import _gemini from "../client.ts";
 import type { PromptParameters } from "../types.ts";
@@ -36,11 +37,11 @@ export async function generateVideo(
     model,
     prompt,
     config: {
-      aspectRatio: "16:9",
+      aspectRatio: "1:1",
       enhancePrompt: true,
       fps: 24,
       numberOfVideos: 1,
-      durationSeconds: 5, // to keep it under Discord's 8MB limit
+      durationSeconds: 6, // to keep it under Discord's 8MB limit
       personGeneration: PersonGeneration.ALLOW_ADULT,
       resolution: "720p",
     },
@@ -75,5 +76,5 @@ export async function generateVideo(
     throw new Error("No video bytes");
   }
 
-  return decodeBase64(videoData.video.videoBytes);
+  return Buffer.from(decodeBase64(videoData.video.videoBytes));
 }
