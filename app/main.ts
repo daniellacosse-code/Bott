@@ -41,7 +41,7 @@ async function standardResponse(message: Message<true>, client: Client) {
 startBot({
   commands,
   identityToken: Deno.env.get("DISCORD_TOKEN")!,
-  // TODO(#): support direct messages
+  // TODO(#7): support direct messages
   // directMessage: standardResponse,
   channelMention: standardResponse,
   channelReply: standardResponse,
