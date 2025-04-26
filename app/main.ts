@@ -70,7 +70,7 @@ startBot({
       context: formatMessageCollection(recentHistory),
     });
 
-    if (response === instructions.proactiveIgnore) {
+    if (response === instructions.ignoreMarker) {
       // gemini decided to ignore this message
       return;
     }
