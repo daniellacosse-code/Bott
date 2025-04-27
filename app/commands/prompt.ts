@@ -22,7 +22,7 @@ export const prompt: CommandObject = {
     let result = `
       Here's my response to your prompt: **"${prompt}"**
       
-      > ${response}
+      ${response.split('\n').map(line => `> ${line}`).join('\n')}
     `.trim();
 
     if (result.length > DISCORD_MESSAGE_LIMIT) {
