@@ -14,21 +14,25 @@ export const prompt: CommandObject = {
   async command(interaction) {
     const prompt = interaction.options.get("prompt")!.value as string;
 
+    console.info(`[INFO] Recieved text prompt "${prompt}".`);
+
     const response = await generateText(prompt as string, {
+      characterLimit: DISCORD_MESSAGE_LIMIT,
       instructions:
+        // We already set a hard character limit, but it can't hurt.
         `Try to keep your response under ${DISCORD_MESSAGE_LIMIT} characters.`,
     });
 
-    let result = `
+    return interaction.editReply(`
       Here's my response to your prompt: **"${prompt}"**
       
-      ${response.split('\n').map(line => `> ${line}`).join('\n')}
-    `.trim();
-
-    if (result.length > DISCORD_MESSAGE_LIMIT) {
-      result = result.slice(0, DISCORD_MESSAGE_LIMIT - 1) + "…";
-    }
-
-    return interaction.editReply(result);
+      ${
+      // Gemini likes to use triple carriage returns in highly structured responses
+      // that don't translate well to discord
+      response.replaceAll("\n\n\n", "\n\n").split("\n").map((line) =>
+        `> ${line}`
+      )
+        .join("\n")}
+    `.trim().slice(0, DISCORD_MESSAGE_LIMIT));
   },
 };

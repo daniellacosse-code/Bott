@@ -30,6 +30,8 @@ export const image: CommandObject = {
 
     const prompt = interaction.options.get("prompt")!.value as string;
 
+    console.info(`[INFO] Recieved image prompt "${prompt}".`);
+
     return interaction.editReply({
       content: `Here's my image for your prompt: **"${prompt}"**`,
       files: [

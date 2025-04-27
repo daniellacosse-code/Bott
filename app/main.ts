@@ -3,9 +3,9 @@ import { Client, Collection, Message } from "npm:discord.js";
 import { startBot } from "@bott/discord";
 import { generateText } from "@bott/gemini";
 
-import { HISTORY_LENGTH } from "./constants.ts";
+import { DISCORD_MESSAGE_LIMIT, HISTORY_LENGTH } from "./constants.ts";
 import {
-  focusMarker,
+  subjectMarker,
   ignoreMarker,
   proactiveInstructions,
   standardInstructions,
@@ -20,7 +20,7 @@ const formatMessage = (message: Message, focus?: boolean) => {
   let log = `<@${message.author.id}>: ${content}`;
 
   if (focus) {
-    log = `${focusMarker} ${log}`;
+    log = `${subjectMarker} ${log}`;
   }
 
   return log;
@@ -37,6 +37,8 @@ async function standardResponse(message: Message<true>, client: Client) {
 
   if (!formattedMessage) return;
 
+  console.info(`[INFO] Recieved message "${formattedMessage}".`);
+
   await message.channel.sendTyping();
 
   const recentHistory = await message.channel.messages.fetch({
@@ -44,6 +46,7 @@ async function standardResponse(message: Message<true>, client: Client) {
   });
 
   const response = await generateText(formattedMessage, {
+    characterLimit: DISCORD_MESSAGE_LIMIT,
     instructions: standardInstructions(client.user?.id).trim(),
     context: formatMessageCollection(recentHistory),
   });
@@ -68,17 +71,20 @@ startBot({
 
     if (!formattedMessage) return;
 
+    console.info(`[INFO] Proactively considering a response to message "${formattedMessage}".`);
+
     const recentHistory = await message.channel.messages.fetch({
       limit: HISTORY_LENGTH,
     });
 
     const response = await generateText(formattedMessage, {
+      characterLimit: DISCORD_MESSAGE_LIMIT,
       instructions: proactiveInstructions(client.user?.id).trim(),
       context: formatMessageCollection(recentHistory),
     });
 
     if (response === ignoreMarker) {
-      // gemini decided to ignore this message
+      console.info(`[INFO] Decided against responding to message "${formattedMessage}".`);
       return;
     }
 

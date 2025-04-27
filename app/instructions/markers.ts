@@ -1,2 +1,2 @@
-export const focusMarker = "[[FOCUS]]";
+export const subjectMarker = "[[SUBJECT]]";
 export const ignoreMarker = "[[IGNORE]]";

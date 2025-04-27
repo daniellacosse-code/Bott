@@ -10,7 +10,11 @@ gcloud run deploy bott-service \
   --image us-central1-docker.pkg.dev/$GOOGLE_PROJECT_ID/bot-farm/bott:latest \
   --region us-central1 \
   --project $GOOGLE_PROJECT_ID \
-  --max-instances=1 \
+  --cpu 1 \
+  --cpu-boost \
+  --memory 2Gi \
+  --min-instances 1 \
+  --max-instances 1 \
   --set-env-vars DISCORD_TOKEN=$DISCORD_TOKEN \
   --set-env-vars GOOGLE_PROJECT_ID=$GOOGLE_PROJECT_ID \
   --set-env-vars GOOGLE_PROJECT_LOCATION=$GOOGLE_PROJECT_LOCATION \

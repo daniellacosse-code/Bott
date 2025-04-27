@@ -5,4 +5,5 @@ export type PromptParameters = {
   model?: string;
   instructions?: string;
   gemini?: GoogleGenAI;
+  characterLimit?: number;
 };

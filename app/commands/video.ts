@@ -30,6 +30,8 @@ export const video: CommandObject = {
 
     const prompt = interaction.options.get("prompt")!.value as string;
 
+    console.info(`[INFO] Recieved video prompt "${prompt}".`);
+
     return interaction.editReply({
       content: `Here's my video for your prompt: **"${prompt}"**`,
       files: [
