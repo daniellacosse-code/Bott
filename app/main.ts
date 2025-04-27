@@ -90,3 +90,9 @@ startBot({
     );
   },
 });
+
+// need to respond to GCP health probe
+Deno.serve(
+  { port: Number(Deno.env.get("PORT") ?? 8080) },
+  () => new Response("OK", { status: 200 }),
+);

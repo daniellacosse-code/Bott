@@ -10,4 +10,6 @@ COPY ./app .
 
 COPY ./infra /infra
 
+EXPOSE 8080
+
 CMD ["deno", "task", "start"]

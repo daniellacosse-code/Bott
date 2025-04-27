@@ -1,0 +1,17 @@
+#!/bin/sh
+
+source .env
+
+docker buildx build --platform linux/amd64 -t bott .
+docker tag bott us-central1-docker.pkg.dev/$GOOGLE_PROJECT_ID/bot-farm/bott:latest
+docker push us-central1-docker.pkg.dev/$GOOGLE_PROJECT_ID/bot-farm/bott:latest
+
+gcloud run deploy bott-service \
+  --image us-central1-docker.pkg.dev/$GOOGLE_PROJECT_ID/bot-farm/bott:latest \
+  --region us-central1 \
+  --project $GOOGLE_PROJECT_ID \
+  --max-instances=1 \
+  --set-env-vars DISCORD_TOKEN=$DISCORD_TOKEN \
+  --set-env-vars CONFIG_PROACTIVE_REPLY_CHANCE=$CONFIG_PROACTIVE_REPLY_CHANCE \
+  --set-env-vars CONFIG_HISTORY_LENGTH=$CONFIG_HISTORY_LENGTH \
+  --allow-unauthenticated
