@@ -9,6 +9,7 @@ import {
   proactiveInstructions,
   standardInstructions,
   subjectMarker,
+  okayMarker
 } from "./instructions/main.ts";
 import commands from "./commands/main.ts";
 
@@ -60,7 +61,13 @@ async function standardResponse(message: Message<true>, client: Client) {
     context: formatMessageCollection(recentHistory),
   });
 
-  return message.reply(parseMessageText(response, client));
+  const parsedResponse = parseMessageText(response, client);
+
+  if (parsedResponse === okayMarker) {
+    return message.react('👍');
+  }
+
+  return message.reply(parsedResponse);
 }
 
 startBot({

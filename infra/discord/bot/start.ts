@@ -3,6 +3,7 @@ import {
   Events,
   GatewayIntentBits,
   type Message,
+  MessageReaction,
   REST,
   Routes,
   SlashCommandBuilder,
@@ -21,7 +22,7 @@ const defaultIntents = [
 type BotChannelResponder = (
   message: Message<true>,
   client: Client,
-) => Promise<Message<true> | undefined>;
+) => Promise<Message<true> | MessageReaction | undefined>;
 
 type BotOptions = {
   identityToken: string;
