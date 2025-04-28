@@ -39,7 +39,7 @@ export async function generateText(prompt: string, {
       // maxOutputTokens: characterLimit !== undefined
       //   ? Math.floor(characterLimit / ESTIMATED_CHARACTERS_PER_TOKEN)
       //   : undefined,
-      // candidateCount: 1,
+      candidateCount: 1,
       systemInstruction: instructions
         ? {
           role: "system",
