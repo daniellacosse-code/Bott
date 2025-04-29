@@ -22,15 +22,6 @@ export async function generateText(prompt: string, {
 }: PromptParameters = {}): Promise<string> {
   const response = await gemini.models.generateContent({
     model,
-    // contents: [
-    //   ...context.map((text) => ({
-    //     parts: [{ text }],
-    //   })),
-    //   {
-    //     role: "user",
-    //     parts: [{ text: prompt }],
-    //   },
-    // ],
     contents: [
       ...context.reverse(),
       prompt
@@ -62,7 +53,7 @@ export async function generateText(prompt: string, {
   for (const { uri } of citations) {
     if (uri) {
       // we use bullet points because Gemini doesn't return all the sources cited
-      citationText += `\n- [${uri}](${uri})`;
+      citationText += `\n- ${uri}`;
     }
   }
 

@@ -1,7 +1,6 @@
 // TODO(#2): tests
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { generateText } from "./generate.ts";
-import { assertThrows } from "https://deno.land/std@0.224.0/assert/assert_throws.ts";
 type MockGenerateContentResponse = {
   text: string;
   candidates?: Array<{
@@ -41,7 +40,7 @@ Deno.test("generateText should append formatted citations when present", async (
   const result = await generateText(prompt, options);
 
   const expectedOutput =
-    "This is the generated text.\n### Sources\n- [https://example.com/source1](https://example.com/source1)\n- [https://example.com/source2](https://example.com/source2)";
+    "This is the generated text.\n### Sources\n- https://example.com/source1\n- https://example.com/source2";
 
   assertEquals(
     result,
@@ -82,7 +81,7 @@ Deno.test("generateText should truncate text correctly when citations are presen
   const result = await generateText(prompt, options);
 
   const expectedCitationText =
-    "\n### Sources\n- [https://example.com/source1](https://example.com/source1)";
+    "\n### Sources\n- https://example.com/source1";
   const expectedTextLength = characterLimit - expectedCitationText.length - 1;
   const expectedTruncatedText = longText.slice(0, expectedTextLength) + "…";
 
