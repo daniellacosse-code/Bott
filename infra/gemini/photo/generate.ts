@@ -17,7 +17,8 @@ export async function generatePhoto(prompt: string, {
       enhancePrompt: true,
       includeRaiReason: true,
       numberOfImages: 1,
-      personGeneration: PersonGeneration.ALLOW_ADULT,
+      // TODO: Get approved for adult photos.
+      // personGeneration: PersonGeneration.ALLOW_ADULT,
       safetyFilterLevel: SafetyFilterLevel.BLOCK_ONLY_HIGH,
     },
   });
