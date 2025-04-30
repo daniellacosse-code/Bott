@@ -58,17 +58,6 @@ startBot({
 
     console.info(`[INFO] Recieved message "${formattedMessage}".`);
 
-    if ("sendTyping" in message.channel) {
-      try {
-        await message.channel.sendTyping();
-      } catch (error) {
-        console.warn(
-          `[WARN] Could not send typing indicator in channel ${message.channel.id}:`,
-          error,
-        );
-      }
-    }
-
     let chat: Chat;
     const channelId = message.channel.id;
 
@@ -115,7 +104,38 @@ startBot({
       return;
     }
 
-    return message.reply(parsedResponse);
+
+    if ("sendTyping" in message.channel) {
+      try {
+        await message.channel.sendTyping();
+      } catch (error) {
+        console.warn(
+          `[WARN] Could not send typing indicator in channel ${message.channel.id}:`,
+          error,
+        );
+      }
+    }
+
+    const wordsPerMinute = 60; // Average typing speed
+    const words = parsedResponse.split(/\s+/).length;
+    const delayMs = Math.max(500, (words / wordsPerMinute) * 60 * 1000);
+    const cappedDelayMs = Math.min(delayMs, 7000);
+
+    return new Promise((resolve, reject) => {
+      setTimeout(async () => {
+        try {
+          if ("send" in message.channel){
+            await message.channel.send(parsedResponse);
+          } else {
+            await message.reply(parsedResponse);
+          }
+        } catch (error) {
+          reject(error);
+        } finally {
+          resolve(message);
+        }
+      }, cappedDelayMs);
+    });
   },
   mount(client) {
     console.info(
