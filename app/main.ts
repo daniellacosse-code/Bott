@@ -1,5 +1,6 @@
 // TODO(#16): encapsulate these concepts in infra
 import {
+AttachmentBuilder,
   ChannelType,
   Client,
   Collection,
@@ -8,6 +9,7 @@ import {
 } from "npm:discord.js";
 // TODO: encapsulate these concepts in infra
 import { Chat, Content } from "npm:@google/genai";
+import { Buffer } from "node:buffer";
 
 import { startBot } from "@bott/discord";
 import { createChat, messageChat } from "@bott/gemini";
@@ -17,34 +19,41 @@ import { standardInstructions } from "./instructions/main.ts";
 import commands from "./commands/main.ts";
 import { noResponseMarker } from "./instructions/markers.ts";
 
-const formatMessage = (message: Message) => {
+const formatMessage = (message: Message, client: Client): Content | undefined => {
   const content = message.content.trim();
 
   if (!content) return undefined;
 
-  return `<@${message.author.id}>: ${content}`;
+  return {
+    parts: [{ text: `<@${message.author.id}>: ${content}` }],
+    role: message.author.id === client.user?.id ? "model" : "user",
+  }
 };
 
-const formatMessageCollection = (
+const formatMessageHistory = (
   collection: Collection<string, Message>,
   client: Client,
 ): Content[] => {
-  return collection.map((message) => formatMessage(message)).slice(1).filter((
-    text,
-  ) => text !== undefined).map((messageText) => ({
-    part: [messageText],
-    role: messageText.startsWith(`<@${client.user?.id}>`) ? "model" : "user",
-  }));
+  const orderedMessages = Array.from(collection.values()).reverse();
+
+  const history: Content[] = orderedMessages
+    .map((message) => formatMessage(message, client))
+    .filter((content): content is Content => content !== undefined);
+
+  // Chat histories require that we send in reverse order, starting with a user message
+  const firstUserIndex = history.findIndex((content) => content.role === "user");
+
+  if (firstUserIndex === -1) {
+    return [];
+  }
+
+  return history.slice(firstUserIndex);
 };
 
 const parseMessageText = (message: string, client: Client) => {
   // Gemini sometimes sends a response in the same format as we send it in
   if (message.startsWith(`<@${client.user?.id}>: `)) {
     return message.slice(`<@${client.user?.id}>: `.length);
-  }
-
-  if (message.length > DISCORD_MESSAGE_LIMIT) {
-    return message.slice(0, DISCORD_MESSAGE_LIMIT - 1) + "…";
   }
 
   return message;
@@ -56,7 +65,7 @@ startBot({
   commands,
   identityToken: Deno.env.get("DISCORD_TOKEN")!,
   async message(message, client) {
-    const formattedMessage = formatMessage(message);
+    const formattedMessage = formatMessage(message, client);
 
     if (!formattedMessage) return;
 
@@ -85,7 +94,7 @@ startBot({
       }
 
       chat = createChat(
-        formatMessageCollection(recentHistory, client),
+        formatMessageHistory(recentHistory, client),
         {
           instructions: standardInstructions(
             client.user!.id,
@@ -98,7 +107,7 @@ startBot({
     }
 
     const response = await messageChat(
-      formattedMessage,
+      formattedMessage.parts![0].text as string,
       channelMap.get(message.channel.id)!.chat,
     );
 
@@ -119,6 +128,15 @@ startBot({
       }
     }
 
+    let file: AttachmentBuilder | undefined;;
+    if (parsedResponse.length > DISCORD_MESSAGE_LIMIT) {
+      file = new AttachmentBuilder(Buffer.from(parsedResponse), {
+        name: "response.txt",
+      });
+    }
+
+    const payload = file ? { files: [file] } : parsedResponse;
+
     const wordsPerMinute = 60; // Average typing speed
     const words = parsedResponse.split(/\s+/).length;
     const delayMs = Math.max(500, (words / wordsPerMinute) * 60 * 1000);
@@ -128,9 +146,9 @@ startBot({
       setTimeout(async () => {
         try {
           if ("send" in message.channel){
-            await message.channel.send(parsedResponse);
+            await message.channel.send(payload);
           } else {
-            await message.reply(parsedResponse);
+            await message.reply(payload);
           }
         } catch (error) {
           reject(error);

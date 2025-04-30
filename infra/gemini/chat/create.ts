@@ -9,7 +9,7 @@ export function createChat(history: Content[], {
 }: PromptParameters = {}): Chat {
   return gemini.chats.create({
     model,
-    history: history.reverse(),
+    history,
     config: {
       candidateCount: 1,
       systemInstruction: instructions,
