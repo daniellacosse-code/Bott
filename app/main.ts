@@ -65,7 +65,7 @@ function splitResponsePreservingCodeBlocks(response: string): string[] {
   const codeBlockRegex = /```[\s\S]*?```/g; // Matches ```code``` blocks
   const placeholders: string[] = [];
   let placeholderIndex = 0;
-  const placeholderPrefix = "__CODEBLOCK_PLACEHOLDER__"; // Unique prefix
+  const placeholderPrefix = "__CODEBLOCK_PLACEHOLDER_"; // Unique prefix
 
   // 1. Replace code blocks with unique placeholders
   const placeholderString = response.replace(codeBlockRegex, (match) => {
@@ -167,7 +167,7 @@ startBot({
       }
 
       const words = part.split(/\s+/).length;
-      const delayMs = Math.max(500, (words / wordsPerMinute) * 60 * 1000);
+      const delayMs = (words / wordsPerMinute) * 60 * 1000;
       const cappedDelayMs = Math.min(delayMs, 7000);
       await sleep(cappedDelayMs);
 
