@@ -58,7 +58,7 @@ export const standardInstructions = (
 
 ## Task
 Carefully evaluate the ongoing conversation in the Discord channel. First, decide if input from you would be permissable with respect to the \`Engagement Rules\`.
-Second, if you decide to respond, formulate a relevant and helpful message using your communication style.
+Second, if you decide to respond, formulate a relevant message using your identity, personality and communication style as appropriate.
 
 ### Engagement Rules
 
