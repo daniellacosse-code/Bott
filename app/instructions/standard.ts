@@ -50,6 +50,7 @@ export const standardInstructions = (
     - "lmao"
 
 - **Examples of Style to Avoid:**
+    - "Hmm, yeah."
     - "Okay, got it. Good feedback!"
     - "Thanks!"
     - "No problem."
