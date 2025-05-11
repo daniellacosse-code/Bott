@@ -1,26 +1,29 @@
 import { exec, sql } from "./client.ts";
 
-import { BottChannel } from "./channels.ts";
-import { BottUser } from "./users.ts";
+import type { BottChannel } from "./channels.ts";
+import type { BottUser } from "./users.ts";
 
 exec(
   sql`
     create table if not exists events (
       id integer primary key not null,
-      type tinyint not null,
-      data blob not null,
+      type varchar(16) not null,
+      details text,
       parent_id integer,
       channel_id integer,
       user_id integer,
       timestamp datetime not null
+      foreign key(parent_id) references events(id),
+      foreign key(channel_id) references channels(id),
+      foreign key(user_id) references users(id)
     )
   `,
 );
 
 export enum EventType {
-  MESSAGE = 0,
-  REPLY = 1,
-  REACTION = 2,
+  MESSAGE = "message",
+  REPLY = "reply",
+  REACTION = "reaction",
 }
 
 export interface BottEvent {
@@ -29,7 +32,7 @@ export interface BottEvent {
   parent?: BottEvent;
   user?: BottUser;
   type: EventType;
-  data: Uint8Array;
+  details: Uint8Array;
   timestamp: Date;
 }
 
@@ -37,8 +40,8 @@ export const getEvents = (...ids: number[]): BottEvent[] => {
   const rows = exec(
     sql`
       select
-        e.id as e_id, e.type as e_type, e.data as e_data, e.timestamp as e_ts,
-        p.id as p_id, p.type as p_type, p.data as p_data, p.timestamp as p_ts,
+        e.id as e_id, e.type as e_type, e.details as e_details, e.timestamp as e_ts,
+        p.id as p_id, p.type as p_type, p.details as p_details, p.timestamp as p_ts,
         c.id as c_id, c.name as c_name, c.description as c_description,
         u.id as u_id, u.name as u_name
       from
@@ -55,11 +58,11 @@ export const getEvents = (...ids: number[]): BottEvent[] => {
   ) as any[];
 
   return rows.map(
-    ({ e_id: id, e_type: type, e_data: data, e_ts: timestamp, ...context }) => {
+    ({ e_id: id, e_type: type, e_details: details, e_ts: timestamp, ...context }) => {
       const event: BottEvent = {
         id,
         type,
-        data: new Uint8Array(data),
+        details,
         timestamp: new Date(timestamp),
       };
 
@@ -82,7 +85,7 @@ export const getEvents = (...ids: number[]): BottEvent[] => {
         event.parent = {
           id: context.p_id,
           type: context.p_type,
-          data: new Uint8Array(context.p_data),
+          details: context.p_details,
           timestamp: new Date(context.p_ts),
         };
       }
@@ -97,10 +100,10 @@ export const addEvents = (...events: BottEvent[]): boolean => {
     exec(
       sql`
         insert into events
-        (id, type, data, parent_id, channel_id, user_id, timestamp)
+        (id, type, details, parent_id, channel_id, user_id, timestamp)
         values ${
         events.map((event) =>
-          sql`(${event.id}, ${event.type}, ${event.data}, ${
+          sql`(${event.id}, ${event.type}, ${event.details}, ${
             event.parent?.id ?? null
           }, ${event.channel?.id ?? null}, ${
             event.user?.id ?? null

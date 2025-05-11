@@ -1,7 +1,5 @@
 import type { Chat } from "npm:@google/genai";
 
-import type { BottChannel, BottEvent } from "@bott/data";
-
 export async function messageChat(
   message: string,
   chat: Chat,
@@ -14,16 +12,3 @@ export async function messageChat(
 
   return response.text;
 }
-
-export const messageChannel = async (
-  channel: BottChannel,
-  instructions: string,
-): Promise<BottEvent> => {
-  // 1. get chat history
-
-  // 2. create chat
-
-  // 3. messageChat
-
-  // 4. return event
-};

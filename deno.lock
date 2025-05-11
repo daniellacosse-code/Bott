@@ -2,6 +2,8 @@
   "version": "4",
   "specifiers": {
     "jsr:@std/assert@*": "1.0.12",
+    "jsr:@std/collections@*": "1.0.11",
+    "jsr:@std/data-structures@*": "1.0.7",
     "jsr:@std/encoding@*": "1.0.9",
     "jsr:@std/internal@^1.0.6": "1.0.6",
     "npm:@google/genai@*": "0.10.0_zod@3.24.3",
@@ -14,6 +16,12 @@
       "dependencies": [
         "jsr:@std/internal"
       ]
+    },
+    "@std/collections@1.0.11": {
+      "integrity": "2f62cf9587484b1fff364f6c3e1f83478eea53dbb6faed6ffeda92ddb6b172f0"
+    },
+    "@std/data-structures@1.0.7": {
+      "integrity": "16932d2c8d281f65eaaa2209af2473209881e33b1ced54cd1b015e7b4cdbb0d2"
     },
     "@std/encoding@1.0.9": {
       "integrity": "025b8f18eb1749bc30d1353bf48b77d1eb5e35610220fa226f5a046b9240c5d7"
