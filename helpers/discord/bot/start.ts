@@ -15,12 +15,14 @@ import { type CommandObject, CommandOptionType } from "./types.ts";
 
 import { SwapTaskQueue } from "./task/queue.ts";
 import {
+  addSpaces,
   addChannels,
   addEvents,
   addUsers,
   type BottChannel,
   type BottEvent,
   type BottUser,
+  type BottSpace,
   EventType,
 } from "@bott/data";
 
@@ -105,12 +107,21 @@ export async function startBot({
 
   client.once(Events.ClientReady, async () => {
     try {
+      const spaceIndex = new Map<string, BottSpace>();
       const userIndex = new Map<string, BottUser>();
       const channelIndex = new Map<string, BottChannel>();
       const events: BottEvent[] = [];
 
       // Discord "guilds" are equivalent to Bott's "spaces":
       for (const space of client.guilds.cache.values()) {
+        // Add space:
+        spaceIndex.set(space.id, {
+          id: Number(space.id),
+          name: space.name,
+          description: space.description ?? "N/A",
+          channels: [] // TODO: worry about this later
+        });
+
         // Add users:
         await space.members.fetch();
         for (const { user: { id, username } } of space.members.cache.values()) {
@@ -144,8 +155,9 @@ export async function startBot({
         }
       }
 
-      addUsers(...userIndex.values());
+      addSpaces(...spaceIndex.values());
       addChannels(...channelIndex.values());
+      addUsers(...userIndex.values());
       addEvents(
         ...events.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()),
       );

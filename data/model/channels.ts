@@ -5,9 +5,11 @@ exec(
   sql`
     create table if not exists channels (
       id integer primary key not null,
+      space_id integer,
       name text not null,
       description text,
-      config text
+      config text,
+      foreign key(space_id) references spaces(id)
     )
   `,
 );
