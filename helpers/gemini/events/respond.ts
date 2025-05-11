@@ -100,24 +100,30 @@ function transformContentToBottEvents(content: Content): BottEvent[] {
   }
 
   for (const partialEvent of parsedOutput) {
-    if (!partialEvent.details) {
+    if (!partialEvent.details?.content) {
       continue;
     }
 
-    result.push({
-      id: partialEvent.id ??
-        Math.round(Math.random() * Number.MAX_SAFE_INTEGER),
-      type: partialEvent.type ?? BottEventType.MESSAGE,
-      details: partialEvent.details,
-      timestamp: new Date(),
-      ...partialEvent,
-    });
+    const splitDetails = splitMessagePreservingCodeBlocks(
+      partialEvent.details.content,
+    );
+
+    for (const messagePart of splitDetails) {
+      result.push({
+        id: partialEvent.id ??
+          Math.round(Math.random() * Number.MAX_SAFE_INTEGER),
+        type: partialEvent.type ?? BottEventType.MESSAGE,
+        details: { content: messagePart },
+        timestamp: new Date(),
+        ...partialEvent,
+      });
+    }
   }
 
   return result;
 }
 
-export function splitMessagePreservingCodeBlocks(message: string): string[] {
+function splitMessagePreservingCodeBlocks(message: string): string[] {
   const codeBlockRegex = /```[\s\S]*?```/g;
   const placeholders: string[] = [];
   let placeholderIndex = 0;
