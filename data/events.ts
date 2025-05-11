@@ -26,7 +26,7 @@ export enum EventType {
   REACTION = "reaction",
 }
 
-export interface BottEvent<D extends object = { content: string; }> {
+export interface BottEvent<D extends object = { content: string }> {
   id: number;
   type: EventType;
   details: D;
@@ -58,7 +58,15 @@ export const getEvents = (...ids: number[]): BottEvent[] => {
   ) as any[];
 
   return rows.map(
-    ({ e_id: id, e_type: type, e_details: details, e_ts: timestamp, ...context }) => {
+    (
+      {
+        e_id: id,
+        e_type: type,
+        e_details: details,
+        e_ts: timestamp,
+        ...context
+      },
+    ) => {
       const event: BottEvent = {
         id,
         type,

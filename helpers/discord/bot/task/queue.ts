@@ -1,4 +1,4 @@
-import { BinaryHeap as Heap } from "jsr:@std/data-structures"; 
+import { BinaryHeap as Heap } from "jsr:@std/data-structures";
 
 type SwapBucketId = number;
 type CancellableTask = (controller: AbortController) => Promise<void>;
@@ -32,9 +32,9 @@ export class SwapTaskQueue {
       id,
       task,
       remainingSwaps: this.initialSwaps,
-      abortController: new AbortController()
+      abortController: new AbortController(),
     };
-  
+
     if (this.isSwapLocked(job.id)) {
       return this.blockJob(job);
     }
@@ -85,8 +85,8 @@ export class SwapTaskQueue {
       return;
     }
 
-    this.liveJob = job
-       
+    this.liveJob = job;
+
     try {
       await job.task(job.abortController);
     } catch (_) {
@@ -115,7 +115,7 @@ export class SwapTaskQueue {
     if (this.liveJob?.id === id && this.liveJob.remainingSwaps > 0) {
       return true;
     }
-    
+
     if (this.readyJobs.has(id) && this.readyJobs.get(id)!.remainingSwaps > 0) {
       return true;
     }

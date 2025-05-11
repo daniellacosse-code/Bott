@@ -2,10 +2,13 @@
   "version": "4",
   "specifiers": {
     "jsr:@std/assert@*": "1.0.12",
+    "jsr:@std/assert@^1.0.12": "1.0.12",
+    "jsr:@std/async@*": "1.0.12",
     "jsr:@std/collections@*": "1.0.11",
     "jsr:@std/data-structures@*": "1.0.7",
     "jsr:@std/encoding@*": "1.0.9",
     "jsr:@std/internal@^1.0.6": "1.0.6",
+    "jsr:@std/testing@*": "1.0.11",
     "npm:@google/genai@*": "0.10.0_zod@3.24.3",
     "npm:@types/node@*": "22.12.0",
     "npm:discord.js@*": "14.19.1"
@@ -16,6 +19,9 @@
       "dependencies": [
         "jsr:@std/internal"
       ]
+    },
+    "@std/async@1.0.12": {
+      "integrity": "d1bfcec459e8012846fe4e38dfc4241ab23240ecda3d8d6dfcf6d81a632e803d"
     },
     "@std/collections@1.0.11": {
       "integrity": "2f62cf9587484b1fff364f6c3e1f83478eea53dbb6faed6ffeda92ddb6b172f0"
@@ -28,6 +34,12 @@
     },
     "@std/internal@1.0.6": {
       "integrity": "9533b128f230f73bd209408bb07a4b12f8d4255ab2a4d22a1fd6d87304aca9a4"
+    },
+    "@std/testing@1.0.11": {
+      "integrity": "12b3db12d34f0f385a26248933bde766c0f8c5ad8b6ab34d4d38f528ab852f48",
+      "dependencies": [
+        "jsr:@std/assert@^1.0.12"
+      ]
     }
   },
   "npm": {

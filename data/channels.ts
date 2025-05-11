@@ -22,10 +22,10 @@ export const getChannels = (...ids: number[]): BottChannel[] =>
     sql`select * from channels where id in (${ids})`,
   );
 
-export const getChannelHistory = (id: number): BottEvent[] => 
+export const getChannelHistory = (id: number): BottEvent[] =>
   exec(
-    sql`select * from events where channel_id = ${id} order by timestamp desc`
-  )
+    sql`select * from events where channel_id = ${id} order by timestamp desc`,
+  );
 
 export const addChannels = (...channels: BottChannel[]): boolean => {
   try {

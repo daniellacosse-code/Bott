@@ -1,4 +1,4 @@
-import { setTimeout as sleep } from "node:timers/promises";
+import { delay } from "jsr:@std/async/delay";
 
 import { addEvents, type BottEvent } from "@bott/data";
 import { startBot } from "@bott/discord";
@@ -27,40 +27,42 @@ startBot({
     addEvents(event);
 
     this.tasks.push(event.channel.id, async (ctl: AbortController) => {
-          // 1. Get response from gemini
-    const baseMessageEvent: BottEvent = await messageChannel(
-      event.channel,
-      standardInstructions(
-        this.id,
-        event.channel!.name,
-        event.channel?.description ?? "N/A",
-      ),
-      ctl
-    );
+      // 1. Get response from gemini
+      const baseMessageEvent: BottEvent = await messageChannel(
+        event.channel,
+        standardInstructions(
+          this.id,
+          event.channel!.name,
+          event.channel?.description ?? "N/A",
+        ),
+        ctl,
+      );
 
-    // 2. Ignore or split
-    if (baseMessageEvent.details.content === noResponseMarker) {
-      return;
-    }
-
-    const messageTexts = splitMessagePreservingCodeBlocks(baseMessageEvent.details.content);
-
-    // 3. Send events, writing to disk as we go
-    for (const messageText of messageTexts) {
-      this.startTyping();
-
-      const words = messageText.split(/\s+/).length;
-      const delayMs = (words / this.wpm) * 60 * 1000;
-      const cappedDelayMs = Math.min(delayMs, 7000);
-      await sleep(cappedDelayMs);
-
-      if (ctl.signal.aborted) {
+      // 2. Ignore or split
+      if (baseMessageEvent.details.content === noResponseMarker) {
         return;
       }
 
-      // TODO: change behavior based on reaction/reply
-      addEvents(this.sentMessage(messageText));
-    }
+      const messageTexts = splitMessagePreservingCodeBlocks(
+        baseMessageEvent.details.content,
+      );
+
+      // 3. Send events, writing to disk as we go
+      for (const messageText of messageTexts) {
+        this.startTyping();
+
+        const words = messageText.split(/\s+/).length;
+        const delayMs = (words / this.wpm) * 60 * 1000;
+        const cappedDelayMs = Math.min(delayMs, 7000);
+        await delay(cappedDelayMs);
+
+        if (ctl.signal.aborted) {
+          return;
+        }
+
+        // TODO: change behavior based on reaction/reply
+        addEvents(this.sentMessage(messageText));
+      }
     });
   },
 });

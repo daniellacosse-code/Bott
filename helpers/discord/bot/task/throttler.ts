@@ -1,44 +1,42 @@
 export class TaskThrottler {
   throttleWindowMs: number;
   maxTaskCount: number;
-  taskRecord: Record<string, Date[]>;
+  taskRecord: Record<string, Date[]> = {};
 
   constructor(
     throttleWindowMs: number,
-    maxActionCount: number,
-    actionRecord?: Record<string, Date[]>,
+    maxTaskCount: number,
   ) {
     this.throttleWindowMs = throttleWindowMs;
-    this.maxTaskCount = maxActionCount;
-    this.taskRecord = actionRecord ?? {};
+    this.maxTaskCount = maxTaskCount;
   }
 
-  canRunTask(actionId: string): boolean {
+  /**
+   * Whether the task of the given id is permitted to run.
+   */
+  canRun(taskId: string): boolean {
     const nowMs = Date.now().valueOf();
-    const timestamps = this.taskRecord[actionId];
+    const timestamps = this.taskRecord[taskId];
 
     if (!timestamps) {
       return true;
     }
 
-    this.taskRecord[actionId] = timestamps.filter((timestamp) =>
+    this.taskRecord[taskId] = timestamps.filter((timestamp) =>
       (timestamp.valueOf() + this.throttleWindowMs) > nowMs
     );
 
-    return this.taskRecord[actionId].length < this.maxTaskCount;
+    return this.taskRecord[taskId].length < this.maxTaskCount;
   }
 
-  tryTask(actionName: string): boolean {
-    if (!this.canRunTask(actionName)) {
-      return false;
-    }
-
-    if (!this.taskRecord[actionName]) {
-      this.taskRecord[actionName] = [new Date()];
+  /**
+   * Records a run of the taskId.
+   */
+  recordRun(taskId: string) {
+    if (!this.taskRecord[taskId]) {
+      this.taskRecord[taskId] = [new Date()];
     } else {
-      this.taskRecord[actionName].push(new Date());
+      this.taskRecord[taskId].push(new Date());
     }
-
-    return true;
   }
 }

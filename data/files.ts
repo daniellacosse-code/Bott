@@ -12,7 +12,7 @@ exec(
       event_id integer not null,
       foreign key(event_id) references events(id)
     )
-  `
+  `,
 );
 
 export interface BottFile {
@@ -36,7 +36,7 @@ export const getFiles = (...id: number[]): BottFile[] => {
         from files
       inner join events on files.event_id = events.id
       where files.id in (${id})
-    `
+    `,
   );
 };
 
@@ -49,7 +49,11 @@ export const addFiles = (...files: BottFile[]): boolean => {
         mimetype,
         event_id
         )
-      values ${files.map((file) => sql`(${file.name}, ${file.data}, ${file.mimetype}, ${file.event.id})`)}
-    `
+      values ${
+      files.map((file) =>
+        sql`(${file.name}, ${file.data}, ${file.mimetype}, ${file.event.id})`
+      )
+    }
+    `,
   );
 };
