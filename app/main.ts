@@ -1,20 +1,23 @@
-// import { delay } from "jsr:@std/async/delay";
+import { delay } from "jsr:@std/async/delay";
 
-import { addEvents } from "@bott/data";
+import { addEvents, type BottEvent, getChannelHistory } from "@bott/data";
 import { startBot } from "@bott/discord";
 
 // TODO: messageChannel or whatever it is
-// import { respondEvents } from "@bott/gemini";
-// import { getIdentity } from "./instructions/main.ts";
+import { respondEvents } from "@bott/gemini";
+import { getIdentity } from "./identity.ts";
 
 import commands from "./commands/main.ts";
+
+const MS_IN_MINUTE = 60 * 1000;
+const MAX_TYPING_TIME_MS = 3000;
 
 startBot({
   commands,
   identityToken: Deno.env.get("DISCORD_TOKEN")!,
   mount() {
     console.info(
-      `[INFO] @Bott running at id <@${this.id}>`,
+      `[INFO] @Bott running at id <@${this.user.id}>`,
     );
   },
   event(event) {
@@ -22,40 +25,45 @@ startBot({
       return;
     }
 
-    // 0. Persist event
+    // Persist input event:
     addEvents(event);
 
+    // This will be executed in accordance to @bott/discord/bot/tasks/queue.
+    // Subsequent triggering events will interrupt this process to start a new one,
+    // until a certain "interruption limit" is reached (to ensure Bott is not "soft-blocked").
     this.tasks.push(event.channel.id, async (abortSignal: AbortSignal) => {
-      // // 1. Get response from gemini
-      // const events: BottEvent[] = await replyEvents({
-      //   modelUserId: this.id,
-      //   events: getChannelHistory(event.channel.id),
-      //   identity: getIdentity(
-      //     this.id,
-      //     event.channel!.name,
-      //     event.channel?.description ?? "N/A",
-      //   ),
-      //   abortSignal,
-      // });
+      // 1. Get list of bot events from Gemini:
+      const messageEvents: BottEvent[] = await respondEvents(
+        getChannelHistory(event.channel!.id),
+        {
+          abortSignal,
+          identity: getIdentity({
+            user: this.user,
+            channel: event.channel!,
+          }),
+        },
+      );
 
-      // // 2. Send events, writing to disk as we go
-      // for (const event of events) {
-      //   this.startTyping();
+      // Send one event (message) at a time:
+      for (const event of messageEvents) {
+        if (abortSignal.aborted) {
+          return;
+        }
 
-      //   const words = messageText.split(/\s+/).length;
-      //   const delayMs = (words / this.wpm) * 60 * 1000;
-      //   const cappedDelayMs = Math.min(delayMs, 7000);
-      //   await delay(cappedDelayMs);
+        this.startTyping();
 
-      //   if (abortSignal.aborted) {
-      //     return;
-      //   }
+        const words = event.details.content.split(/\s+/).length;
+        const delayMs = (words / this.wpm) * MS_IN_MINUTE;
+        const cappedDelayMs = Math.min(delayMs, MAX_TYPING_TIME_MS);
+        await delay(cappedDelayMs);
 
-      //   // TODO:
-      //   switch (event.type) { /* handle */ }
+        if (abortSignal.aborted) {
+          return;
+        }
 
-      //   addEvents(event);
-      // }
+        await this.send(event);
+        addEvents(event);
+      }
     });
   },
 });

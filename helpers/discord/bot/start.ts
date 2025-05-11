@@ -23,7 +23,6 @@ import {
   type BottUser,
   EventType,
 } from "@bott/data";
-import { promises } from "node:dns";
 
 const defaultIntents = [
   GatewayIntentBits.Guilds,
@@ -33,8 +32,10 @@ const defaultIntents = [
 ];
 
 type BotContext = {
-  id: string;
-  send: (event: BottEvent) => Promise<Message<true> | MessageReaction | undefined>;
+  user: BottUser;
+  send: (
+    event: BottEvent,
+  ) => Promise<Message<true> | MessageReaction | undefined>;
   startTyping: () => Promise<void>;
   tasks: SwapTaskQueue;
   wpm: number;
@@ -65,7 +66,10 @@ export async function startBot({
   }
 
   const baseSelf = {
-    id: client.user.id,
+    user: {
+      id: Number(client.user.id),
+      name: client.user.username
+    },
     tasks: new SwapTaskQueue(),
     wpm: 200,
   };
@@ -84,11 +88,15 @@ export async function startBot({
         case EventType.MESSAGE:
           return currentChannel.send(event.details.content);
         case EventType.REPLY: {
-          const message = await currentChannel.messages.fetch(String(event.parent!.id));
+          const message = await currentChannel.messages.fetch(
+            String(event.parent!.id),
+          );
           return message.reply(event.details.content);
         }
         case EventType.REACTION: {
-          const message = await currentChannel.messages.fetch(String(event.parent!.id));
+          const message = await currentChannel.messages.fetch(
+            String(event.parent!.id),
+          );
           return message.react(event.details.content);
         }
       }
@@ -243,7 +251,7 @@ export async function startBot({
   }
 
   await new REST({ version: "10" }).setToken(token).put(
-    Routes.applicationCommands(baseSelf.id),
+    Routes.applicationCommands(String(baseSelf.user.id)),
     { body },
   );
 }
