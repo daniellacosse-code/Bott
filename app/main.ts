@@ -28,8 +28,9 @@ startBot({
     this.tasks.push(event.channel.id, async (abortSignal: AbortSignal) => {
       // // 1. Get response from gemini
       // const events: BottEvent[] = await replyEvents({
+      //   modelUserId: this.id,
       //   events: getChannelHistory(event.channel.id),
-      //   context: getIdentity(
+      //   identity: getIdentity(
       //     this.id,
       //     event.channel!.name,
       //     event.channel?.description ?? "N/A",

@@ -159,9 +159,8 @@ export async function startBot({
       return;
     }
     const event: BottEvent = {
-      // TODO: The 'id' for a reaction event should likely be unique and not the reacted message's ID,
-      // especially if 'events.id' is a primary key. This needs to be addressed for data integrity.
-      id: Number(reaction.message.id),
+      // It's okay if we lose reaction data 
+      id: Math.round(Math.random() * Number.MAX_SAFE_INTEGER),
       type: EventType.REACTION,
       details: { content: reaction.emoji.toString() },
       timestamp: new Date(),
