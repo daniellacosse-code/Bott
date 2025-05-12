@@ -6,8 +6,7 @@ A Discord Bot, powered by Gemini.
 
 ## Getting started
 
-Duplicate `.env.example` to `.env.staging` and fill it out. Also need to generate a
-`gcp-key.json`.
+Duplicate `.env.example` to `.env.staging` and fill it out.
 
 Then run:
 
@@ -21,5 +20,6 @@ deno task start
 [![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?git_repo=https://github.com/daniellacosse-code/Bott.git)
 
 ```
+gcloud login
 deno task deploy
 ```
