@@ -14,8 +14,8 @@ exec(
 export interface BottSpace {
   id: number;
   name: string;
-  description: string;
-  channels: BottChannel[];
+  description?: string;
+  channels?: BottChannel[];
 }
 
 export const addSpaces = (...spaces: BottSpace[]): boolean => {
@@ -27,9 +27,11 @@ export const addSpaces = (...spaces: BottSpace[]): boolean => {
         description
       ) values ${
       spaces.map((space) =>
-        sql`(${space.id}, ${space.name}, ${space.description})`
+        sql`(${space.id}, ${space.name}, ${space.description ?? null})`
       )
-    }
+    } on conflict(id) do update set
+        name = excluded.name,
+        description = excluded.description
     `,
   );
 };

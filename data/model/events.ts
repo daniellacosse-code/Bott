@@ -12,7 +12,7 @@ exec(
       parent_id integer,
       channel_id integer,
       user_id integer,
-      timestamp datetime not null
+      timestamp datetime not null,
       foreign key(parent_id) references events(id),
       foreign key(channel_id) references channels(id),
       foreign key(user_id) references users(id)
@@ -40,9 +40,10 @@ export const getEvents = (...ids: number[]): BottEvent[] => {
   const rows = exec(
     sql`
       select
-        e.id as e_id, e.type as e_type, e.details as e_details, e.timestamp as e_ts,
-        p.id as p_id, p.type as p_type, p.details as p_details, p.timestamp as p_ts,
-        c.id as c_id, c.name as c_name, c.description as c_description,
+        e.id as e_id, e.type as e_type, e.details as e_details, e.timestamp as e_timestamp,
+        p.id as p_id, p.type as p_type, p.details as p_details, p.timestamp as p_timestamp,
+        c.id as c_id, c.name as c_name, c.description as c_description, c.config as c_config,
+        s.id as s_id, s.name as s_name, s.description as s_description,
         u.id as u_id, u.name as u_name
       from
         events e
@@ -50,6 +51,8 @@ export const getEvents = (...ids: number[]): BottEvent[] => {
         events p on e.parent_id = p.id
       left join
         channels c on e.channel_id = c.id
+      left join
+        spaces s on c.space_id = s.id
       left join
         users u on e.user_id = u.id
       where
@@ -63,7 +66,7 @@ export const getEvents = (...ids: number[]): BottEvent[] => {
         e_id: id,
         e_type: type,
         e_details: details,
-        e_ts: timestamp,
+        e_timestamp: timestamp,
         ...context
       },
     ) => {
@@ -79,7 +82,13 @@ export const getEvents = (...ids: number[]): BottEvent[] => {
           id: context.c_id,
           name: context.c_name,
           description: context.c_description,
+          space: { // Populate space for the channel
+            id: context.s_id,
+            name: context.s_name,
+            description: context.s_description,
+          },
         };
+        if (context.c_config) event.channel.config = JSON.parse(context.c_config);
       }
 
       if (context.u_id) {
@@ -94,7 +103,7 @@ export const getEvents = (...ids: number[]): BottEvent[] => {
           id: context.p_id,
           type: context.p_type,
           details: JSON.parse(context.p_details),
-          timestamp: new Date(context.p_ts),
+          timestamp: new Date(context.p_timestamp),
         };
       }
 
@@ -117,11 +126,12 @@ export const addEvents = (...events: BottEvent[]): boolean => {
             event.user?.id ?? null
           }, ${event.timestamp.toISOString()})`
         )
-      } on conflict do nothing
+      } on conflict(id) do nothing
       `,
     );
     return true;
   } catch (_) {
+    console.log(_);
     return false;
   }
 };

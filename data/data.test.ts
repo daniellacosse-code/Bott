@@ -1,9 +1,37 @@
 import { assertExists } from "jsr:@std/assert";
+import { exec, sql } from "./client.ts";
 
 Deno.test("database smoke test", async () => {
   const tempDbFile = await Deno.makeTempFile();
 
   Deno.env.set("DB_PATH", tempDbFile);
+
+  // spaces
+  const { addSpaces } = await import("./model/spaces.ts");
+
+  const chatWorld = {
+    id: 1,
+    name: "Chat World"
+  };
+
+  addSpaces(chatWorld);
+
+  console.log(exec(sql`select * from spaces`));
+
+  // channels
+  const { addChannels } = await import("./model/channels.ts");
+  
+  const channelMain = { id: 1, name: "main", space: chatWorld };
+  const channelRandom = {
+    id: 2,
+    space: chatWorld,
+    name: "random",
+    description: "random channel",
+  };
+
+  addChannels(channelMain, channelRandom);
+
+  console.log(exec(sql`select * from channels`));
 
   // users
   const { addUsers } = await import("./model/users.ts");
@@ -13,17 +41,7 @@ Deno.test("database smoke test", async () => {
 
   addUsers(userNancy, userBob);
 
-  // channels
-  const { addChannels } = await import("./model/channels.ts");
-
-  const channelMain = { id: 1, name: "main" };
-  const channelRandom = {
-    id: 2,
-    name: "random",
-    description: "random channel",
-  };
-
-  addChannels(channelMain, channelRandom);
+  console.log(exec(sql`select * from users`));
 
   // events
   const { addEvents, getEvents, EventType } = await import("./model/events.ts");
@@ -57,6 +75,8 @@ Deno.test("database smoke test", async () => {
 
   addEvents(nancyGreeting, bobReply, nancyReaction);
 
+  console.log(exec(sql`select * from events`));
+
   // test
   const [dbResult] = getEvents(nancyReaction.id);
 
@@ -69,6 +89,9 @@ Deno.test("database smoke test", async () => {
   assertExists(dbResult.channel);
   assertExists(dbResult.channel.id);
   assertExists(dbResult.channel.name);
+  assertExists(dbResult.channel.space);
+  assertExists(dbResult.channel.space.id);
+  assertExists(dbResult.channel.space.name);
   assertExists(dbResult.user);
   assertExists(dbResult.user.id);
   assertExists(dbResult.user.name);

@@ -26,7 +26,8 @@ export const addUsers = (...users: BottUser[]): boolean => {
         insert into users
         (id, name)
         values ${users.map((user) => sql`(${user.id}, ${user.name})`)}
-        on conflict update`,
+        on conflict(id) do update set
+          name = excluded.name`,
     );
     return true;
   } catch (_) {

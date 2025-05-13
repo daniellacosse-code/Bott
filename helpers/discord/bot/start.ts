@@ -115,12 +115,12 @@ export async function startBot({
       // Discord "guilds" are equivalent to Bott's "spaces":
       for (const space of client.guilds.cache.values()) {
         // Add space:
-        spaceIndex.set(space.id, {
+        const spaceObject = {
           id: Number(space.id),
           name: space.name,
-          description: space.description ?? "N/A",
-          channels: [], // We add the channels below.
-        });
+          description: space.description ?? undefined,
+        };
+        spaceIndex.set(space.id, spaceObject);
 
         // Add users:
         await space.members.fetch();
@@ -138,6 +138,7 @@ export async function startBot({
             id: Number(channel.id),
             name: channel.name,
             description: channel.topic ?? undefined,
+            space: spaceObject
           });
 
           // Add events:
@@ -217,6 +218,10 @@ export async function startBot({
       channel: {
         id: Number(currentChannel.id),
         name: currentChannel.name,
+        space: {
+          id: Number(currentChannel.guild.id),
+          name: currentChannel.guild.name,
+        },
       },
     };
 
@@ -277,6 +282,10 @@ const messageToBaseEvent = (message: Message<true>): BottEvent => {
     channel: {
       id: Number(message.channel.id),
       name: message.channel.name,
+      space: {
+        id: Number(message.guild?.id),
+        name: message.guild?.name,
+      },
     },
   };
 
