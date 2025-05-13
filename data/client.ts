@@ -71,7 +71,6 @@ export function sql(
 }
 
 export const exec = ({ query, params }: SqlInstructions): any => {
-  console.log({query, params});
   const statement = client.prepare(query);
   const isReadQuery = query.trim().toLowerCase().startsWith("select");
 

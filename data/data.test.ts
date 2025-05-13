@@ -16,7 +16,7 @@ Deno.test("database smoke test", async () => {
 
   addSpaces(chatWorld);
 
-  console.log(exec(sql`select * from spaces`));
+  console.log("spaces table:", exec(sql`select * from spaces`));
 
   // channels
   const { addChannels } = await import("./model/channels.ts");
@@ -31,7 +31,7 @@ Deno.test("database smoke test", async () => {
 
   addChannels(channelMain, channelRandom);
 
-  console.log(exec(sql`select * from channels`));
+  console.log("channel table:", exec(sql`select * from channels`));
 
   // users
   const { addUsers } = await import("./model/users.ts");
@@ -41,7 +41,7 @@ Deno.test("database smoke test", async () => {
 
   addUsers(userNancy, userBob);
 
-  console.log(exec(sql`select * from users`));
+  console.log("user table:", exec(sql`select * from users`));
 
   // events
   const { addEvents, getEvents, EventType } = await import("./model/events.ts");
@@ -75,12 +75,12 @@ Deno.test("database smoke test", async () => {
 
   addEvents(nancyGreeting, bobReply, nancyReaction);
 
-  console.log(exec(sql`select * from events`));
+  console.log("event table:", exec(sql`select * from events`));
 
   // test
   const [dbResult] = getEvents(nancyReaction.id);
 
-  console.log(dbResult);
+  console.log("final result:", dbResult);
 
   assertExists(dbResult.id);
   assertExists(dbResult.type);
