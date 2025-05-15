@@ -50,47 +50,84 @@ const getAddEventsSql = (...events: BottEvent[]) => {
   `;
 };
 
-export const addEvents = (...events: BottEvent[]) => {
+export const addEvents = (...inputEvents: BottEvent[]) => {
+  // Extract all unique entities (events, spaces, channels, users)
+  const events = new Map<string, BottEvent>();
+  const _queue: BottEvent[] = [...inputEvents];
+  const _seenEvents = new Set<string>();
+
+  while (_queue.length > 0) {
+    const currentEvent = _queue.shift()!;
+
+    events.set(currentEvent.id, currentEvent);
+    _seenEvents.add(currentEvent.id);
+
+    if (
+      // We haven't seen this parent before, add it to the queue:
+      currentEvent.parent && !_seenEvents.has(currentEvent.parent.id)
+    ) {
+      _queue.push(currentEvent.parent);
+      _seenEvents.add(currentEvent.parent.id);
+    }
+  }
+
   const spaces = new Map<string, BottSpace>();
   const channels = new Map<string, BottChannel>();
   const users = new Map<string, BottUser>();
-  let orderedEvents: BottEvent[] = [];
 
-  for (const event of events) {
-    if (event.channel?.space) {
-      spaces.set(event.channel.space.id, event.channel.space);
-    }
-
+  for (const event of events.values()) {
     if (event.channel) {
+      spaces.set(event.channel.space.id, event.channel.space);
       channels.set(event.channel.id, event.channel);
     }
 
     if (event.user) {
       users.set(event.user.id, event.user);
     }
-
-    // Ensure parent events are processed before their children:
-    let parent = event.parent;
-    const parents = [];
-    while (parent) {
-      parents.unshift(parent);
-      parent = parent.parent;
-    }
-
-    orderedEvents = [
-      ...orderedEvents,
-      ...parents,
-      event,
-    ];
   }
 
   return commit(
     getAddSpacesSql(...spaces.values()),
     getAddChannelsSql(...channels.values()),
     getAddUsersSql(...users.values()),
-    getAddEventsSql(...orderedEvents),
+    getAddEventsSql(
+      ...topologicallySortEvents(...events.values()),
+    ),
   );
 };
+
+function topologicallySortEvents(...events: BottEvent[]): BottEvent[] {
+  const result: BottEvent[] = [];
+
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+
+  function visit(event: BottEvent) {
+    if (visited.has(event.id) || visiting.has(event.id)) {
+      return; // Cycle detected, break it
+    }
+
+    visiting.add(event.id);
+    // If the event has a parent, visit it first
+    if (event.parent) {
+      visit(event.parent);
+    }
+    visiting.delete(event.id);
+
+    visited.add(event.id);
+    result.push(event);
+  }
+
+  for (const event of events) {
+    if (visited.has(event.id)) {
+      continue;
+    }
+
+    visit(event);
+  }
+
+  return result;
+}
 
 export const getEvents = (...ids: string[]): BottEvent[] => {
   const result = commit(
