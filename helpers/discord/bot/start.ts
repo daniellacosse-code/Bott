@@ -140,7 +140,10 @@ export async function startBot({
 
     const event: BottEvent = await messageToEvent(message as Message<true>);
 
-    console.log("[DEBUG] Received message.", event);
+    console.log(
+      "[DEBUG] Received message.",
+      { id: event.id, preview: event.details?.content.slice(0, 100) },
+    );
 
     handleEvent?.call(makeSelf(currentChannel), event);
   });
@@ -181,7 +184,10 @@ export async function startBot({
       );
     }
 
-    console.log("[DEBUG] Received reaction.", event);
+    console.log("[DEBUG] Received reaction.", {
+      id: event.id,
+      details: event.details,
+    });
 
     handleEvent?.call(makeSelf(currentChannel), event);
   });

@@ -51,7 +51,7 @@ export const respondEvents = async (
   }
 
   try {
-    console.log("[DEBUG] Content recieved. Parsing response.");
+    console.log("[DEBUG] Gemini content recieved. Parsing response.");
     return transformContentToBottEvents(content);
   } catch (error) {
     console.error("[ERROR] Problem processing Gemini content:", error);
