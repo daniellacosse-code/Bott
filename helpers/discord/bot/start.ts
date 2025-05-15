@@ -16,10 +16,8 @@ import { type CommandObject, CommandOptionType } from "./types.ts";
 import { SwapTaskQueue } from "./task/queue.ts";
 import {
   addEvents,
-  type BottChannel,
   type BottEvent,
   BottEventType,
-  type BottSpace,
   type BottUser,
 } from "@bott/data";
 
@@ -106,61 +104,22 @@ export async function startBot({
   });
 
   // Attempt to hydrate the DB.
-  const spaceIndex = new Map<string, BottSpace>();
-  const userIndex = new Map<string, BottUser>();
-  const channelIndex = new Map<string, BottChannel>();
   const events: BottEvent[] = [];
 
   // Discord "guilds" are equivalent to Bott's "spaces":
   for (const space of client.guilds.cache.values()) {
-    try {
-      // Add space:
-      const spaceObject = {
-        id: space.id,
-        name: space.name,
-        description: space.description ?? undefined,
-      };
-      spaceIndex.set(space.id, spaceObject);
-
-      // Add users:
-      await space.members.fetch();
-      for (
-        const { user: { id, username } } of space.members.cache.values()
-      ) {
-        userIndex.set(id, { id, name: username });
+    for (const channel of space.channels.cache.values()) {
+      if (channel.type !== ChannelType.GuildText) {
+        continue;
       }
 
-      // Add channels:
-      for (const channel of space.channels.cache.values()) {
-        if (channel.type !== ChannelType.GuildText) {
-          continue;
+      try {
+        for (const [_, message] of await channel.messages.fetch()) {
+          events.push(await messageToEvent(message));
         }
-        try {
-          channelIndex.set(channel.id, {
-            id: channel.id,
-            name: channel.name,
-            description: channel.topic ?? undefined,
-            space: spaceObject,
-          });
-
-          // Add events:
-          const messages = await channel.messages.fetch();
-          for (const message of messages.values()) {
-            const baseEvent = messageToBaseEvent(message as Message<true>);
-            if (message.reference?.messageId) {
-              baseEvent.type = BottEventType.REPLY;
-              baseEvent.parent = {
-                id: message.reference.messageId,
-              } as BottEvent;
-            }
-            events.push(baseEvent);
-          }
-        } catch (_) {
-          // Continue to the next channel
-        }
+      } catch (_) {
+        // Likely don't have access to this channel
       }
-    } catch (_) {
-      // Continue to the next guild
     }
   }
 
@@ -179,35 +138,14 @@ export async function startBot({
       return;
     }
 
-    let eventType = BottEventType.MESSAGE;
-    let parentEvent: BottEvent | undefined;
-
-    if (message.reference && message.reference.messageId) {
-      eventType = BottEventType.REPLY;
-      try {
-        parentEvent = messageToBaseEvent(
-          await currentChannel.messages.fetch(message.reference.messageId),
-        );
-      } catch (error) {
-        console.error(
-          `Failed to fetch replied-to message (ID: ${message.reference.messageId}):`,
-          error,
-        );
-      }
-    }
-
-    const event: BottEvent = {
-      ...messageToBaseEvent(message as Message<true>),
-      type: eventType,
-      parent: parentEvent,
-    };
+    const event: BottEvent = await messageToEvent(message as Message<true>);
 
     console.log("[DEBUG] Received message.", event);
 
     handleEvent?.call(makeSelf(currentChannel), event);
   });
 
-  client.on(Events.MessageReactionAdd, (reaction) => {
+  client.on(Events.MessageReactionAdd, async (reaction) => {
     const currentChannel = reaction.message.channel;
 
     if (currentChannel.type !== ChannelType.GuildText) {
@@ -238,7 +176,9 @@ export async function startBot({
     }
 
     if (reaction.message.content) {
-      event.parent = messageToBaseEvent(reaction.message as Message<true>);
+      event.parent = await messageToEvent(
+        reaction.message as Message<true>,
+      );
     }
 
     console.log("[DEBUG] Received reaction.", event);
@@ -279,7 +219,9 @@ export async function startBot({
   );
 }
 
-const messageToBaseEvent = (message: Message<true>): BottEvent => {
+const messageToEvent = async (
+  message: Message<true>,
+): Promise<BottEvent> => {
   const event: BottEvent = {
     id: message.id,
     type: BottEventType.MESSAGE,
@@ -303,6 +245,26 @@ const messageToBaseEvent = (message: Message<true>): BottEvent => {
       id: message.author.id,
       name: message.author.username,
     };
+  }
+
+  if (message.reference?.messageId) {
+    event.type = BottEventType.REPLY;
+
+    let parentMessage: BottEvent | undefined;
+
+    try {
+      parentMessage = await messageToEvent(
+        await message.channel.messages.fetch(
+          message.reference.messageId,
+        ),
+      );
+    } catch (_) {
+      // If the parent message isn't available, we can't populate the parent event.
+      // This can happen if the parent message was deleted or is otherwise inaccessible.
+      // In this case, we'll just omit the parent event.
+    }
+
+    event.parent = parentMessage;
   }
 
   return event;

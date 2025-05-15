@@ -27,9 +27,9 @@ export const getAddChannelsSql = (
   ...channels: BottChannel[]
 ) => {
   const values = channels.map((channel) =>
-    sql`(${channel.id}, ${channel.space.id}, ${channel.name ?? null}, ${
-      channel.description ?? null
-    }, ${JSON.stringify(channel.config ?? null)})`
+    sql`(${channel.id}, ${channel.space.id}, ${channel.name}, ${channel.description}, ${
+      JSON.stringify(channel.config)
+    })`
   );
 
   return sql`

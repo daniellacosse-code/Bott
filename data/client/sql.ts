@@ -17,7 +17,7 @@ function isSqlInstructions(value: any): value is SqlInstructions {
 // Helper to process a single non-array interpolation item.
 // It returns the query string part for this item and pushes its parameters to the paramsCollector.
 function processInterpolationValue(
-  item: SupportedValueType | SqlInstructions,
+  item: SupportedValueType | SqlInstructions | undefined,
   paramsCollector: SupportedValueType[],
 ): string {
   if (isSqlInstructions(item)) {
@@ -25,13 +25,18 @@ function processInterpolationValue(
     return item.query;
   }
   // It's a SupportedValueType
-  paramsCollector.push(item);
+  if (item === undefined || item === "undefined" || item === "null") {
+    paramsCollector.push(null);
+  } else {
+    paramsCollector.push(item);
+  }
   return "?";
 }
 
 export function sql( // naive sql tag
   strings: TemplateStringsArray,
   ...interpolations: (
+    | undefined
     | SupportedValueType
     | SqlInstructions
     | (SqlInstructions | SupportedValueType)[]

@@ -38,11 +38,9 @@ export const eventsTableSql = sql`
 
 const getAddEventsSql = (...events: BottEvent[]) => {
   const values = events.map((event) =>
-    sql`(${event.id}, ${event.type}, ${JSON.stringify(event.details)}, ${
-      event.parent?.id ?? null
-    }, ${event.channel?.id ?? null}, ${event.user?.id ?? null}, ${
-      (event.timestamp ?? new Date()).toISOString()
-    })`
+    sql`(${event.id}, ${event.type}, ${
+      JSON.stringify(event.details)
+    }, ${event.parent?.id}, ${event.channel?.id}, ${event.user?.id}, ${event.timestamp.toISOString()})`
   );
 
   return sql`
@@ -56,35 +54,41 @@ export const addEvents = (...events: BottEvent[]) => {
   const spaces = new Map<string, BottSpace>();
   const channels = new Map<string, BottChannel>();
   const users = new Map<string, BottUser>();
-  const parents = new Map<string, BottEvent>();
-  const remainingEvents = [];
+  let orderedEvents: BottEvent[] = [];
 
-  for (const { channel, user, parent, ...rest } of events) {
-    if (channel?.space) {
-      spaces.set(channel.space.id, channel.space);
+  for (const event of events) {
+    if (event.channel?.space) {
+      spaces.set(event.channel.space.id, event.channel.space);
     }
 
-    if (channel) {
-      channels.set(channel.id, channel);
+    if (event.channel) {
+      channels.set(event.channel.id, event.channel);
     }
 
-    if (user) {
-      users.set(user.id, user);
+    if (event.user) {
+      users.set(event.user.id, event.user);
     }
 
-    if (parent) {
-      // do nothing (for now)
-    } else {
-      remainingEvents.push({ channel, user, parent, ...rest });
+    // Ensure parent events are processed before their children:
+    let parent = event.parent;
+    const parents = [];
+    while (parent) {
+      parents.unshift(parent);
+      parent = parent.parent;
     }
+
+    orderedEvents = [
+      ...orderedEvents,
+      ...parents,
+      event,
+    ];
   }
 
   return commit(
     getAddSpacesSql(...spaces.values()),
     getAddChannelsSql(...channels.values()),
     getAddUsersSql(...users.values()),
-    // getAddEventsSql(...parents.values()),
-    getAddEventsSql(...remainingEvents),
+    getAddEventsSql(...orderedEvents),
   );
 };
 
