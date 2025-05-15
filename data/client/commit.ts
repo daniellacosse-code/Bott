@@ -12,7 +12,7 @@ export type TransactionResults = {
 const client = new DatabaseSync(Deno.env.get("DB_PATH") ?? "test.db");
 
 export const commit = (
-  ...instructions: SqlInstructions[]
+  ...instructions: (SqlInstructions | undefined)[]
 ): TransactionResults => {
   let reads: any[] = [];
   let writes = 0;
@@ -20,7 +20,13 @@ export const commit = (
   try {
     client.exec("begin");
 
-    for (const { query, params } of instructions) {
+    for (const instruction of instructions) {
+      if (!instruction) {
+        continue;
+      }
+
+      const { query, params } = instruction;
+
       const statement = client.prepare(query);
       const isReadQuery = query.trim().toLowerCase().startsWith("select");
 

@@ -130,10 +130,10 @@ function transformContentToBottEvents(content: Content): BottEvent[] {
     for (const messagePart of splitDetails) {
       result.push({
         id: crypto.randomUUID(),
-        type,
-        details: { content: messagePart },
         timestamp: new Date(),
         ...partialEvent,
+        type,
+        details: { content: messagePart },
       });
 
       // Don't string multiple replies in the same message stream

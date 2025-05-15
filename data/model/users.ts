@@ -13,6 +13,10 @@ export const usersTableSql = sql`
 `;
 
 export const getAddUsersSql = (...users: BottUser[]) => {
+  if (!users.length) {
+    return;
+  }
+
   const values = users.map((user) => sql`(${user.id}, ${user.name})`);
 
   return sql`

@@ -17,6 +17,10 @@ export const spacesTableSql = sql`
 `;
 
 export const getAddSpacesSql = (...spaces: BottSpace[]) => {
+  if (!spaces.length) {
+    return;
+  }
+
   const values = spaces.map((space) =>
     sql`(${space.id}, ${space.name}, ${space.description})`
   );

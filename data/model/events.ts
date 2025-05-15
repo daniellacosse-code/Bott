@@ -37,6 +37,10 @@ export const eventsTableSql = sql`
 `;
 
 const getAddEventsSql = (...events: BottEvent[]) => {
+  if (!events.length) {
+    return;
+  }
+
   const values = events.map((event) =>
     sql`(${event.id}, ${event.type}, ${
       JSON.stringify(event.details)
@@ -212,7 +216,7 @@ export const getEvents = (...ids: string[]): BottEvent[] => {
   );
 };
 
-// TODO: do this in a single query
+// TODO: get channel history in a single query
 export const getEventIdsForChannel = (channelId: string): string[] => {
   const result = commit(
     sql`
