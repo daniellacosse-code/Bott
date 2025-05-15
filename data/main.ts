@@ -7,4 +7,5 @@ export {
   type BottEvent,
   BottEventType,
   getEventIdsForChannel,
+  getEvents,
 } from "./model/events.ts";

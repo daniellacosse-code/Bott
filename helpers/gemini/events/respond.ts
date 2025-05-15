@@ -7,9 +7,10 @@ import {
   type BottEvent,
   BottEventType,
   type BottUser,
+  getEvents,
 } from "@bott/data";
 
-import baseInstructions from "./baseInstructions.ts";
+import taskInstructions from "./instructions.ts";
 
 type GeminiResponseContext = {
   abortSignal: AbortSignal;
@@ -97,8 +98,9 @@ export const respondEvents = async (
     config: {
       abortSignal,
       candidateCount: 1,
-      systemInstruction: context.identity + baseInstructions,
-      tools: [{ googleSearch: {} }],
+      systemInstruction: context.identity + taskInstructions,
+      // TODO: Can't use google search w/ structured output.
+      // tools: [{ googleSearch: {} }],
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.ARRAY,
@@ -177,24 +179,25 @@ function transformContentToBottEvents(content: Content, context: {
 
   const result: BottEvent[] = [];
 
-  for (const partialEvent of parsedOutput) {
-    if (!partialEvent.details?.content) {
+  for (const subevent of parsedOutput) {
+    if (!subevent.details?.content) {
       continue;
     }
 
     const splitDetails = splitMessagePreservingCodeBlocks(
-      partialEvent.details.content,
+      subevent.details.content,
     );
 
-    let type = partialEvent.type ?? BottEventType.MESSAGE;
+    let type = subevent.type ?? BottEventType.MESSAGE;
 
     for (const messagePart of splitDetails) {
       result.push({
         id: crypto.randomUUID(),
         timestamp: new Date(),
-        ...partialEvent,
+        ...subevent,
         user: context.user,
         channel: context.channel,
+        parent: subevent.parent ? getEvents(subevent.parent.id)[0] : undefined,
         type,
         details: { content: messagePart },
       });

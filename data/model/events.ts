@@ -137,11 +137,11 @@ export const getEvents = (...ids: string[]): BottEvent[] => {
   const result = commit(
     sql`
       select
-        e.id as e_id, e.type as e_type, e.details as e_details, e.timestamp as e_timestamp,
-        p.id as p_id, p.type as p_type, p.details as p_details, p.timestamp as p_timestamp,
-        c.id as c_id, c.name as c_name, c.description as c_description, c.config as c_config,
-        s.id as s_id, s.name as s_name, s.description as s_description,
-        u.id as u_id, u.name as u_name
+        e.id as e_id, e.type as e_type, e.details as e_details, e.timestamp as e_timestamp, -- event
+        c.id as c_id, c.name as c_name, c.description as c_description, c.config as c_config, -- channel
+        s.id as s_id, s.name as s_name, s.description as s_description, -- space
+        u.id as u_id, u.name as u_name, -- user
+        p.id as p_id -- parent event
       from
         events e
       left join
@@ -203,12 +203,7 @@ export const getEvents = (...ids: string[]): BottEvent[] => {
       }
 
       if (context.p_id) {
-        event.parent = {
-          id: context.p_id,
-          type: context.p_type,
-          details: JSON.parse(context.p_details),
-          timestamp: new Date(context.p_timestamp),
-        };
+        event.parent = getEvents(context.p_id)[0];
       }
 
       return event;

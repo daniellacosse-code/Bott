@@ -93,8 +93,8 @@ export class SwapTaskQueue {
     try {
       await job.task(job.abortController.signal);
       console.log("[DEBUG] Job completed:", job.id);
-    } catch (_) {
-      console.log("[DEBUG] Job failed:", job.id);
+    } catch (error) {
+      console.log("[DEBUG] Job failed:", job.id, error);
       // Job failed or was aborted: do nothing.
     } finally {
       // Cleanup step: promote blocked jobs and flush only if the job instance

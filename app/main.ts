@@ -77,7 +77,9 @@ startBot({
           return;
         }
 
-        this.startTyping();
+        if (messageEvent.type !== "reaction") {
+          this.startTyping();
+        }
 
         const words = messageEvent.details.content.split(/\s+/).length;
         const delayMs = (words / this.wpm) * MS_IN_MINUTE;
