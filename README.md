@@ -6,12 +6,14 @@ A Discord Bot, powered by Gemini.
 
 ## Getting started
 
-Duplicate `.env.example` to `.env.staging` and fill it out.
+Duplicate `.env.example` to `app/.env.development` and fill it out.
 
 Then run:
 
-```
+```sh
 brew bundle
+cd app
+gcloud auth login
 deno task start
 ```
 
@@ -21,7 +23,8 @@ deno task start
 
 Duplicate `.env.example` to `.env.production` and fill it out.
 
-```
-gcloud login
+```sh
 deno task deploy
 ```
+
+You can also run the Dockerfile locally with `deno task start`.

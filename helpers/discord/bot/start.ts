@@ -22,10 +22,11 @@ import {
 } from "@bott/data";
 
 const defaultIntents = [
-  GatewayIntentBits.Guilds,
-  GatewayIntentBits.GuildMessages,
-  GatewayIntentBits.MessageContent,
   GatewayIntentBits.GuildMembers,
+  GatewayIntentBits.GuildMessageReactions,
+  GatewayIntentBits.GuildMessages,
+  GatewayIntentBits.Guilds,
+  GatewayIntentBits.MessageContent,
 ];
 
 type BotContext = {
@@ -141,7 +142,7 @@ export async function startBot({
     const event: BottEvent = await messageToEvent(message as Message<true>);
 
     console.log(
-      "[DEBUG] Received message.",
+      "[DEBUG] Message event:",
       { id: event.id, preview: event.details?.content.slice(0, 100) },
     );
 
@@ -184,7 +185,7 @@ export async function startBot({
       );
     }
 
-    console.log("[DEBUG] Received reaction.", {
+    console.log("[DEBUG] Reaction event:", {
       id: event.id,
       details: event.details,
     });

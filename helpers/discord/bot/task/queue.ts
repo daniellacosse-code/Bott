@@ -57,6 +57,8 @@ export class SwapTaskQueue {
     if (job.id === this.liveJob?.id) {
       this.liveJob.abortController.abort();
 
+      console.log("[DEBUG] Aborted live job:", this.liveJob.id);
+
       job.remainingSwaps = this.liveJob.remainingSwaps - 1;
 
       this.readyJobs.set(job.id, job);
@@ -87,9 +89,12 @@ export class SwapTaskQueue {
 
     this.liveJob = job;
 
+    console.log("[DEBUG] Running job:", job.id);
     try {
       await job.task(job.abortController.signal);
+      console.log("[DEBUG] Job completed:", job.id);
     } catch (_) {
+      console.log("[DEBUG] Job failed:", job.id);
       // Job failed or was aborted: do nothing.
     } finally {
       // Cleanup step: promote blocked jobs and flush only if the job instance
