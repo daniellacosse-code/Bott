@@ -1,6 +1,11 @@
 import { delay } from "jsr:@std/async/delay";
 
-import { addEvents, type BottEvent, getEventIdsForChannel } from "@bott/data";
+import {
+  addEvents,
+  type BottEvent,
+  getEventIdsForChannel,
+  setSchema,
+} from "@bott/data";
 import { startBot } from "@bott/discord";
 
 import { respondEvents } from "@bott/gemini";
@@ -11,6 +16,8 @@ import { getEvents } from "../data/model/events.ts";
 
 const MS_IN_MINUTE = 60 * 1000;
 const MAX_TYPING_TIME_MS = 3000;
+
+setSchema();
 
 startBot({
   commands,
@@ -25,12 +32,27 @@ startBot({
       return;
     }
 
-    addEvents(event);
+    const result = addEvents(event);
+
+    if ("error" in result) {
+      console.error("[ERROR] Failed to add event to database:", result);
+      return;
+    }
 
     this.tasks.push(event.channel.id, async (abortSignal: AbortSignal) => {
+      let eventHistoryResult;
+
+      try {
+        const eventHistoryIds = getEventIdsForChannel(event.channel!.id);
+        eventHistoryResult = getEvents(...eventHistoryIds);
+      } catch (error) {
+        console.log("[ERROR] Failed to get channel history:", error);
+        return;
+      }
+
       // 1. Get list of bot events (responses) from Gemini:
       const messageEvents: BottEvent[] = await respondEvents(
-        getEvents(...getEventIdsForChannel(event.channel!.id)),
+        eventHistoryResult,
         {
           abortSignal,
           identity: getIdentity({

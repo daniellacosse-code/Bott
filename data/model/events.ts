@@ -2,6 +2,7 @@ import { commit } from "../client/commit.ts";
 import { sql } from "../client/sql.ts";
 
 import { type BottChannel, getAddChannelsSql } from "./channels.ts";
+import { type BottSpace, getAddSpacesSql } from "./spaces.ts";
 import { type BottUser, getAddUsersSql } from "./users.ts";
 
 export enum BottEventType {
@@ -39,9 +40,9 @@ const getAddEventsSql = (...events: BottEvent[]) => {
   const values = events.map((event) =>
     sql`(${event.id}, ${event.type}, ${JSON.stringify(event.details)}, ${
       event.parent?.id ?? null
-    }, ${event.channel?.id ?? null}, ${
-      event.user?.id ?? null
-    }, ${event.timestamp.toISOString()})`
+    }, ${event.channel?.id ?? null}, ${event.user?.id ?? null}, ${
+      (event.timestamp ?? new Date()).toISOString()
+    })`
   );
 
   return sql`
@@ -52,29 +53,38 @@ const getAddEventsSql = (...events: BottEvent[]) => {
 };
 
 export const addEvents = (...events: BottEvent[]) => {
-  const channels = [];
-  const users = [];
-  const parents = [];
+  const spaces = new Map<string, BottSpace>();
+  const channels = new Map<string, BottChannel>();
+  const users = new Map<string, BottUser>();
+  const parents = new Map<string, BottEvent>();
+  const remainingEvents = [];
 
-  for (const event of events) {
-    if (event.channel) {
-      channels.push(event.channel);
+  for (const { channel, user, parent, ...rest } of events) {
+    if (channel?.space) {
+      spaces.set(channel.space.id, channel.space);
     }
 
-    if (event.user) {
-      users.push(event.user);
+    if (channel) {
+      channels.set(channel.id, channel);
     }
 
-    if (event.parent) {
-      parents.push(event.parent);
+    if (user) {
+      users.set(user.id, user);
+    }
+
+    if (parent) {
+      // do nothing (for now)
+    } else {
+      remainingEvents.push({ channel, user, parent, ...rest });
     }
   }
 
   return commit(
-    getAddChannelsSql(...channels),
-    getAddUsersSql(...users),
-    getAddEventsSql(...parents),
-    getAddEventsSql(...events),
+    getAddSpacesSql(...spaces.values()),
+    getAddChannelsSql(...channels.values()),
+    getAddUsersSql(...users.values()),
+    // getAddEventsSql(...parents.values()),
+    getAddEventsSql(...remainingEvents),
   );
 };
 

@@ -1,6 +1,5 @@
-import { commit } from "../client/commit.ts";
 import { sql } from "../client/sql.ts";
-import { type BottSpace, getAddSpacesSql } from "./spaces.ts";
+import type { BottSpace } from "./spaces.ts";
 
 export interface BottChannel {
   id: string;
@@ -24,19 +23,6 @@ export const channelsTableSql = sql`
   )
 `;
 
-export const addChannels = (...channels: BottChannel[]) => {
-  const spaces = [];
-
-  for (const channel of channels) {
-    spaces.push(channel.space);
-  }
-
-  return commit(
-    getAddSpacesSql(...spaces),
-    getAddChannelsSql(...channels),
-  );
-};
-
 export const getAddChannelsSql = (
   ...channels: BottChannel[]
 ) => {
@@ -56,5 +42,3 @@ export const getAddChannelsSql = (
       config = excluded.config
   `;
 };
-
-// export const getChannelHistory = (channelId: number): BottEvent[] => {};

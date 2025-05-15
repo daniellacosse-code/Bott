@@ -1,4 +1,3 @@
-import { commit } from "../client/commit.ts";
 import { sql } from "../client/sql.ts";
 import type { BottChannel } from "./channels.ts";
 
@@ -16,10 +15,6 @@ export const spacesTableSql = sql`
     description text
   )
 `;
-
-export const addSpaces = (...spaces: BottSpace[]) => {
-  return commit(getAddSpacesSql(...spaces));
-};
 
 export const getAddSpacesSql = (...spaces: BottSpace[]) => {
   const values = spaces.map((space) =>

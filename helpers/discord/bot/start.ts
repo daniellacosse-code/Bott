@@ -58,10 +58,11 @@ export async function startBot({
   const client = new Client({ intents });
 
   await client.login(token);
+  console.log("[DEBUG] Logged in.");
 
   // this is the bot user object
   if (!client.user) {
-    throw new Error("Bot user is not set");
+    throw new Error("Bot user is not set!");
   }
 
   const baseSelf = {
@@ -104,74 +105,72 @@ export async function startBot({
     },
   });
 
-  client.once(Events.ClientReady, async () => {
-    // Attempt to hydrate the DB.
-    const spaceIndex = new Map<string, BottSpace>();
-    const userIndex = new Map<string, BottUser>();
-    const channelIndex = new Map<string, BottChannel>();
-    const events: BottEvent[] = [];
+  // Attempt to hydrate the DB.
+  const spaceIndex = new Map<string, BottSpace>();
+  const userIndex = new Map<string, BottUser>();
+  const channelIndex = new Map<string, BottChannel>();
+  const events: BottEvent[] = [];
 
-    // Discord "guilds" are equivalent to Bott's "spaces":
-    for (const space of client.guilds.cache.values()) {
-      try {
-        // Add space:
-        const spaceObject = {
-          id: space.id,
-          name: space.name,
-          description: space.description ?? undefined,
-        };
-        spaceIndex.set(space.id, spaceObject);
+  // Discord "guilds" are equivalent to Bott's "spaces":
+  for (const space of client.guilds.cache.values()) {
+    try {
+      // Add space:
+      const spaceObject = {
+        id: space.id,
+        name: space.name,
+        description: space.description ?? undefined,
+      };
+      spaceIndex.set(space.id, spaceObject);
 
-        // Add users:
-        await space.members.fetch();
-        for (
-          const { user: { id, username } } of space.members.cache.values()
-        ) {
-          userIndex.set(id, { id, name: username });
-        }
-
-        // Add channels:
-        for (const channel of space.channels.cache.values()) {
-          if (channel.type !== ChannelType.GuildText) {
-            continue;
-          }
-          try {
-            channelIndex.set(channel.id, {
-              id: channel.id,
-              name: channel.name,
-              description: channel.topic ?? undefined,
-              space: spaceObject,
-            });
-
-            // Add events:
-            const messages = await channel.messages.fetch();
-            for (const message of messages.values()) {
-              const baseEvent = messageToBaseEvent(message as Message<true>);
-              if (message.reference?.messageId) {
-                baseEvent.type = BottEventType.REPLY;
-                baseEvent.parent = {
-                  id: message.reference.messageId,
-                } as BottEvent;
-              }
-              events.push(baseEvent);
-            }
-          } catch (_) {
-            // Continue to the next channel
-          }
-        }
-      } catch (_) {
-        // Continue to the next guild
+      // Add users:
+      await space.members.fetch();
+      for (
+        const { user: { id, username } } of space.members.cache.values()
+      ) {
+        userIndex.set(id, { id, name: username });
       }
+
+      // Add channels:
+      for (const channel of space.channels.cache.values()) {
+        if (channel.type !== ChannelType.GuildText) {
+          continue;
+        }
+        try {
+          channelIndex.set(channel.id, {
+            id: channel.id,
+            name: channel.name,
+            description: channel.topic ?? undefined,
+            space: spaceObject,
+          });
+
+          // Add events:
+          const messages = await channel.messages.fetch();
+          for (const message of messages.values()) {
+            const baseEvent = messageToBaseEvent(message as Message<true>);
+            if (message.reference?.messageId) {
+              baseEvent.type = BottEventType.REPLY;
+              baseEvent.parent = {
+                id: message.reference.messageId,
+              } as BottEvent;
+            }
+            events.push(baseEvent);
+          }
+        } catch (_) {
+          // Continue to the next channel
+        }
+      }
+    } catch (_) {
+      // Continue to the next guild
     }
+  }
 
-    const result = addEvents(...events);
+  const result = addEvents(...events);
 
-    if ("error" in result) {
-      console.error("[ERROR] Failed to hydrate database:", result.error);
-    }
+  if ("error" in result) {
+    console.error("[ERROR] Failed to hydrate database:", result.error);
+  }
 
-    handleMount?.call(makeSelf());
-  });
+  handleMount?.call(makeSelf());
 
   client.on(Events.MessageCreate, async (message) => {
     const currentChannel = message.channel;
@@ -202,6 +201,8 @@ export async function startBot({
       type: eventType,
       parent: parentEvent,
     };
+
+    console.log("[DEBUG] Received message.", event);
 
     handleEvent?.call(makeSelf(currentChannel), event);
   });
@@ -239,6 +240,8 @@ export async function startBot({
     if (reaction.message.content) {
       event.parent = messageToBaseEvent(reaction.message as Message<true>);
     }
+
+    console.log("[DEBUG] Received reaction.", event);
 
     handleEvent?.call(makeSelf(currentChannel), event);
   });

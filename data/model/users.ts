@@ -1,4 +1,3 @@
-import { commit } from "../client/commit.ts";
 import { sql } from "../client/sql.ts";
 
 export interface BottUser {
@@ -22,8 +21,4 @@ export const getAddUsersSql = (...users: BottUser[]) => {
     on conflict(id) do update set
       name = excluded.name
   `;
-};
-
-export const addUsers = (...users: BottUser[]) => {
-  return commit(getAddUsersSql(...users));
 };
