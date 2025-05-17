@@ -111,7 +111,8 @@ export async function* outputGenerator(
   let firstChunkProcessed = false;
 
   for await (const streamPart of geminiResponseStream) {
-    const textFromPart = streamPart.candidates?.[0]?.content?.parts // Safely access parts
+    // TODO: parse functions and files
+    const textFromPart = streamPart.candidates?.[0]?.content?.parts
       ?.filter((part: Part) => "text" in part && typeof part.text === "string")
       .map((part: Part) => (part as { text: string }).text)
       .join("") ?? "";
