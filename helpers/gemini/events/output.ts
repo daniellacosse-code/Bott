@@ -227,7 +227,11 @@ export function _extractTopLevelObjectsFromString(
               objectStartIndex,
               i + 1,
             );
-            extractedObjects.push(JSON.parse(objString));
+            try {
+              extractedObjects.push(JSON.parse(objString));
+            } catch (error) {
+              console.error("Failed to parse JSON object:", error);
+            }
             current = current.substring(i + 1);
             const commaMatch = current.match(/^\s*,\s*/);
             if (commaMatch) {
