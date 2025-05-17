@@ -50,6 +50,8 @@ export class SwapTaskQueue {
       abortController: new AbortController(),
     };
 
+    console.log("[DEBUG] Pushing job:", job.id);
+
     if (this.isSwapLocked(job.id)) {
       return this.blockJob(job);
     }

@@ -1,7 +1,5 @@
-import type { Content, Schema } from "npm:@google/genai";
-import { Type } from "npm:@google/genai";
+import type { Content } from "npm:@google/genai";
 
-import gemini from "../client.ts";
 import {
   type BottChannel,
   type BottEvent,
@@ -11,6 +9,8 @@ import {
 } from "@bott/data";
 
 import taskInstructions from "./instructions.ts";
+import { outputGenerator, outputSchema } from "./output.ts";
+import gemini from "../client.ts";
 
 type GeminiResponseContext = {
   abortSignal: AbortSignal;
@@ -22,53 +22,11 @@ type GeminiResponseContext = {
   model?: string;
 };
 
-// Define the schema for a single event object in the response
-const outputEventSchema: Schema = {
-  type: Type.OBJECT,
-  properties: {
-    type: {
-      type: Type.STRING,
-      enum: [
-        BottEventType.MESSAGE,
-        BottEventType.REPLY,
-        BottEventType.REACTION,
-      ],
-      description:
-        "The type of event to send: 'message', 'reply', or 'reaction'.",
-    },
-    details: {
-      type: Type.OBJECT,
-      properties: {
-        content: {
-          type: Type.STRING,
-          description:
-            "The content of the message or reaction (e.g., an emoji for reactions).",
-        },
-      },
-      required: ["content"],
-    },
-    parent: {
-      type: Type.OBJECT,
-      properties: {
-        id: {
-          type: Type.STRING,
-          description:
-            "The string ID of the message being replied or reacted to. Required if 'parent' object is present.",
-        },
-      },
-      required: ["id"],
-    },
-  },
-  required: ["type", "details"],
-  description:
-    "An event object representing an action to take (message, reply, or reaction).",
-};
-
-export const respondEvents = async (
+export async function* respondEvents(
   inputEvents: BottEvent[],
   { model = "gemini-2.5-pro-preview-05-06", abortSignal, context }:
     GeminiResponseContext,
-): Promise<BottEvent[]> => {
+): AsyncGenerator<BottEvent[]> {
   const modelUserId = context.user.id;
 
   const contents: Content[] = [];
@@ -92,7 +50,7 @@ export const respondEvents = async (
     );
   }
 
-  const response = await gemini.models.generateContent({
+  const responseGenerator = await gemini.models.generateContentStream({
     model,
     contents,
     config: {
@@ -102,31 +60,40 @@ export const respondEvents = async (
       // TODO: Can't use google search w/ structured output.
       // tools: [{ googleSearch: {} }],
       responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: outputEventSchema,
-        description:
-          "A list of event objects to send. Send an empty array if no response is warranted.",
-      },
+      responseSchema: outputSchema,
     },
   });
 
-  // Only one candidate specified.
-  const content = response.candidates![0].content;
+  for await (const event of outputGenerator(responseGenerator)) {
+    const result: BottEvent[] = [];
 
-  if (!content) {
-    return [];
+    const splitDetails = splitMessagePreservingCodeBlocks(
+      event.details.content,
+    );
+
+    let type = event.type;
+
+    for (const messagePart of splitDetails) {
+      result.push({
+        id: crypto.randomUUID(),
+        timestamp: new Date(),
+        ...event,
+        user: context.user,
+        channel: context.channel,
+        parent: event.parent ? getEvents(event.parent.id)[0] : undefined,
+        type,
+        details: { content: messagePart },
+      });
+
+      // Don't string multiple replies in the same message stream
+      type = BottEventType.MESSAGE;
+    }
+
+    yield result;
   }
 
-  try {
-    console.log("[DEBUG] Gemini content recieved. Parsing response.");
-    return transformContentToBottEvents(content, context);
-  } catch (error) {
-    console.error("[ERROR] Problem processing Gemini content:", error);
-
-    return [];
-  }
-};
+  return;
+}
 
 const transformBottEventToContent = (
   event: BottEvent<{ content: string; seen: boolean }>,
@@ -135,80 +102,6 @@ const transformBottEventToContent = (
   role: (event.user && event.user.id === modelUserId) ? "model" : "user",
   parts: [{ text: JSON.stringify(event) }],
 });
-
-function transformContentToBottEvents(content: Content, context: {
-  user: BottUser;
-  channel: BottChannel;
-}): BottEvent[] {
-  if (!content.parts || content.parts.length === 0 || !content.parts[0].text) {
-    console.warn(
-      "[WARN] Gemini response content is empty or not in the expected format.",
-    );
-    return [];
-  }
-
-  const jsonString = content.parts[0].text;
-  let parsedOutput: Partial<BottEvent>[];
-
-  try {
-    parsedOutput = JSON.parse(jsonString);
-  } catch (error) {
-    console.error(
-      "[ERROR] Failed to parse Gemini response JSON:",
-      error,
-      "\nJSON string was:",
-      jsonString,
-    );
-    return [];
-  }
-
-  if (!Array.isArray(parsedOutput)) {
-    console.error(
-      "[ERROR] Gemini response is not a JSON array as expected:",
-      jsonString,
-    );
-    return [];
-  }
-
-  if (!parsedOutput.length) {
-    console.log(
-      "[DEBUG] Gemini opted not to respond.",
-    );
-    return [];
-  }
-
-  const result: BottEvent[] = [];
-
-  for (const subevent of parsedOutput) {
-    if (!subevent.details?.content) {
-      continue;
-    }
-
-    const splitDetails = splitMessagePreservingCodeBlocks(
-      subevent.details.content,
-    );
-
-    let type = subevent.type ?? BottEventType.MESSAGE;
-
-    for (const messagePart of splitDetails) {
-      result.push({
-        id: crypto.randomUUID(),
-        timestamp: new Date(),
-        ...subevent,
-        user: context.user,
-        channel: context.channel,
-        parent: subevent.parent ? getEvents(subevent.parent.id)[0] : undefined,
-        type,
-        details: { content: messagePart },
-      });
-
-      // Don't string multiple replies in the same message stream
-      type = BottEventType.MESSAGE;
-    }
-  }
-
-  return result;
-}
 
 function splitMessagePreservingCodeBlocks(message: string): string[] {
   const codeBlockRegex = /```[\s\S]*?```/g;
