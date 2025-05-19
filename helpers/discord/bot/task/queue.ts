@@ -54,7 +54,9 @@ export class SwapTaskQueue {
 
     if (this.isSwapLocked(job.id)) {
       console.log("[DEBUG] Blocking job:", job.id);
-      return this.blockJob(job);
+      this.blockJob(job);
+
+      return this.flushQueue();
     }
 
     if (job.id === this.liveJob?.id) {
