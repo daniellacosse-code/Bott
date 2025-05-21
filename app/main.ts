@@ -59,13 +59,13 @@ startBot({
           const eventHistoryIds = getEventIdsForChannel(event.channel!.id);
           eventHistoryResult = getEvents(...eventHistoryIds);
         } catch (error) {
-          throw new Error("[ERROR] Failed to get channel history.", {
+          throw new Error("Failed to get channel history.", {
             cause: error,
           });
         }
 
         if (abortSignal.aborted) {
-          throw new Error("Aborted task!");
+          throw new Error("Aborted task: before getting event generator");
         }
 
         // 1. Get list of bot events (responses) from Gemini:
@@ -86,7 +86,7 @@ startBot({
         // Send one event (message) at a time:
         for await (const messageEvent of messageEventGenerator) {
           if (abortSignal.aborted) {
-            throw new Error("Aborted task!");
+            throw new Error("Aborted task: before typing message");
           }
 
           if (messageEvent.type !== "reaction") {
@@ -96,10 +96,10 @@ startBot({
           const words = messageEvent.details.content.split(/\s+/).length;
           const delayMs = (words / this.wpm) * MS_IN_MINUTE;
           const cappedDelayMs = Math.min(delayMs, MAX_TYPING_TIME_MS);
-          await delay(cappedDelayMs);
+          await delay(cappedDelayMs, { signal: abortSignal });
 
           if (abortSignal.aborted) {
-            throw new Error("Aborted task!");
+            throw new Error("Aborted task: after typing message");
           }
 
           const result = await this.send(messageEvent);
@@ -112,7 +112,7 @@ startBot({
           if ("error" in eventTransaction) {
             console.error(
               "[ERROR] Failed to add event to database:",
-              eventTransaction,
+              eventTransaction.error,
             );
           }
         }

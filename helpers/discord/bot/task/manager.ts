@@ -15,13 +15,8 @@ type TaskBucket = {
 type TaskBucketMap = Map<TaskBucketName, TaskBucket>;
 
 export class TaskManager {
-  // taskTypeThrottler: TaskThrottler;
   buckets: TaskBucketMap = new Map();
   private isFlushing = false;
-
-  // constructor(throttler: TaskThrottler) {
-  //   this.taskTypeThrottler = throttler;
-  // }
 
   push(name: TaskBucketName, task: Task) {
     if (!this.buckets.has(name)) {
@@ -43,7 +38,7 @@ export class TaskManager {
     this.flushTasks();
   }
 
-  private async flushTasks() {
+  private flushTasks() {
     if (this.isFlushing) {
       return;
     }
@@ -52,85 +47,78 @@ export class TaskManager {
 
     for (const bucket of this.buckets.values()) {
       if (!bucket.next) {
-        console.debug("[DEBUG] No next task:", bucket.name);
+        console.debug("[DEBUG] No new task:", bucket.name);
         continue;
       }
 
-      if (!bucket.current || bucket.remainingSwaps > 0) {
+      const oldTask = bucket.current;
+      const newTask = bucket.next;
+
+      if (!oldTask) {
+        bucket.remainingSwaps = bucket.config.maximumSequentialSwaps;
         console.debug(
           "[DEBUG] Loading new task:",
           bucket.name,
-          bucket.next.nonce,
+          newTask.nonce,
         );
-        const previous = bucket.current;
-
-        bucket.current = bucket.next;
+        bucket.current = newTask;
         bucket.next = undefined;
-
-        if (previous && bucket.remainingSwaps > 0) {
+      } else {
+        if (bucket.remainingSwaps >= 1) {
           console.debug(
-            "[DEBUG] Aborting previous task:",
+            "[DEBUG] Aborting old task:",
             bucket.name,
-            previous.nonce,
+            oldTask.nonce,
           );
-          previous.controller.abort();
+          oldTask.controller.abort();
           bucket.remainingSwaps--;
+
+          console.debug(
+            "[DEBUG] Loading new task:",
+            bucket.name,
+            newTask.nonce,
+          );
+          bucket.current = newTask;
+          bucket.next = undefined;
+        } else {
+          console.debug(
+            "[DEBUG] Swap-blocked new task:",
+            bucket.name,
+            newTask.nonce,
+          );
+          continue;
         }
       }
 
-      // if (
-      //   !(channel.current &&
-      //     this.taskTypeThrottler.canRun(channel.current.type))
-      // ) {
-      //   console.debug(
-      //     "[DEBUG] Throttled task of type:",
-      //     channel.name,
-      //     channel.current.type,
-      //     channel.current.nonce,
-      //   );
-      //   continue;
-      // }
-
-      if (bucket.remainingSwaps < 0) {
-        console.debug(
-          "[DEBUG] Swap-blocked task:",
-          bucket.name,
-          bucket.current?.nonce,
-        );
-        continue;
-      }
-
       console.debug(
-        "[DEBUG] Starting task:",
+        "[DEBUG] Starting new task:",
         bucket.name,
-        bucket.current?.nonce,
+        newTask.nonce,
       );
 
-      // We have to wrap this in a function so we can handle errors
-      // without holding up the loop.
-      this.runCurrentTaskImmediately(bucket);
+      newTask(newTask.controller.signal)
+        .catch((error: Error) => {
+          console.warn(
+            "[WARN] Task aborted:",
+            bucket.name,
+            newTask.nonce,
+            { message: error.message },
+          );
+        })
+        .finally(() => {
+          console.debug(
+            "[DEBUG] Task finished:",
+            bucket.name,
+            newTask.nonce,
+          );
+
+          bucket.current = undefined;
+          bucket.remainingSwaps = bucket.config.maximumSequentialSwaps;
+
+          this.flushTasks();
+        });
     }
 
     this.isFlushing = false;
-  }
-
-  private async runCurrentTaskImmediately(bucket: TaskBucket) {
-    try {
-      await bucket.current!(bucket.current!.controller.signal);
-    } catch (error) {
-      console.warn(
-        "[WARN] Task failed or aborted:",
-        bucket.name,
-        bucket.current!.nonce,
-        (error as Error).message,
-      );
-    } finally {
-      // this.taskTypeThrottler?.recordRun(channel.current!.type);
-
-      bucket.current = undefined;
-      bucket.remainingSwaps = bucket.config.maximumSequentialSwaps;
-
-      this.flushTasks();
-    }
   }
 }

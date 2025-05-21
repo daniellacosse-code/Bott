@@ -57,7 +57,7 @@ export async function startBot({
   const client = new Client({ intents });
 
   await client.login(token);
-  console.log("[DEBUG] Logged in.");
+  console.debug("[DEBUG] Logged in.");
 
   // this is the bot user object
   if (!client.user) {
@@ -185,7 +185,7 @@ export async function startBot({
       );
     }
 
-    console.log("[DEBUG] Reaction event:", {
+    console.debug("[DEBUG] Reaction event:", {
       id: event.id,
       details: event.details,
     });
