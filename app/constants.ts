@@ -13,3 +13,8 @@ export const RATE_LIMIT_IMAGES = Number(
 export const RATE_LIMIT_VIDEOS = Number(
   Deno.env.get("CONFIG_RATE_LIMIT_VIDEOS") ?? 10,
 );
+
+export const FILE_SYSTEM_ROOT = Deno.env.get("FILE_SYSTEM_ROOT") ?? "output";
+export const FILE_SYSTEM_DB_PATH = `${FILE_SYSTEM_ROOT}/data.db`;
+export const FILE_SYSTEM_DEPLOY_NONCE_PATH =
+  `${FILE_SYSTEM_ROOT}/.deploy-nonce`;

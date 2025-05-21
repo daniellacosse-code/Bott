@@ -2,11 +2,12 @@ import { addEvents, BottEventType, getEvents } from "./model/events.ts";
 
 import { assertExists } from "jsr:@std/assert";
 import { setSchema } from "./model/schema.ts";
+import { initClient } from "./main.ts";
 
 Deno.test("database smoke test", async () => {
   const tempDbFile = await Deno.makeTempFile();
 
-  Deno.env.set("DB_PATH", tempDbFile);
+  initClient(tempDbFile);
 
   setSchema();
 

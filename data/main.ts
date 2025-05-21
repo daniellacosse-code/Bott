@@ -9,3 +9,4 @@ export {
   getEventIdsForChannel,
   getEvents,
 } from "./model/events.ts";
+export { initClient } from "./client/commit.ts";

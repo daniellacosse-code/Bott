@@ -12,9 +12,13 @@ gcloud run deploy bott-service \
   --project $GOOGLE_PROJECT_ID \
   --cpu 1 \
   --cpu-boost \
-  --memory 2Gi \
+  --memory 1.5Gi \
   --min-instances 0 \
   --max-instances 1 \
+  --exec-environment gen2 \
+  --add-volume=name=bott-data-volume,type=cloud-storage,bucket=bott-data \
+  --add-volume-mount=volume=bott-data-volume,mount-path=$FILE_SYSTEM_ROOT \
+  --set-env-vars FILE_SYSTEM_ROOT=$FILE_SYSTEM_ROOT \
   --set-env-vars DISCORD_TOKEN=$DISCORD_TOKEN \
   --set-env-vars GOOGLE_PROJECT_ID=$GOOGLE_PROJECT_ID \
   --set-env-vars GOOGLE_PROJECT_LOCATION=$GOOGLE_PROJECT_LOCATION \

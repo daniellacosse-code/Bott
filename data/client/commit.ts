@@ -9,7 +9,12 @@ export type TransactionResults = {
   error: Error;
 };
 
-const client = new DatabaseSync(Deno.env.get("DB_PATH") ?? "test.db");
+let client: DatabaseSync;
+
+export const initClient = (dbPath = "test.db") =>
+  client = new DatabaseSync(
+    dbPath,
+  );
 
 export const commit = (
   ...instructions: (SqlInstructions | undefined)[]
