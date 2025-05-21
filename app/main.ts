@@ -55,7 +55,7 @@ startBot({
   identityToken: Deno.env.get("DISCORD_TOKEN")!,
   mount() {
     console.info(
-      `[INFO] Running at id <@${this.user.id}>`,
+      `[INFO] Running bot ${this.user.name} at user id <@${this.user.id}>`,
     );
   },
   event(event) {
@@ -65,6 +65,7 @@ startBot({
     }
 
     if (!event.channel) {
+      // This shouldn't happen.
       return;
     }
 
