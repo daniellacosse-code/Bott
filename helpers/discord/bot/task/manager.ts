@@ -121,8 +121,13 @@ export class TaskManager {
             newTask.nonce,
           );
 
-          bucket.current = undefined;
-          bucket.remainingSwaps = bucket.config.maximumSequentialSwaps;
+          // Only modify the bucket's state if this task (newTask) is still
+          // the one considered current. This prevents a task that was swapped out
+          // from incorrectly clearing the state of the task that replaced it.
+          if (bucket.current === newTask) {
+            bucket.current = undefined;
+            bucket.remainingSwaps = bucket.config.maximumSequentialSwaps;
+          }
 
           this.flushTasks();
         });
