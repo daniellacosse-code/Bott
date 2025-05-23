@@ -16,8 +16,8 @@ import { addEvents, type BottEvent, BottEventType } from "@bott/data";
 
 import { TaskManager } from "./task/manager.ts";
 import { createErrorEmbed } from "../embed/error.ts";
-import { command2Json } from "./event/command.ts";
-import { message2BottEvent } from "./event/message.ts";
+import { getCommandBottEvent, getCommandJson } from "./event/command.ts";
+import { getMessageBottEvent } from "./message/event.ts";
 
 type BotOptions = {
   commands?: Command[];
@@ -112,7 +112,7 @@ export async function startBot({
 
       try {
         for (const [_, message] of await channel.messages.fetch()) {
-          events.push(await message2Event(message));
+          events.push(await getMessageBottEvent(message));
         }
       } catch (_) {
         // Likely don't have access to this channel
@@ -135,7 +135,9 @@ export async function startBot({
       return;
     }
 
-    const event: BottEvent = await message2BottEvent(message as Message<true>);
+    const event: BottEvent = await getMessageBottEvent(
+      message as Message<true>,
+    );
 
     console.log(
       "[DEBUG] Message event:",
@@ -176,7 +178,7 @@ export async function startBot({
     }
 
     if (reaction.message.content) {
-      event.parent = await message2BottEvent(
+      event.parent = await getMessageBottEvent(
         reaction.message as Message<true>,
       );
     }
@@ -206,7 +208,7 @@ export async function startBot({
     try {
       responseEvent = await commands[interaction.commandName]?.command.call(
         _makeSelf(interaction.channel! as GuildTextBasedChannel),
-        await commandToEvent(interaction),
+        await getCommandBottEvent(interaction),
       );
     } catch (error) {
       await interaction.editReply({
@@ -225,7 +227,7 @@ export async function startBot({
   // Sync commands with discord origin via their custom http client 🙄
   const body = [];
   for (const command of commands) {
-    body.push(command2Json(command));
+    body.push(getCommandJson(command));
   }
 
   await new REST({ version: "10" }).setToken(token).put(

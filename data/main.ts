@@ -15,3 +15,5 @@ export {
   getEvents,
 } from "./model/events.ts";
 export { initClient } from "./client/commit.ts";
+
+export { writeFileSystem } from "./filesystem/write.ts";

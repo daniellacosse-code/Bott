@@ -1,8 +1,11 @@
 import { PersonGeneration, SafetyFilterLevel } from "npm:@google/genai";
 import { decodeBase64 } from "jsr:@std/encoding";
 
+import { BottFileMimetypes, writeFileSystem } from "@bott/data";
+
 import _gemini from "../client.ts";
 import type { FileGenerator } from "./types.ts";
+import { getPromptSlug } from "../prompt.ts";
 
 export const generatePhotoFile: FileGenerator = async (prompt: string, {
   model = "imagen-3.0-generate-002",
@@ -41,8 +44,14 @@ export const generatePhotoFile: FileGenerator = async (prompt: string, {
     throw new Error("No image bytes");
   }
 
+  const fileName = `${getPromptSlug(prompt)}.png`;
+  const fileData = decodeBase64(imageData.image.imageBytes);
+
   return {
     id: crypto.randomUUID(),
-    data: decodeBase64(imageData.image.imageBytes),
+    data: fileData,
+    name: fileName,
+    url: writeFileSystem(fileName, fileData),
+    mimetype: BottFileMimetypes.PNG,
   };
 };

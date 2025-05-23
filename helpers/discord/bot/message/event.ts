@@ -5,10 +5,10 @@ import {
   BottEventType,
   type BottFile,
   BottFileMimetypes,
-  fetchFileUrl,
+  getFileUrl,
 } from "@bott/data";
 
-export const message2BottEvent = async (
+export const getMessageBottEvent = async (
   message: Message<true>,
 ): Promise<BottEvent> => {
   const event: BottEvent = {
@@ -42,7 +42,7 @@ export const message2BottEvent = async (
     let parentMessage: BottEvent | undefined;
 
     try {
-      parentMessage = await message2BottEvent(
+      parentMessage = await getMessageBottEvent(
         await message.channel.messages.fetch(
           message.reference.messageId,
         ),
@@ -64,7 +64,7 @@ export const message2BottEvent = async (
             return Promise.resolve(null);
           }
 
-          return fetchFileUrl(new URL(attachment.url)) as BottFile;
+          return getFileUrl(new URL(attachment.url));
         },
       );
 

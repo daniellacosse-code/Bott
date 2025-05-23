@@ -1,12 +1,7 @@
-import { BottFileMimetypes } from "@bott/data";
+import { BottFileMimetypes, writeFileSystem } from "@bott/data";
 import _gemini from "../client.ts";
 import type { FileGenerator } from "./types.ts";
-import {
-  prompt2fileName,
-  STORAGE_BUCKET_URL,
-  TEXT_GEN_FILE_PATH,
-} from "../../../data/filesystem/constants.ts";
-import { join } from "node:path";
+import { getPromptSlug } from "../prompt.ts";
 
 export const generateTextFile: FileGenerator = async (prompt: string, {
   model = "gemini-2.5-pro-preview-05-06",
@@ -40,17 +35,13 @@ export const generateTextFile: FileGenerator = async (prompt: string, {
   }
 
   const textData = new TextEncoder().encode(sanitizedResponse.text);
-  const fileName = `${prompt2fileName(prompt)}.txt`;
-
-  if (TEXT_GEN_FILE_PATH && Deno.statSync(TEXT_GEN_FILE_PATH).isDirectory) {
-    Deno.writeFileSync(join(TEXT_GEN_FILE_PATH, fileName), textData);
-  }
+  const fileName = `${getPromptSlug(prompt)}.txt`;
 
   return {
     id: crypto.randomUUID(),
     data: textData,
     name: fileName,
-    url: new URL(`${STORAGE_BUCKET_URL}/gen/text/${fileName}`),
+    url: writeFileSystem(fileName, textData),
     mimetype: BottFileMimetypes.TXT,
   };
 };

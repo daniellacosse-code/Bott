@@ -71,28 +71,3 @@ export const getAddFilesSql = (
     parent_id = excluded.parent_id,
     parent_type = excluded.parent_type`;
 };
-
-export const readFileUrl = async (
-  url: URL,
-): Promise<Partial<BottFile>> => {
-  const response = await fetch(url);
-
-  const mimetype = response.headers.get("content-type");
-
-  if (!mimetype || !(mimetype in BottFileMimetypes)) {
-    throw new TypeError(`Invalid mimetype: ${mimetype}`);
-  }
-
-  const data = await response.arrayBuffer();
-
-  return {
-    data: new Uint8Array(data),
-    mimetype: mimetype as BottFileMimetypes,
-    name: url.pathname.split("/").pop()!,
-    url,
-  };
-};
-
-// export const writeFileData = async (
-//   file: BottFile,
-// ) =>

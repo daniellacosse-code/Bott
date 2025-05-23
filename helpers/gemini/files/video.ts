@@ -4,8 +4,11 @@ import {
 } from "npm:@google/genai";
 import { decodeBase64 } from "jsr:@std/encoding";
 
+import { BottFileMimetypes, writeFileSystem } from "@bott/data";
+
 import _gemini from "../client.ts";
 import type { FileGenerator } from "./types.ts";
+import { getPromptSlug } from "../prompt.ts";
 
 function doVideoJob(
   job: GenerateVideosOperation,
@@ -76,8 +79,14 @@ export const generateVideoFile: FileGenerator = async (
     throw new Error("No video bytes");
   }
 
+  const fileName = `${getPromptSlug(prompt)}.mp4`;
+  const fileData = decodeBase64(videoData.video.videoBytes);
+
   return {
     id: crypto.randomUUID(),
-    data: decodeBase64(videoData.video.videoBytes),
+    data: fileData,
+    name: fileName,
+    url: writeFileSystem(fileName, fileData),
+    mimetype: BottFileMimetypes.MP4,
   };
 };

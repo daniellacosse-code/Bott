@@ -1,5 +1,9 @@
 import { decodeBase64 } from "jsr:@std/encoding";
+
+import { BottFileMimetypes, writeFileSystem } from "@bott/data";
+
 import type { FileGenerator } from "./types.ts";
+import { getPromptSlug } from "../prompt.ts";
 
 const GOOGLE_PROJECT_LOCATION = Deno.env.get("GOOGLE_PROJECT_LOCATION") ??
   "us-central1";
@@ -31,8 +35,14 @@ export const generateMusicFile: FileGenerator = async (
 
   const { predictions } = await response.json();
 
+  const fileName = `${getPromptSlug(prompt)}.wav`;
+  const fileData = decodeBase64(predictions[0].bytesBase64Encoded);
+
   return {
     id: crypto.randomUUID(),
-    data: decodeBase64(predictions[0].bytesBase64Encoded),
+    data: fileData,
+    name: fileName,
+    url: writeFileSystem(fileName, fileData),
+    mimetype: BottFileMimetypes.WAV,
   };
 };

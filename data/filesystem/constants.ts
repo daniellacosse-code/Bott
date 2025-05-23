@@ -11,6 +11,3 @@ export const TEXT_GEN_FILE_PATH = join(ROOT_GEN_FILE_PATH, "text");
 
 export const STORAGE_BUCKET_URL = Deno.env.get("STORAGE_BUCKET_URL") ??
   `file://${ROOT_FILE_PATH}`;
-
-export const prompt2fileName = (prompt: string) =>
-  prompt.replaceAll(/\s+/g, "-").slice(0, 20);

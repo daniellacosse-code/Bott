@@ -3,7 +3,6 @@ import type { Content } from "npm:@google/genai";
 import {
   type BottChannel,
   type BottEvent,
-  BottEventType,
   type BottUser,
   getEvents,
 } from "@bott/data";

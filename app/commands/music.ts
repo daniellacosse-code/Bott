@@ -1,23 +1,22 @@
-import {
-  type CommandObject,
-  CommandOptionType,
-  createTask,
-} from "@bott/discord";
+import { CommandOptionType, createCommand, createTask } from "@bott/discord";
 import { generateMusicFile } from "@bott/gemini";
 import { RATE_LIMIT_MUSIC, RATE_LIMIT_WINDOW_MS } from "../constants.ts";
 
-export const music: CommandObject = {
-  description:
-    `Ask @Bott to generate music: you can generate ${RATE_LIMIT_MUSIC} songs a month. @Bott won't generate music containing lyrics.`,
-  options: [{
-    name: "prompt",
-    type: CommandOptionType.STRING,
-    description: "A description of the music you want to generate.",
-    required: true,
-  }],
-  command(commandEvent) {
+export const music = createCommand<{ prompt: string }>(
+  {
+    name: "music",
+    description:
+      `Ask @Bott to generate music: you can generate ${RATE_LIMIT_MUSIC} songs a month. @Bott won't generate music containing lyrics.`,
+    options: [{
+      name: "prompt",
+      type: CommandOptionType.STRING,
+      description: "A description of the music you want to generate.",
+      required: true,
+    }],
+  },
+  (commandEvent) => {
     const taskBucketId = `music-${commandEvent.user?.id}`;
-    const prompt = commandEvent.details.prompt;
+    const prompt = commandEvent.details.options.prompt;
 
     console.info(`[INFO] Recieved video prompt "${prompt}".`);
 
@@ -56,4 +55,4 @@ export const music: CommandObject = {
       );
     });
   },
-};
+);
