@@ -1,3 +1,7 @@
+import type { BottEvent } from "@bott/data";
+import { BottEventType } from "@bott/data";
+import type { ChatInputCommandInteraction } from "npm:discord.js";
+
 export function getCommandBottEvent(
   interaction: ChatInputCommandInteraction,
 ): BottEvent<{ name: string; prompt: string }> {
@@ -6,7 +10,7 @@ export function getCommandBottEvent(
     type: BottEventType.REQUEST,
     details: {
       name: interaction.commandName,
-      prompt: interaction.get("prompt")?.value,
+      prompt: interaction.command?.options.get("prompt")?.value as string,
     },
     user: {
       id: interaction.user.id,

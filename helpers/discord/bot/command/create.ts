@@ -1,11 +1,5 @@
-import {
-  type ChatInputCommandInteraction,
-  SlashCommandBuilder,
-} from "npm:discord.js";
-import { type BottEvent, BottEventType } from "@bott/data";
+import type { BottEvent } from "@bott/data";
 import type { BotContext } from "../types.ts";
-
-const COMMAND_DESCRIPTION_LIMIT = 100;
 
 export type CommandEvent<O extends Record<string, unknown> = {}> = BottEvent<
   { name: string; options: O }

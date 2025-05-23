@@ -7,17 +7,19 @@ import {
   GatewayIntentBits,
   type GuildTextBasedChannel,
   type Message,
-  type MessageReaction,
   REST,
   Routes,
 } from "npm:discord.js";
 
 import { addEvents, type BottEvent, BottEventType } from "@bott/data";
 
-import { TaskManager } from "./task/manager.ts";
 import { createErrorEmbed } from "../embed/error.ts";
-import { getCommandBottEvent, getCommandJson } from "./event/command.ts";
+import { getCommandBottEvent } from "./command/event.ts";
+import { getCommandJson } from "./command/json.ts";
 import { getMessageBottEvent } from "./message/event.ts";
+import { TaskManager } from "./task/manager.ts";
+import type { BotContext } from "./types.ts";
+import type { Command } from "./command/create.ts";
 
 type BotOptions = {
   commands?: Command[];
@@ -25,16 +27,6 @@ type BotOptions = {
   identityToken: string;
   intents?: GatewayIntentBits[];
   mount?: (this: BotContext) => void;
-};
-
-type BotContext = {
-  user: BottUser;
-  send: (
-    event: BottEvent,
-  ) => Promise<Message<true> | MessageReaction | undefined>;
-  startTyping: () => Promise<void>;
-  taskManager: TaskManager;
-  wpm: number;
 };
 
 export async function startBot({
@@ -201,26 +193,45 @@ export async function startBot({
       return;
     }
 
+    const command = commands.find(({ name }) =>
+      interaction.commandName === name
+    );
+
+    if (!command) {
+      return;
+    }
     await interaction.deferReply();
 
     let responseEvent;
 
     try {
-      responseEvent = await commands[interaction.commandName]?.command.call(
+      responseEvent = await command.call(
         _makeSelf(interaction.channel! as GuildTextBasedChannel),
         await getCommandBottEvent(interaction),
       );
     } catch (error) {
-      await interaction.editReply({
+      return interaction.editReply({
         embeds: [createErrorEmbed(error as Error)],
       });
     }
 
+    if (!responseEvent) {
+      return;
+    }
+
+    const files = [];
+
+    for (const file of responseEvent.files || []) {
+      if (!file.data) {
+        continue;
+      }
+
+      files.push(new AttachmentBuilder(Buffer.from(file.data)));
+    }
+
     interaction.followUp({
-      content: responseEvent?.details.content,
-      files: (responseEvent?.files || []).map((file) =>
-        new AttachmentBuilder(Buffer.from(file.data))
-      ),
+      content: responseEvent.details.content,
+      files,
     });
   });
 

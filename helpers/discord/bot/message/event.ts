@@ -5,7 +5,7 @@ import {
   BottEventType,
   type BottFile,
   BottFileMimetypes,
-  getFileUrl,
+  readFileSystem,
 } from "@bott/data";
 
 export const getMessageBottEvent = async (
@@ -64,7 +64,7 @@ export const getMessageBottEvent = async (
             return Promise.resolve(null);
           }
 
-          return getFileUrl(new URL(attachment.url));
+          return readFileSystem(new URL(attachment.url));
         },
       );
 
