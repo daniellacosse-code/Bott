@@ -2,7 +2,7 @@ import type { Message } from "npm:discord.js";
 
 import { type BottEvent, BottEventType, BottFileMimetypes } from "@bott/data";
 
-export const getMessageBottEvent = async (
+export const getMessageEvent = async (
   message: Message<true>,
 ): Promise<BottEvent> => {
   const event: BottEvent = {
@@ -36,7 +36,7 @@ export const getMessageBottEvent = async (
     let parentMessage: BottEvent | undefined;
 
     try {
-      parentMessage = await getMessageBottEvent(
+      parentMessage = await getMessageEvent(
         await message.channel.messages.fetch(
           message.reference.messageId,
         ),
@@ -66,7 +66,7 @@ export const getMessageBottEvent = async (
           name: attachment.name,
           url: new URL(attachment.url),
           data: new Uint8Array(await fileResponse.arrayBuffer()),
-          mimetype: attachment.contentType as BottFileMimetypes,
+          type: attachment.contentType as BottFileMimetypes,
         });
       }
     }

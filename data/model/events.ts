@@ -35,7 +35,7 @@ export const eventsTableSql = sql`
     type varchar(16) not null,
     details text,
     parent_id varchar(36),
-    channel_id varchar(36), 
+    channel_id varchar(36),
     user_id varchar(36),
     timestamp datetime not null,
     foreign key(parent_id) references events(id),
@@ -142,7 +142,7 @@ export const getEvents = async (
         s.id as s_id, s.name as s_name, s.description as s_description, -- space
         u.id as u_id, u.name as u_name, -- user
         p.id as p_id, -- parent event
-        f.id as f_id, f.name as f_name, f.description as f_description, f.mimetype as f_mimetype, f.data as f_data, f.url as f_url -- file
+        f.id as f_id, f.name as f_name, f.description as f_description, f.type as f_type, f.data as f_data, f.url as f_url -- file
       from
         events e
       left join
@@ -174,7 +174,7 @@ export const getEvents = async (
       id: context.f_id,
       name: context.f_name,
       description: context.f_description,
-      mimetype: context.f_mimetype,
+      type: context.f_type,
       data: new Uint8Array(await fileResponse.arrayBuffer()),
       url: new URL(context.f_url),
     };

@@ -5,8 +5,7 @@ export { type BottChannel } from "./model/channels.ts";
 export { type BottUser } from "./model/users.ts";
 export {
   type BottFile,
-  BottFileExtensionMap,
-  BottFileMimetypes,
+  BottFileType as BottFileMimetypes,
 } from "./model/files.ts";
 export {
   addEvents,

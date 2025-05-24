@@ -14,9 +14,9 @@ import {
 import { addEvents, type BottEvent, BottEventType } from "@bott/data";
 
 import { createErrorEmbed } from "../embed/error.ts";
-import { getCommandBottEvent } from "./command/event.ts";
+import { getCommandRequestEvent } from "./command/request.ts";
 import { getCommandJson } from "./command/json.ts";
-import { getMessageBottEvent } from "./message/event.ts";
+import { getMessageEvent } from "./message/event.ts";
 import { TaskManager } from "./task/manager.ts";
 import type { BotContext } from "./types.ts";
 import type { Command } from "./command/create.ts";
@@ -104,7 +104,7 @@ export async function startBot<O extends Record<string, unknown> = {}>({
 
       try {
         for (const [_, message] of await channel.messages.fetch()) {
-          events.push(await getMessageBottEvent(message));
+          events.push(await getMessageEvent(message));
         }
       } catch (_) {
         // Likely don't have access to this channel
@@ -127,7 +127,7 @@ export async function startBot<O extends Record<string, unknown> = {}>({
       return;
     }
 
-    const event: BottEvent = await getMessageBottEvent(
+    const event: BottEvent = await getMessageEvent(
       message as Message<true>,
     );
 
@@ -170,7 +170,7 @@ export async function startBot<O extends Record<string, unknown> = {}>({
     }
 
     if (reaction.message.content) {
-      event.parent = await getMessageBottEvent(
+      event.parent = await getMessageEvent(
         reaction.message as Message<true>,
       );
     }
@@ -205,7 +205,7 @@ export async function startBot<O extends Record<string, unknown> = {}>({
     let responseEvent;
 
     try {
-      const requestEvent = await getCommandBottEvent<O>(interaction);
+      const requestEvent = await getCommandRequestEvent<O>(interaction);
 
       addEvents(requestEvent);
 
@@ -234,8 +234,8 @@ export async function startBot<O extends Record<string, unknown> = {}>({
     }
 
     interaction.followUp({
-      content: responseEvent.details.content || undefined, // Use content if present
-      embeds: responseEvent.details.embeds, // Pass embeds if present
+      content: responseEvent.details.content || undefined,
+      embeds: responseEvent.details.embeds,
       files,
     });
 

@@ -28,7 +28,6 @@ export async function* respondEvents(
   inputEvents: BottEvent<object>[],
   { model = "gemini-2.5-pro-preview-05-06", abortSignal, context }:
     GeminiResponseContext,
-  // Output events have specific details and type
 ): AsyncGenerator<
   BottEvent<
     { content: string },
@@ -117,7 +116,7 @@ const transformBottEventToContent = async (
 
       content.parts!.push({
         inlineData: {
-          mimeType: file.mimetype,
+          mimeType: file.type,
           data: encodeBase64(fileData),
         },
       });

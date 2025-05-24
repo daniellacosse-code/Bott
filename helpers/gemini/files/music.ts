@@ -44,6 +44,6 @@ export const generateMusicFile: FileGenerator = async (
     name: fileName,
     description: prompt,
     url: getGeneratedFileUrl(fileName),
-    mimetype: BottFileMimetypes.WAV,
+    type: BottFileMimetypes.WAV,
   };
 };

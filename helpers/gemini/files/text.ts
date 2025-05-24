@@ -43,6 +43,6 @@ export const generateTextFile: FileGenerator = async (prompt: string, {
     name: fileName,
     description: prompt,
     url: getGeneratedFileUrl(fileName),
-    mimetype: BottFileMimetypes.TXT,
+    type: BottFileMimetypes.TXT,
   };
 };

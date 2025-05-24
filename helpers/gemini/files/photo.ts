@@ -53,6 +53,6 @@ export const generatePhotoFile: FileGenerator = async (prompt: string, {
     name: fileName,
     description: prompt,
     url: getGeneratedFileUrl(fileName),
-    mimetype: BottFileMimetypes.PNG,
+    type: BottFileMimetypes.PNG,
   };
 };

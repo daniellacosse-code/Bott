@@ -88,6 +88,6 @@ export const generateVideoFile: FileGenerator = async (
     name: fileName,
     description: prompt,
     url: getGeneratedFileUrl(fileName),
-    mimetype: BottFileMimetypes.MP4,
+    type: BottFileMimetypes.MP4,
   };
 };
