@@ -9,5 +9,18 @@
     "./helpers/gemini",
     "./helpers/discord",
     "./app"
-  ]
+  ],
+  "fmt": {
+    "options": {
+      "lineWidth": 80,
+      "indentWidth": 2,
+      "singleQuotes": false,
+      "proseWrap": "always",
+      "importOrder": [
+        "@bott/data",
+        "@bott/gemini",
+        "@bott/discord"
+      ]
+    }
+  }
 }
