@@ -18,7 +18,7 @@ export const photo = createCommand<{ prompt: string }>({
   const taskBucketId = `photo-${functionRequestEvent.user?.id}`;
   const prompt = functionRequestEvent.details.options.prompt;
 
-  console.info(`[INFO] Recieved photo prompt "${prompt}".`);
+  console.info(`[INFO] Received photo prompt "${prompt}".`);
 
   if (!this.taskManager.has(taskBucketId)) {
     this.taskManager.add({

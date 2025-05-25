@@ -15,7 +15,7 @@ export const text = createCommand<{ prompt: string }>({
   const taskBucketId = `text-${commandEvent.user?.id}`;
   const prompt = commandEvent.details.options.prompt;
 
-  console.info(`[INFO] Recieved text prompt "${prompt}".`);
+  console.info(`[INFO] Received text prompt "${prompt}".`);
 
   if (!this.taskManager.has(taskBucketId)) {
     this.taskManager.add({

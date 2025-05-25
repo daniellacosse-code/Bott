@@ -20,7 +20,7 @@ export const video = createCommand<{
   const taskBucketId = `video-${commandEvent.user?.id}`;
   const prompt = commandEvent.details.options.prompt;
 
-  console.info(`[INFO] Recieved video prompt "${prompt}".`);
+  console.info(`[INFO] Received video prompt "${prompt}".`);
 
   if (!this.taskManager.has(taskBucketId)) {
     this.taskManager.add({
