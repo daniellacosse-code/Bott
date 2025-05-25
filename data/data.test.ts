@@ -5,7 +5,7 @@ import { setSchema } from "./model/schema.ts";
 import { initDatabase } from "./main.ts";
 import { BottFileType } from "./model/files.ts";
 
-Deno.test("database smoke test", async () => {
+Deno.test("Database - smoke test", async () => {
   const tempDbFile = await Deno.makeTempFile();
 
   initDatabase(tempDbFile);

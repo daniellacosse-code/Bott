@@ -1,4 +1,4 @@
-import { resolve } from "jsr:@std/path/resolve";
+import { resolve } from "jsr:@std/path";
 
 const FILE_SYSTEM_ROOT = Deno.env.get("FILE_SYSTEM_ROOT") ?? "output";
 const FILE_SYSTEM_GENERATED_PATH = `${FILE_SYSTEM_ROOT}/generated`;

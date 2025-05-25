@@ -1,6 +1,6 @@
 import { decodeBase64 } from "jsr:@std/encoding";
 
-import { BottFileMimetypes } from "@bott/data";
+import { BottFileType } from "@bott/data";
 
 import type { FileGenerator } from "./types.ts";
 import { getFileNameFromDescription, getGeneratedFileUrl } from "./url.ts";
@@ -44,6 +44,6 @@ export const generateMusicFile: FileGenerator = async (
     name: fileName,
     description: prompt,
     url: getGeneratedFileUrl(fileName),
-    type: BottFileMimetypes.WAV,
+    type: BottFileType.WAV,
   };
 };
