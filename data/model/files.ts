@@ -13,10 +13,13 @@ export interface BottFile {
 }
 
 export enum BottFileType {
-  WAV = "audio/wav",
-  PNG = "image/png",
+  GIF = "image/gif",
+  HTML = "text/html",
   MP4 = "video/mp4",
+  PDF = "application/pdf",
+  PNG = "image/png",
   TXT = "text/plain",
+  WAV = "audio/wav",
 }
 
 export const filesTableSql = sql`

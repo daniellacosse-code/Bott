@@ -1,6 +1,9 @@
 import type { Message } from "npm:discord.js";
 
-import { type BottEvent, BottEventType, BottFileMimetypes } from "@bott/data";
+import { type BottEvent, BottEventType, BottFileType } from "@bott/data";
+
+const URL_REGEX =
+  /(?:(?:https?|ftp):\/\/|\b(?:[a-z\d]+\.))(?:(?:[^\s()<>]+|\((?:[^\s()<>]+|(?:\([^\s()<>]+\)))?\))+(?:\((?:[^\s()<>]+|(?:\(?:[^\s()<>]+\)))?\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))?/gi;
 
 export const getMessageEvent = async (
   message: Message<true>,
@@ -53,7 +56,7 @@ export const getMessageEvent = async (
       for (const attachment of message.attachments.values()) {
         if (
           !attachment.contentType ||
-          !(attachment.contentType in BottFileMimetypes)
+          !(attachment.contentType in BottFileType)
         ) {
           continue;
         }
@@ -66,7 +69,40 @@ export const getMessageEvent = async (
           name: attachment.name,
           url: new URL(attachment.url),
           data: new Uint8Array(await fileResponse.arrayBuffer()),
-          type: attachment.contentType as BottFileMimetypes,
+          type: attachment.contentType as BottFileType,
+        });
+      }
+    }
+
+    if (URL_REGEX.test(event.details.content)) {
+      event.files ??= [];
+
+      for (
+        const urlString of new Set(...event.details.content.matchAll(URL_REGEX))
+      ) {
+        const url = new URL(urlString);
+
+        let urlResponse, contentType;
+        try {
+          urlResponse = await fetch(url);
+          contentType = urlResponse.headers.get("content-type")?.split(
+            ";",
+          ).find((part) => part in BottFileType);
+        } catch (_) {
+          // Can't fetch this, continue.
+          continue;
+        }
+
+        if (!contentType) {
+          continue;
+        }
+
+        event.files.push({
+          id: crypto.randomUUID(),
+          name: url.pathname.split("/").at(-1) ?? "",
+          url,
+          data: new Uint8Array(await urlResponse.arrayBuffer()),
+          type: contentType as BottFileType,
         });
       }
     }
