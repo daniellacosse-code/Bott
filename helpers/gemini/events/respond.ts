@@ -13,7 +13,6 @@ import {
 import taskInstructions from "./instructions.ts";
 import { outputGenerator, outputSchema } from "./output.ts";
 import gemini from "../client.ts";
-import { countTokens } from "./tokens.ts";
 
 type GeminiResponseContext = {
   abortSignal: AbortSignal;
@@ -43,7 +42,6 @@ export async function* respondEvents(
 
   // We only want the model to respond to the most recent user messages,
   // since the model's last response
-  let totalTokens = 0;
   while (pointer--) {
     const event = {
       ...inputEvents[pointer],
@@ -62,22 +60,6 @@ export async function* respondEvents(
       ...event,
       details: { ...event.details, seen: goingOverSeenEvents },
     } as BottEvent<object & { seen: boolean }>, modelUserId);
-
-    const contentTokens = await countTokens(event.id, content, {
-      model,
-      abortSignal,
-    });
-
-    console.debug("[DEBUG] Event size:", contentTokens, "tokens");
-
-    if (totalTokens + contentTokens > 1_000_000) {
-      console.warn(
-        `[WARN] Token limit exceeded while constructing gemini input stream. Sending ${contents.length} events.`,
-      );
-      break;
-    }
-
-    totalTokens += contentTokens;
 
     contents.unshift(content);
   }

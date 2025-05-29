@@ -100,19 +100,10 @@ export const getFileFromUrl = async (
 
   let data;
   if (type === BottFileType.HTML) {
-    const result =
+    data = new TextEncoder().encode(
       (await extractFromHtml(await response.text(), url.toString()))
-        ?.content;
-
-    console.debug(
-      "[DEBUG] Extracting HTML content.",
-      "Characters:",
-      result?.length,
-      "Est. words:",
-      result?.split(/\s+/).length,
+        ?.content,
     );
-
-    data = new TextEncoder().encode(result);
   } else {
     data = new Uint8Array(await response.arrayBuffer());
   }
