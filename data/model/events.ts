@@ -2,7 +2,7 @@ import { commit } from "../database/commit.ts";
 import { sql } from "../database/sql.ts";
 import { dirname } from "jsr:@std/path/dirname";
 
-import { type BottFile, getAddFilesSql, getFileFromUrl } from "./files.ts";
+import { type BottFile, getAddFilesSql, getFileFromUrl } from "./files/sql.ts";
 import { type BottChannel, getAddChannelsSql } from "./channels.ts";
 import { type BottSpace, getAddSpacesSql } from "./spaces.ts";
 import { type BottUser, getAddUsersSql } from "./users.ts";

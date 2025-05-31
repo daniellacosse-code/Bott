@@ -1,5 +1,5 @@
-import { sql } from "../database/sql.ts";
-import type { BottEvent } from "../main.ts";
+import { sql } from "../../database/sql.ts";
+import type { BottEvent } from "../../main.ts";
 
 export interface BottFile {
   id: string;
@@ -13,12 +13,12 @@ export interface BottFile {
 }
 
 export enum BottFileType {
-  GIF = "image/gif",
+  // GIF = "image/gif",
   HTML = "text/html",
   MP4 = "video/mp4",
-  PDF = "application/pdf",
+  // PDF = "application/pdf",
   PNG = "image/png",
-  JPEG = "image/jpeg",
+  // JPEG = "image/jpeg",
   TXT = "text/plain",
   WAV = "audio/wav",
 }

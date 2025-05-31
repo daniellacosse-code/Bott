@@ -1,7 +1,7 @@
 import { commit } from "../database/commit.ts";
 import { channelsTableSql } from "./channels.ts";
 import { eventsTableSql } from "./events.ts";
-import { filesTableSql } from "./files.ts";
+import { filesTableSql } from "./files/sql.ts";
 import { spacesTableSql } from "./spaces.ts";
 import { usersTableSql } from "./users.ts";
 
