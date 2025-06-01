@@ -6,6 +6,7 @@ import { type BottAsset, BottAssetType } from "@bott/model";
 
 import { SupportedRawFileType } from "./types.ts";
 import { prepareHtml } from "./prepare/html.ts";
+import { prepareStaticImageAsJpeg } from "./prepare/ffmpeg.ts";
 
 export const _getResponseContentType = (response: Response): string => {
   const contentTypeHeader = response.headers.get("content-type");
@@ -30,6 +31,10 @@ export const cacheAsset = async (source: URL): Promise<BottAsset> => {
   switch (sourceType) {
     case SupportedRawFileType.HTML:
       [resultData, resultType] = await prepareHtml(sourceData);
+      break;
+    case SupportedRawFileType.PNG:
+    case SupportedRawFileType.JPEG:
+      [resultData, resultType] = await prepareStaticImageAsJpeg(sourceData);
       break;
     default:
       throw new Error(`Unsupported source type: ${sourceType}`);
