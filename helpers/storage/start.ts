@@ -14,8 +14,8 @@ export const startStorage = (
   root: string,
   { assetSizeCautionBytes = 100_000 } = {},
 ) => {
-  // Create assets folder:
-  const assetRoot = join(root, "assets");
+  // Create asset cache folder:
+  const assetRoot = join(root, "cache");
 
   Deno.mkdirSync(assetRoot, { recursive: true });
 

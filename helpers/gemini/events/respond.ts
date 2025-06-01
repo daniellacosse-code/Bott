@@ -14,6 +14,10 @@ import taskInstructions from "./instructions.ts";
 import { outputGenerator, outputSchema } from "./output.ts";
 import gemini from "../client.ts";
 
+// TODO: constants
+const CONTEXT_LIMIT__EVENT_ASSET_TOKENS = 500_000;
+const CONTEXT_LIMIT__EVENT_COUNT = 2000;
+
 type GeminiResponseContext = {
   abortSignal: AbortSignal;
   context: {
@@ -41,18 +45,30 @@ export async function* respondEvents(
 
   // We only want the model to respond to the most recent user messages,
   // since the model's last response
+  let estimatedTokens = 0;
   while (pointer--) {
     const event = {
       ...inputEvents[pointer],
       details: { ...inputEvents[pointer].details },
     };
 
-    if (event.user?.id === modelUserId) {
-      goingOverSeenEvents = true;
+    // Determine if this event was from the model itself:
+    if (event.user?.id === modelUserId) goingOverSeenEvents = true;
+
+    // Prune old, stale assets that bloat the context window:
+    if (
+      goingOverSeenEvents && estimatedTokens > CONTEXT_LIMIT__EVENT_ASSET_TOKENS
+    ) {
+      delete event.assets;
+    } else {
+      for (const asset of event.assets ?? []) {
+        estimatedTokens += asset.data.byteLength;
+      }
     }
 
-    if (goingOverSeenEvents) {
-      delete event.assets;
+    // Remove parent assets from events that the model has already seen:
+    if (event.parent) {
+      delete event.parent.assets;
     }
 
     const content = transformBottEventToContent({
@@ -61,6 +77,10 @@ export async function* respondEvents(
     } as BottEvent<object & { seen: boolean }>, modelUserId);
 
     contents.unshift(content);
+
+    if (contents.length >= CONTEXT_LIMIT__EVENT_COUNT) {
+      break;
+    }
   }
 
   if (contents.length === 0) {
