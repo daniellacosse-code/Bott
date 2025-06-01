@@ -14,7 +14,7 @@ export const getEvents = async (
         s.id as s_id, s.name as s_name, s.description as s_description, -- space
         u.id as u_id, u.name as u_name, -- user
         p.id as p_id, -- parent event
-        f.id as f_id, f.path as f_path, f.type as f_type -- file
+        a.id as a_id, a.path as a_path, a.type as a_type -- asset
       from
         events e
       left join
@@ -26,7 +26,7 @@ export const getEvents = async (
       left join
         users u on e.user_id = u.id
       left join
-        files f on f.parent_id = e.id and f.parent_type = 'event'
+        assets a on a.parent_id = e.id and a.parent_type = 'event'
       where
         e.id in (${ids})
       order by e.timestamp asc`,
@@ -48,15 +48,15 @@ export const getEvents = async (
     } of result.reads
   ) {
     // add file to existing event
-    if (events.has(id) && context.f_id) {
+    if (events.has(id) && context.a_id) {
       const event = events.get(id)!;
 
       event.assets ??= [];
       event.assets.push({
-        id: context.f_id,
-        path: context.f_path,
-        type: context.f_type as BottAssetType,
-        data: Deno.readFileSync(context.f_path),
+        id: context.a_id,
+        path: context.a_path,
+        type: context.a_type as BottAssetType,
+        data: Deno.readFileSync(context.a_path),
       });
 
       continue;
@@ -93,12 +93,12 @@ export const getEvents = async (
       event.parent = (await getEvents(context.p_id))[0];
     }
 
-    if (context.f_id) {
+    if (context.a_id) {
       event.assets = [{
-        id: context.f_id,
-        path: context.f_path,
-        type: context.f_type as BottAssetType,
-        data: Deno.readFileSync(context.f_path),
+        id: context.a_id,
+        path: context.a_path,
+        type: context.a_type as BottAssetType,
+        data: Deno.readFileSync(context.a_path),
       }];
     }
 

@@ -1,10 +1,10 @@
 import { assertEquals, assertExists } from "jsr:@std/assert";
 
-import { BottEventType } from "@bott/model";
+import { type BottAsset, BottAssetType, BottEventType } from "@bott/model";
 
 import { addEvents } from "./data/events/add.ts";
 import { getEvents } from "./data/events/get.ts";
-// import { addAsset } from "./assets/add.ts";
+import { addAsset } from "./assets/add.ts";
 import { prepareHtml } from "./assets/prepare/html.ts";
 import { startStorage } from "./start.ts";
 
@@ -81,38 +81,29 @@ Deno.test("Storage - addEvents, getEvents", async () => {
   assertExists(dbResult.parent.timestamp);
 });
 
-Deno.test("Storage - prepareHtml", async () => {
-  startStorage();
+const htmlInput = `
+  <html>
+    <head>
+      <title>Test Title</title>
+      <link rel="canonical" href="https://example.com/" />
+      <meta name="description" content="Test Description.">
+      <meta name="author" content="Test Author">
+    </head>
+    <body>
+      <article>
+        <h1>Main Heading</h1>
+        <p>This is a paragraph with <strong>bold text</strong> and <em>italic text</em>.</p>
+        <p>Another paragraph.</p>
+        <ul>
+          <li>Item 1</li>
+          <li>Item 2</li>
+        </ul>
+        <pre><code class="language-css">body { color: blue; }</code></pre>
+      </article>
+    </body>
+  </html>`;
 
-  const htmlInput = `
-      <html>
-        <head>
-          <title>Test Title</title>
-          <link rel="canonical" href="https://example.com/" />
-          <meta name="description" content="Test Description.">
-          <meta name="author" content="Test Author">
-        </head>
-        <body>
-          <article>
-            <h1>Main Heading</h1>
-            <p>This is a paragraph with <strong>bold text</strong> and <em>italic text</em>.</p>
-            <p>Another paragraph.</p>
-            <ul>
-              <li>Item 1</li>
-              <li>Item 2</li>
-            </ul>
-            <pre><code class="language-css">body { color: blue; }</code></pre>
-          </article>
-        </body>
-      </html>`;
-  const inputData = new TextEncoder().encode(htmlInput);
-
-  const [resultData] = await prepareHtml(inputData);
-  const resultMarkdown = new TextDecoder().decode(resultData);
-
-  assertEquals(
-    resultMarkdown,
-    `# Test Title
+const expectedMarkdownOutput = `# Test Title
 
 _By: Test Author_
 
@@ -127,16 +118,59 @@ Another paragraph.
 
 \`\`\`
 body { color: blue; }
-\`\`\``,
+\`\`\``;
+
+Deno.test("Storage - prepareHtml", async () => {
+  startStorage();
+
+  const inputData = new TextEncoder().encode(htmlInput);
+
+  const [resultData] = await prepareHtml(inputData);
+  const resultMarkdown = new TextDecoder().decode(resultData);
+
+  assertEquals(
+    resultMarkdown,
+    expectedMarkdownOutput,
   );
 });
 
-Deno.test("Storage - addAsset (TODO)", () => {
+Deno.test("Storage - addAsset", async () => {
   const tempDir = Deno.makeTempDirSync();
-
   startStorage(tempDir);
 
-  // TODO
+  const controller = new AbortController();
+  const asset: BottAsset = await new Promise((resolve) =>
+    Deno.serve(
+      {
+        port: 0,
+        signal: controller.signal,
+        onListen: async ({ hostname, port }) => {
+          const sourceUrl = new URL(
+            `http://${hostname}:${port}/test-asset.html`,
+          );
 
-  Deno.removeSync(tempDir, { recursive: true });
+          try {
+            resolve(await addAsset(sourceUrl));
+          } finally {
+            controller.abort();
+          }
+        },
+      },
+      () =>
+        new Response(htmlInput, {
+          headers: { "content-type": "text/html" },
+        }),
+    )
+  );
+
+  assertExists(asset.id);
+  assertEquals(asset.type, BottAssetType.MD);
+  assertEquals(
+    asset.path,
+    `${BottAssetType.MD}/test-asset.html.md`,
+  );
+  assertEquals(
+    new TextDecoder().decode(asset.data),
+    expectedMarkdownOutput,
+  );
 });

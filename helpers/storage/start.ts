@@ -1,7 +1,9 @@
 import { join } from "jsr:@std/path";
 import { DatabaseSync } from "node:sqlite";
 
-import dbClientSchema from "./data/schema.sql";
+const dbClientSchema = Deno.readTextFileSync(
+  new URL("./data/schema.sql", import.meta.url).pathname,
+);
 
 export let FS_ROOT: string;
 export let FS_ASSET_ROOT: string;
@@ -27,5 +29,5 @@ export const startStorage = (
   );
 
   // Initialize database tables:
-  FS_DB_CLIENT.prepare(dbClientSchema).run();
+  FS_DB_CLIENT.exec(dbClientSchema);
 };

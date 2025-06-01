@@ -19,7 +19,13 @@ const turndownService = new TurndownService({
 export const prepareHtml: AssetDataPreparer = async (data) => {
   const htmlText = new TextDecoder().decode(data);
 
-  const extracted = await extractFromHtml(htmlText) ?? {};
+  const extracted = await extractFromHtml(htmlText, undefined, {
+    contentLengthThreshold: 0,
+  });
+
+  if (!extracted) {
+    throw new Error("No data extracted from HTML.");
+  }
 
   const resultBody = turndownService.turndown(extracted.content ?? "");
   const resultTitle = extracted.title ? `# ${extracted.title}\n\n` : "";

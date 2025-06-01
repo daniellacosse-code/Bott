@@ -25,6 +25,8 @@ export const addAsset = async (source: URL): Promise<BottAsset> => {
   const sourceData = new Uint8Array(await response.arrayBuffer());
   const sourceType = _getResponseContentType(response);
 
+  console.log(new TextDecoder().decode(sourceData), sourceType);
+
   // 2. prepare file of type
   let resultData, resultType;
   switch (sourceType) {
@@ -48,6 +50,7 @@ export const addAsset = async (source: URL): Promise<BottAsset> => {
 
   path += `/${name}`;
 
+  Deno.mkdirSync(join(FS_ASSET_ROOT, resultType), { recursive: true });
   Deno.writeFileSync(join(FS_ASSET_ROOT, path), resultData);
 
   // 4. return BottAsset
