@@ -62,7 +62,7 @@ export const prepareStaticImageAsJpeg: AssetDataPreparer = async (data) => {
     "-pix_fmt",
     "yuvj420p", // Common pixel format for JPEG compatibility
     "-f",
-    "jpeg", // Output format
+    "image2",
     "pipe:1", // Output to stdout
   ];
   return [await _ffmpeg(args, data), BottAssetType.JPEG];

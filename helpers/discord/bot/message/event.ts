@@ -66,7 +66,7 @@ export const getMessageEvent = async (
       try {
         asset = await cacheAsset(new URL(url));
       } catch (error) {
-        console.warn("[WARN] Failed to cache asset:", error);
+        console.warn("[WARN] Failed to cache asset:", (error as Error).message);
 
         continue;
       }
