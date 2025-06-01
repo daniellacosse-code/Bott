@@ -74,8 +74,6 @@ export async function* respondEvents(
       abortSignal,
       candidateCount: 1,
       systemInstruction: context.identity + taskInstructions,
-      // TODO: Can't use google search w/ structured output.
-      // tools: [{ googleSearch: {} }],
       responseMimeType: "application/json",
       responseSchema: outputSchema,
     },

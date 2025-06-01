@@ -123,7 +123,7 @@ export class TaskManager {
             "[WARN] Task aborted:",
             bucket.name,
             newTask.nonce,
-            { message: error.message },
+            { error },
           );
         })
         .finally(() => {

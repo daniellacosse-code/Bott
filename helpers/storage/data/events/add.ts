@@ -51,20 +51,20 @@ const getAddEventsSql = (...events: AnyBottEvent[]) => {
   `;
 };
 
-const getAddFilesSql = (...files: BottAsset[]) => {
-  if (!files.length) {
+const getAddAssetsSql = (...assets: BottAsset[]) => {
+  if (!assets.length) {
     return;
   }
 
   return sql`
-  insert into files (
+  insert into assets (
     id,
     type,
     path,
     parent_id,
     parent_type
   ) values ${
-    files.map((f) =>
+    assets.map((f) =>
       sql`(${f.id}, ${f.type}, ${f.path}, ${f.parent?.id}, "event")`
     )
   } on conflict(id) do update set
@@ -157,7 +157,7 @@ export const addEvents = (...inputEvents: AnyBottEvent[]) => {
     getAddEventsSql(
       ...topologicallySortEvents(...events.values()),
     ),
-    getAddFilesSql(...assets.values()),
+    getAddAssetsSql(...assets.values()),
   );
 
   if ("error" in results) {

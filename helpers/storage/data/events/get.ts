@@ -1,7 +1,11 @@
-import { commit } from "../commit.ts";
-import { sql } from "../sql.ts";
+import { join } from "jsr:@std/path";
+
+import { FS_ASSET_ROOT } from "../../start.ts";
 
 import type { AnyBottEvent, BottAssetType, BottEventType } from "@bott/model";
+
+import { commit } from "../commit.ts";
+import { sql } from "../sql.ts";
 
 export const getEvents = async (
   ...ids: string[]
@@ -56,7 +60,7 @@ export const getEvents = async (
         id: context.a_id,
         path: context.a_path,
         type: context.a_type as BottAssetType,
-        data: Deno.readFileSync(context.a_path),
+        data: Deno.readFileSync(join(FS_ASSET_ROOT, context.a_path)),
       });
 
       continue;
@@ -98,7 +102,7 @@ export const getEvents = async (
         id: context.a_id,
         path: context.a_path,
         type: context.a_type as BottAssetType,
-        data: Deno.readFileSync(context.a_path),
+        data: Deno.readFileSync(join(FS_ASSET_ROOT, context.a_path)),
       }];
     }
 
