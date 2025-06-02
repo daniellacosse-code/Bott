@@ -1,7 +1,7 @@
 // WIP
 
-import { BottAssetType } from "@bott/model";
-import type { AssetDataPreparer } from "../types.ts";
+import { BottInputFileType } from "@bott/model";
+import type { AssetDataPreparer } from "../../types.ts";
 
 const _ffmpeg = async (
   args: string[],
@@ -65,7 +65,7 @@ export const prepareStaticImageAsJpeg: AssetDataPreparer = async (data) => {
     "image2",
     "pipe:1", // Output to stdout
   ];
-  return [await _ffmpeg(args, data), BottAssetType.JPEG];
+  return [await _ffmpeg(args, data), BottInputFileType.JPEG];
 };
 
 // export const prepareMp4: FileDataTransformer = (data) => {

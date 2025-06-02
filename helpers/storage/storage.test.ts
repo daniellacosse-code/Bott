@@ -1,6 +1,10 @@
 import { assertEquals, assertExists } from "jsr:@std/assert";
 
-import { type BottAsset, BottAssetType, BottEventType } from "@bott/model";
+import {
+  BottEventType,
+  type BottInputFile,
+  BottInputFileType,
+} from "@bott/model";
 
 import { addEvents } from "./data/events/add.ts";
 import { getEvents } from "./data/events/get.ts";
@@ -140,7 +144,7 @@ Deno.test("Storage - cacheAsset", async () => {
   startStorage(tempDir);
 
   const controller = new AbortController();
-  const asset: BottAsset = await new Promise((resolve) =>
+  const asset: BottInputFile = await new Promise((resolve) =>
     Deno.serve(
       {
         port: 0,
@@ -165,7 +169,7 @@ Deno.test("Storage - cacheAsset", async () => {
   );
 
   assertExists(asset.id);
-  assertEquals(asset.type, BottAssetType.MD);
+  assertEquals(asset.type, BottInputFileType.MD);
   assertExists(
     asset.path,
   );

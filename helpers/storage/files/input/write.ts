@@ -1,12 +1,12 @@
 import { join } from "jsr:@std/path";
 
-import { FS_ASSET_ROOT } from "../start.ts";
+import { FS_ASSET_ROOT } from "../../start.ts";
 
-import { type BottAsset, BottAssetType } from "@bott/model";
+import { type BottInputFile, BottInputFileType } from "@bott/model";
 
-import { SupportedRawFileType } from "./types.ts";
-import { prepareHtml } from "./prepare/html.ts";
-import { prepareStaticImageAsJpeg } from "./prepare/ffmpeg.ts";
+import { SupportedRawFileType } from "../types.ts";
+import { prepareHtml } from "../prepare/html.ts";
+import { prepareStaticImageAsJpeg } from "../prepare/ffmpeg.ts";
 
 export const _getResponseContentType = (response: Response): string => {
   const contentTypeHeader = response.headers.get("content-type");
@@ -14,7 +14,9 @@ export const _getResponseContentType = (response: Response): string => {
   return contentTypeHeader.split(";")[0].trim();
 };
 
-export const cacheAsset = async (source: URL): Promise<BottAsset> => {
+export const writeInputFile = async (
+  url: URL,
+): Promise<BottInputFile> => {
   if (!FS_ASSET_ROOT) {
     throw new Error(
       "Storage has not been started: FS_ASSET_ROOT is not defined",
@@ -22,7 +24,7 @@ export const cacheAsset = async (source: URL): Promise<BottAsset> => {
   }
 
   // 1. resolve source URL
-  const response = await fetch(source);
+  const response = await fetch(url);
   const sourceData = new Uint8Array(await response.arrayBuffer());
   const sourceType = _getResponseContentType(response);
 
@@ -42,9 +44,9 @@ export const cacheAsset = async (source: URL): Promise<BottAsset> => {
 
   // 3. write to disk
   let path = resultType as string;
-  let name = source.pathname.split("/").pop() || "index";
+  let name = url.pathname.split("/").pop() || "index";
 
-  for (const [key, value] of Object.entries(BottAssetType)) {
+  for (const [key, value] of Object.entries(BottInputFileType)) {
     if (resultType === value) {
       name += `.${
         Math.random().toString(36).substring(7)
@@ -58,9 +60,9 @@ export const cacheAsset = async (source: URL): Promise<BottAsset> => {
   Deno.mkdirSync(join(FS_ASSET_ROOT, resultType), { recursive: true });
   Deno.writeFileSync(join(FS_ASSET_ROOT, path), resultData);
 
-  // 4. return BottAsset
+  // 4. return BottInputFile
   return {
-    id: crypto.randomUUID(),
+    url,
     path,
     type: resultType,
     data: resultData,

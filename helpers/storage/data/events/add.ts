@@ -1,10 +1,15 @@
-import type {
-  AnyBottEvent,
-  BottAsset,
-  BottChannel,
-  BottSpace,
-  BottUser,
+import {
+  type AnyBottEvent,
+  type BottChannel,
+  type BottInputFile,
+  type BottOutputFile,
+  type BottSpace,
+  type BottUser,
+  isBottInputFile,
 } from "@bott/model";
+
+import { writeInputFile } from "../files/input/write.ts";
+import { writeOutputFile } from "../files/output/write.ts";
 
 import { sql } from "../sql.ts";
 import { commit } from "../commit.ts";
@@ -51,20 +56,43 @@ const getAddEventsSql = (...events: AnyBottEvent[]) => {
   `;
 };
 
-const getAddAssetsSql = (...assets: BottAsset[]) => {
-  if (!assets.length) {
+const getAddInputFilesSql = (...inputs: BottInputFile[]) => {
+  if (!inputs.length) {
     return;
   }
 
   return sql`
-  insert into assets (
+  insert into input_files (
+    url,
+    type,
+    path,
+    parent_id,
+    parent_type
+  ) values ${
+    inputs.map((f) =>
+      sql`(${f.url.toString()}, ${f.type}, ${f.path}, ${f.parent?.id}, "event")`
+    )
+  } on conflict(url) do update set
+    type = excluded.type,
+    path = excluded.path,
+    parent_id = excluded.parent_id,
+    parent_type = excluded.parent_type`;
+};
+
+const getAddOutputFilesSql = (...outputs: BottOutputFile[]) => {
+  if (!outputs.length) {
+    return;
+  }
+
+  return sql`
+  insert into output_files (
     id,
     type,
     path,
     parent_id,
     parent_type
   ) values ${
-    assets.map((f) =>
+    outputs.map((f) =>
       sql`(${f.id}, ${f.type}, ${f.path}, ${f.parent?.id}, "event")`
     )
   } on conflict(id) do update set
@@ -131,7 +159,8 @@ export const addEvents = (...inputEvents: AnyBottEvent[]) => {
   const spaces = new Map<string, BottSpace>();
   const channels = new Map<string, BottChannel>();
   const users = new Map<string, BottUser>();
-  const assets = new Map<string, BottAsset>();
+  const inputFiles = new Map<string, BottInputFile>();
+  const outputFiles = new Map<string, BottOutputFile>();
 
   for (const event of events.values()) {
     if (event.channel) {
@@ -143,9 +172,13 @@ export const addEvents = (...inputEvents: AnyBottEvent[]) => {
       users.set(event.user.id, event.user);
     }
 
-    if (event.assets) {
-      for (const asset of event.assets) {
-        assets.set(asset.id, { ...asset, parent: event });
+    if (event.files) {
+      for (const file of event.files) {
+        if (isBottInputFile(file)) {
+          inputFiles.set(file.url.toString(), { ...file, parent: event });
+        } else {
+          outputFiles.set(file.id, { ...file, parent: event });
+        }
       }
     }
   }
@@ -157,7 +190,8 @@ export const addEvents = (...inputEvents: AnyBottEvent[]) => {
     getAddEventsSql(
       ...topologicallySortEvents(...events.values()),
     ),
-    getAddAssetsSql(...assets.values()),
+    getAddInputFilesSql(...inputFiles.values()),
+    getAddOutputFilesSql(...outputFiles.values()),
   );
 
   if ("error" in results) {

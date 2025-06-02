@@ -1,10 +1,10 @@
 import { extractFromHtml } from "npm:@extractus/article-extractor";
 import TurndownService from "npm:turndown";
 
-import { BottAssetType } from "@bott/model";
+import { BottInputFileType } from "@bott/model";
 
-import { FS_ASSET_SIZE_CAUTION } from "../../start.ts";
-import type { AssetDataPreparer } from "../types.ts";
+import { FS_ASSET_SIZE_CAUTION } from "../../../start.ts";
+import type { AssetDataPreparer } from "../../types.ts";
 
 const turndownService = new TurndownService({
   headingStyle: "atx", // Use # for headings.
@@ -41,5 +41,5 @@ export const prepareHtml: AssetDataPreparer = async (data) => {
       "\n\n...(truncated)";
   }
 
-  return [new TextEncoder().encode(result), BottAssetType.MD];
+  return [new TextEncoder().encode(result), BottInputFileType.MD];
 };

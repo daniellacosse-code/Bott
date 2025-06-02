@@ -1,6 +1,9 @@
 import { decodeBase64 } from "jsr:@std/encoding";
 
-import type { ContentGenerator } from "./types.ts";
+import { BottOutputFileType } from "@bott/model";
+import { createOutputFile } from "@bott/storage";
+
+import type { OutputFileGenerator } from "./types.ts";
 
 const GOOGLE_PROJECT_LOCATION = Deno.env.get("GOOGLE_PROJECT_LOCATION") ??
   "us-central1";
@@ -12,7 +15,7 @@ const GOOGLE_ACCESS_TOKEN = Deno.env.get("GOOGLE_ACCESS_TOKEN") ??
 const VERTEX_API_URL =
   `https://${GOOGLE_PROJECT_LOCATION}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${GOOGLE_PROJECT_LOCATION}/publishers/google/models/lyria-002:predict`;
 
-export const generateMusicContents: ContentGenerator = async (
+export const generateMusicFile: OutputFileGenerator = async (
   prompt,
   { abortSignal } = {},
 ) => {
@@ -32,5 +35,8 @@ export const generateMusicContents: ContentGenerator = async (
 
   const { predictions } = await response.json();
 
-  return decodeBase64(predictions[0].bytesBase64Encoded);
+  return createOutputFile(
+    decodeBase64(predictions[0].bytesBase64Encoded),
+    BottOutputFileType.WAV,
+  );
 };

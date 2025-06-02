@@ -1,4 +1,5 @@
 import type { GoogleGenAI } from "npm:@google/genai";
+import type { BottOutputFile } from "@bott/model";
 
 export type PromptParameters = {
   abortSignal?: AbortSignal;
@@ -9,7 +10,7 @@ export type PromptParameters = {
   characterLimit?: number;
 };
 
-export type ContentGenerator = (
+export type OutputFileGenerator = (
   prompt: string,
   params: PromptParameters,
-) => Promise<Uint8Array>;
+) => Promise<BottOutputFile>;

@@ -5,7 +5,7 @@ import {
 import { decodeBase64 } from "jsr:@std/encoding";
 
 import _gemini from "../client.ts";
-import type { ContentGenerator } from "./types.ts";
+import type { OutputFileGenerator } from "./types.ts";
 
 function doVideoJob(
   job: GenerateVideosOperation,
@@ -28,7 +28,7 @@ function doVideoJob(
   });
 }
 
-export const generateVideoContents: ContentGenerator = async (
+export const generateVideoContents: OutputFileGenerator = async (
   prompt: string,
   { model = "veo-2.0-generate-001", gemini = _gemini, abortSignal } = {},
 ) => {

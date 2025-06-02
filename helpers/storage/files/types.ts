@@ -1,4 +1,4 @@
-import type { BottAssetType } from "@bott/model";
+import type { BottInputFileType } from "@bott/model";
 
 export enum SupportedRawFileType {
   // GIF = "image/gif",
@@ -14,4 +14,4 @@ export enum SupportedRawFileType {
 
 export type AssetDataPreparer = (
   data: Uint8Array,
-) => Promise<[data: Uint8Array, type: BottAssetType]>;
+) => Promise<[data: Uint8Array, type: BottInputFileType]>;

@@ -20,21 +20,35 @@ export interface BottUser {
   name: string;
 }
 
-export enum BottAssetType {
+type AnyObject = Record<string, unknown>;
+
+export enum BottInputFileType {
   MP4 = "video/mp4",
   JPEG = "image/jpeg",
   MD = "text/markdown",
   MP3 = "audio/mp3",
 }
 
-type AnyObject = Record<string, unknown>;
-
-export interface BottAsset {
-  id: string;
-  type: BottAssetType;
+export interface BottInputFile {
+  url: URL;
   data: Uint8Array;
+  type: BottInputFileType;
   path: string;
-  // Just BottEvents for now.
+  parent?: BottEvent<AnyObject>;
+}
+
+export enum BottOutputFileType {
+  PNG = "image/png",
+  MP4 = "video/mp4",
+  WAV = "audio/wav",
+  TXT = "text/plain",
+}
+
+export interface BottOutputFile {
+  id: string;
+  data: Uint8Array;
+  type: BottOutputFileType;
+  path: string;
   parent?: BottEvent<AnyObject>;
 }
 
@@ -56,7 +70,7 @@ export interface BottEvent<
   channel?: BottChannel;
   parent?: BottEvent<AnyObject>;
   user?: BottUser;
-  assets?: BottAsset[];
+  files?: BottInputFile[] | BottOutputFile[];
 }
 
 export type AnyBottEvent = BottEvent<AnyObject>;

@@ -2,4 +2,4 @@
 gcp-key.json
 
 output
-test.db
+!helpers/storage/files/output

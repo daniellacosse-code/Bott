@@ -59,7 +59,7 @@ export const getMessageEvent = async (
   ];
 
   if (urls.length) {
-    event.assets = [];
+    event.files = [];
 
     for (const url of urls) {
       let asset;
@@ -73,7 +73,7 @@ export const getMessageEvent = async (
 
       asset.parent = event;
 
-      event.assets.push(asset);
+      event.files.push(asset);
     }
   }
 

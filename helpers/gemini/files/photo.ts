@@ -2,13 +2,16 @@ import { PersonGeneration, SafetyFilterLevel } from "npm:@google/genai";
 import { decodeBase64 } from "jsr:@std/encoding";
 
 import _gemini from "../client.ts";
-import type { ContentGenerator } from "./types.ts";
+import type { OutputFileGenerator } from "./types.ts";
 
-export const generatePhotoContents: ContentGenerator = async (prompt: string, {
-  model = "imagen-3.0-generate-002",
-  abortSignal,
-  gemini = _gemini,
-} = {}) => {
+export const generatePhotoContents: OutputFileGenerator = async (
+  prompt: string,
+  {
+    model = "imagen-3.0-generate-002",
+    abortSignal,
+    gemini = _gemini,
+  } = {},
+) => {
   const response = await gemini.models.generateImages({
     model,
     prompt,

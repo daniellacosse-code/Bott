@@ -59,16 +59,16 @@ export async function* respondEvents(
     if (
       goingOverSeenEvents && estimatedTokens > CONTEXT_LIMIT__EVENT_ASSET_TOKENS
     ) {
-      delete event.assets;
+      delete event.files;
     } else {
-      for (const asset of event.assets ?? []) {
+      for (const asset of event.files ?? []) {
         estimatedTokens += asset.data.byteLength;
       }
     }
 
     // Remove parent assets from events that the model has already seen:
     if (event.parent) {
-      delete event.parent.assets;
+      delete event.parent.files;
     }
 
     const content = transformBottEventToContent({
@@ -121,7 +121,7 @@ const transformBottEventToContent = (
   event: BottEvent<object & { seen: boolean }>,
   modelUserId: string,
 ): Content => {
-  const { assets, ...eventForStringify } = event;
+  const { files: assets, ...eventForStringify } = event;
 
   const parts: Part[] = [{ text: JSON.stringify(eventForStringify) }];
 

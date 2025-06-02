@@ -227,7 +227,7 @@ export async function startBot<O extends Record<string, unknown> = {}>({
 
     const assets = [];
 
-    for (const asset of responseEvent.assets || []) {
+    for (const asset of responseEvent.files || []) {
       if (!asset.data) {
         continue;
       }

@@ -1,10 +1,13 @@
 import _gemini from "../client.ts";
-import type { ContentGenerator } from "./types.ts";
+import type { OutputFileGenerator } from "./types.ts";
 
-export const generateTextContents: ContentGenerator = async (prompt: string, {
-  model = "gemini-2.5-pro-preview-05-06",
-  gemini = _gemini,
-} = {}) => {
+export const generateTextContents: OutputFileGenerator = async (
+  prompt: string,
+  {
+    model = "gemini-2.5-pro-preview-05-06",
+    gemini = _gemini,
+  } = {},
+) => {
   const response = await gemini.models.generateContent({
     model,
     contents: prompt,
