@@ -12,6 +12,6 @@ export enum SupportedRawFileType {
   // MP3 = "audio/mp3",
 }
 
-export type AssetDataPreparer = (
+export type InputFileDataTransformer = (
   data: Uint8Array,
 ) => Promise<[data: Uint8Array, type: BottInputFileType]>;

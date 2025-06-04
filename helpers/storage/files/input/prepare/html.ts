@@ -4,7 +4,7 @@ import TurndownService from "npm:turndown";
 import { BottInputFileType } from "@bott/model";
 
 import { FS_ASSET_SIZE_CAUTION } from "../../../start.ts";
-import type { AssetDataPreparer } from "../../types.ts";
+import type { InputFileDataTransformer } from "../../types.ts";
 
 const turndownService = new TurndownService({
   headingStyle: "atx", // Use # for headings.
@@ -16,7 +16,7 @@ const turndownService = new TurndownService({
   linkStyle: "inlined",
 });
 
-export const prepareHtml: AssetDataPreparer = async (data) => {
+export const prepareHtml: InputFileDataTransformer = async (data) => {
   const htmlText = new TextDecoder().decode(data);
 
   const extracted = await extractFromHtml(htmlText, undefined, {
