@@ -19,7 +19,7 @@ export const music = createCommand<{ prompt: string }>(
     const taskBucketId = `music-${commandEvent.user?.id}`;
     const prompt = commandEvent.details.options.prompt;
 
-    console.info(`[INFO] Received video prompt "${prompt}".`);
+    console.info(`[INFO] Received music prompt "${prompt}".`);
 
     if (!this.taskManager.has(taskBucketId)) {
       this.taskManager.add({
