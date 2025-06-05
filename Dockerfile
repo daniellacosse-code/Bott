@@ -1,10 +1,17 @@
 FROM denoland/deno:latest
 
-# COPY ./gcp-key.json /etc/gcp/gcp-key.json
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    libmp3lame0 \
+    libx265-199 && \
+    rm -rf /var/lib/apt/lists/*
+
+USER deno
 COPY ./deno.json ./deno.lock* ./
 COPY ./app /app
 COPY ./helpers /helpers
-COPY ./data /data
+COPY ./model /model
 
 EXPOSE 8080
 

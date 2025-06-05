@@ -30,7 +30,17 @@ export class TaskManager {
 
     const bucket = this.buckets.get(name)!;
 
-    if (bucket.config.throttle) {}
+    if (bucket.config.throttle) {
+      const nowMs = Date.now();
+
+      bucket.record = bucket.record.filter((timestamp) =>
+        (timestamp.valueOf() + bucket.config.throttle!.windowMs) > nowMs
+      );
+
+      if (bucket.record.length >= bucket.config.throttle!.limit) {
+        throw new Error("Too many requests");
+      }
+    }
 
     this.buckets.get(name)!.next = task;
 
@@ -105,13 +115,15 @@ export class TaskManager {
         newTask.nonce,
       );
 
+      bucket.record.push(new Date());
+
       newTask(newTask.controller.signal)
         .catch((error: Error) => {
           console.warn(
             "[WARN] Task aborted:",
             bucket.name,
             newTask.nonce,
-            { message: error.message },
+            { error },
           );
         })
         .finally(() => {

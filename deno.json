@@ -1,11 +1,19 @@
 {
+  "fmt": {
+    "indentWidth": 2,
+    "lineWidth": 80,
+    "proseWrap": "always",
+    "semiColons": true,
+    "singleQuote": false
+  },
   "tasks": {
-    "start:app": "cd app && deno task start",
-    "start": "docker build -t bott . && docker run -p 8080:8080 --env-file=.env.production bott",
-    "deploy": "sh ./deploy.sh"
+    "build": "docker build -t bott .",
+    "reset": "rm -rf ./fs_root",
+    "start:app": "deno run --allow-all --env-file=.env.development ./app/main.ts"
   },
   "workspace": [
-    "./data",
+    "./model",
+    "./helpers/storage",
     "./helpers/gemini",
     "./helpers/discord",
     "./app"

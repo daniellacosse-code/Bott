@@ -1,19 +1,17 @@
 import { delay } from "jsr:@std/async/delay";
 
 import {
-  addEvents,
+  addEventsData,
   getEventIdsForChannel,
   getEvents,
-  initClient,
-  setSchema,
-} from "@bott/data";
+  startStorage,
+} from "@bott/storage";
 import { createTask, startBot } from "@bott/discord";
 import { respondEvents } from "@bott/gemini";
 
 import { getIdentity } from "./identity.ts";
 import commands from "./commands/main.ts";
 import {
-  FILE_SYSTEM_DB_PATH,
   FILE_SYSTEM_DEPLOY_NONCE_PATH,
   FILE_SYSTEM_ROOT,
 } from "./constants.ts";
@@ -22,17 +20,9 @@ const MS_IN_MINUTE = 60 * 1000;
 const MAX_TYPING_TIME_MS = 3000;
 const DEFAULT_RESPONSE_SWAPS = 6;
 
-// set up file system
-Deno.mkdirSync(FILE_SYSTEM_ROOT, {
-  recursive: true,
-});
+startStorage(FILE_SYSTEM_ROOT);
 
-// set up db
-initClient(FILE_SYSTEM_DB_PATH);
-
-setSchema();
-
-// set up deploy check
+// Set up deploy check:
 const deployNonce = crypto.randomUUID();
 
 Deno.writeTextFileSync(FILE_SYSTEM_DEPLOY_NONCE_PATH, deployNonce);
@@ -49,13 +39,12 @@ const getCurrentDeployNonce = () => {
   }
 };
 
-// start bot
 startBot({
   commands,
   identityToken: Deno.env.get("DISCORD_TOKEN")!,
   mount() {
     console.info(
-      `[INFO] Running bot ${this.user.name} at user id <@${this.user.id}>`,
+      `[INFO] Running bot "${this.user.name}" at user id "<@${this.user.id}>"`,
     );
   },
   event(event) {
@@ -74,15 +63,15 @@ startBot({
       return;
     }
 
-    const result = addEvents(event);
+    const result = addEventsData(event);
 
     if ("error" in result) {
       console.error("[ERROR] Failed to add event to database:", result);
       return;
     }
 
-    if (!this.tasks.has(event.channel.name)) {
-      this.tasks.add({
+    if (!this.taskManager.has(event.channel.name)) {
+      this.taskManager.add({
         name: event.channel.name,
         remainingSwaps: DEFAULT_RESPONSE_SWAPS,
         record: [],
@@ -92,14 +81,14 @@ startBot({
       });
     }
 
-    this.tasks.push(
+    this.taskManager.push(
       event.channel.name,
       createTask(async (abortSignal: AbortSignal) => {
         let eventHistoryResult;
 
         try {
           const eventHistoryIds = getEventIdsForChannel(event.channel!.id);
-          eventHistoryResult = getEvents(...eventHistoryIds);
+          eventHistoryResult = await getEvents(...eventHistoryIds);
         } catch (error) {
           throw new Error("Failed to get channel history.", {
             cause: error,
@@ -125,7 +114,7 @@ startBot({
           },
         );
 
-        // Send one event (message) at a time:
+        // 2. Send one event (message) at a time:
         for await (const messageEvent of messageEventGenerator) {
           if (abortSignal.aborted) {
             throw new Error("Aborted task: before typing message");
@@ -150,7 +139,7 @@ startBot({
             messageEvent.id = result.id;
           }
 
-          const eventTransaction = addEvents(messageEvent);
+          const eventTransaction = addEventsData(messageEvent);
           if ("error" in eventTransaction) {
             console.error(
               "[ERROR] Failed to add event to database:",

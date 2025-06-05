@@ -1,20 +1,15 @@
-import type { CommandInteraction } from "npm:discord.js";
+import type { Message, MessageReaction } from "npm:discord.js";
 
-export enum CommandOptionType {
-  STRING = "string",
-  INTEGER = "integer",
-  BOOLEAN = "boolean",
-}
+import type { BottEvent, BottUser } from "@bott/model";
 
-export type CommandOption = {
-  name: string;
-  type: CommandOptionType;
-  description?: string;
-  required?: boolean;
-};
+import type { TaskManager } from "./task/manager.ts";
 
-export type CommandObject = {
-  description?: string;
-  options?: CommandOption[];
-  command: (interaction: CommandInteraction) => void;
+export type BotContext = {
+  user: BottUser;
+  send: (
+    event: BottEvent,
+  ) => Promise<Message<true> | MessageReaction | undefined>;
+  startTyping: () => Promise<void>;
+  taskManager: TaskManager;
+  wpm: number;
 };

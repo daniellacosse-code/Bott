@@ -1,59 +1,49 @@
+import { Buffer } from "node:buffer";
 import {
+  AttachmentBuilder,
   ChannelType,
   Client,
   Events,
   GatewayIntentBits,
   type GuildTextBasedChannel,
   type Message,
-  type MessageReaction,
   REST,
   Routes,
-  SlashCommandBuilder,
 } from "npm:discord.js";
-import { createErrorEmbed } from "../message/embed/error.ts";
-import { type CommandObject, CommandOptionType } from "./types.ts";
+
+import { type BottEvent, BottEventType } from "@bott/model";
+
+import { addEventsData } from "@bott/storage";
+
+import { createErrorEmbed } from "../embed/error.ts";
+import { getCommandRequestEvent } from "./command/request.ts";
+import { getCommandJson } from "./command/json.ts";
+import { getMessageEvent } from "./message/event.ts";
 import { TaskManager } from "./task/manager.ts";
+import type { BotContext } from "./types.ts";
+import type { Command } from "./command/create.ts";
 
-import {
-  addEvents,
-  type BottEvent,
-  BottEventType,
-  type BottUser,
-} from "@bott/data";
-
-const defaultIntents = [
-  GatewayIntentBits.GuildMembers,
-  GatewayIntentBits.GuildMessageReactions,
-  GatewayIntentBits.GuildMessages,
-  GatewayIntentBits.Guilds,
-  GatewayIntentBits.MessageContent,
-];
-
-type BotContext = {
-  user: BottUser;
-  send: (
-    event: BottEvent,
-  ) => Promise<Message<true> | MessageReaction | undefined>;
-  startTyping: () => Promise<void>;
-  tasks: TaskManager;
-  wpm: number;
-};
-
-type BotOptions = {
-  commands?: Record<string, CommandObject>;
+type BotOptions<O extends Record<string, unknown> = {}> = {
+  commands?: Command<O>[];
   event?: (this: BotContext, event: BottEvent) => void;
   identityToken: string;
   intents?: GatewayIntentBits[];
   mount?: (this: BotContext) => void;
 };
 
-export async function startBot({
+export async function startBot<O extends Record<string, unknown> = {}>({
   identityToken: token,
   commands,
-  intents = defaultIntents,
+  intents = [
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.MessageContent,
+  ],
   event: handleEvent,
   mount: handleMount,
-}: BotOptions) {
+}: BotOptions<O>) {
   const client = new Client({ intents });
 
   await client.login(token);
@@ -69,11 +59,11 @@ export async function startBot({
       id: client.user.id,
       name: client.user.username,
     },
-    tasks: new TaskManager(),
+    taskManager: new TaskManager(),
     wpm: 200,
   };
 
-  const makeSelf = (currentChannel?: GuildTextBasedChannel) => ({
+  const _makeSelf = (currentChannel?: GuildTextBasedChannel) => ({
     ...baseSelf,
     startTyping: () => {
       if (!currentChannel) return Promise.resolve();
@@ -116,7 +106,7 @@ export async function startBot({
 
       try {
         for (const [_, message] of await channel.messages.fetch()) {
-          events.push(await messageToEvent(message));
+          events.push(await getMessageEvent(message));
         }
       } catch (_) {
         // Likely don't have access to this channel
@@ -124,13 +114,13 @@ export async function startBot({
     }
   }
 
-  const result = addEvents(...events);
+  const result = addEventsData(...events);
 
   if ("error" in result) {
     console.error("[ERROR] Failed to hydrate database:", result.error);
   }
 
-  handleMount?.call(makeSelf());
+  handleMount?.call(_makeSelf());
 
   client.on(Events.MessageCreate, async (message) => {
     const currentChannel = message.channel;
@@ -139,14 +129,16 @@ export async function startBot({
       return;
     }
 
-    const event: BottEvent = await messageToEvent(message as Message<true>);
+    const event: BottEvent = await getMessageEvent(
+      message as Message<true>,
+    );
 
-    console.log(
+    console.debug(
       "[DEBUG] Message event:",
       { id: event.id, preview: event.details?.content.slice(0, 100) },
     );
 
-    handleEvent?.call(makeSelf(currentChannel), event);
+    handleEvent?.call(_makeSelf(currentChannel), event);
   });
 
   client.on(Events.MessageReactionAdd, async (reaction) => {
@@ -180,7 +172,7 @@ export async function startBot({
     }
 
     if (reaction.message.content) {
-      event.parent = await messageToEvent(
+      event.parent = await getMessageEvent(
         reaction.message as Message<true>,
       );
     }
@@ -190,7 +182,7 @@ export async function startBot({
       details: event.details,
     });
 
-    handleEvent?.call(makeSelf(currentChannel), event);
+    handleEvent?.call(_makeSelf(currentChannel), event);
   });
 
   // Handle commands, if they exist
@@ -203,122 +195,67 @@ export async function startBot({
       return;
     }
 
+    const command = commands.find(({ commandName }) =>
+      interaction.commandName === commandName
+    );
+
+    if (!command) {
+      return;
+    }
     await interaction.deferReply();
 
+    let responseEvent;
+
     try {
-      await commands[interaction.commandName]?.command(interaction);
+      const requestEvent = await getCommandRequestEvent<O>(interaction);
+
+      addEventsData(requestEvent);
+
+      responseEvent = await command.call(
+        _makeSelf(interaction.channel! as GuildTextBasedChannel),
+        requestEvent,
+      );
     } catch (error) {
-      await interaction.editReply({
+      return interaction.editReply({
         embeds: [createErrorEmbed(error as Error)],
       });
     }
+
+    if (!responseEvent) {
+      return;
+    }
+
+    const outputFiles = [];
+
+    for (const outputFile of responseEvent.files || []) {
+      if (!outputFile.data) {
+        continue;
+      }
+
+      outputFiles.push(
+        new AttachmentBuilder(Buffer.from(outputFile.data), {
+          name: outputFile.path.split("/").at(-1),
+        }),
+      );
+    }
+
+    interaction.followUp({
+      content: responseEvent.details.content || undefined,
+      embeds: responseEvent.details.embeds,
+      files: outputFiles,
+    });
+
+    addEventsData(responseEvent);
   });
 
   // Sync commands with discord origin via their custom http client 🙄
   const body = [];
-  for (const [commandName, commandObject] of Object.entries(commands)) {
-    body.push(getCommandJson(commandName, commandObject));
+  for (const command of commands) {
+    body.push(getCommandJson<O>(command));
   }
 
   await new REST({ version: "10" }).setToken(token).put(
     Routes.applicationCommands(String(baseSelf.user.id)),
     { body },
   );
-}
-
-const messageToEvent = async (
-  message: Message<true>,
-): Promise<BottEvent> => {
-  const event: BottEvent = {
-    id: message.id,
-    type: BottEventType.MESSAGE,
-    details: {
-      content: (message.content || message.embeds.at(0)?.description) ??
-        "NO CONTENT",
-    },
-    timestamp: new Date(message.createdTimestamp),
-    channel: {
-      id: message.channel.id,
-      name: message.channel.name,
-      space: {
-        id: message.guild?.id,
-        name: message.guild?.name,
-      },
-    },
-  };
-
-  if (message.author) {
-    event.user = {
-      id: message.author.id,
-      name: message.author.username,
-    };
-  }
-
-  if (message.reference?.messageId) {
-    event.type = BottEventType.REPLY;
-
-    let parentMessage: BottEvent | undefined;
-
-    try {
-      parentMessage = await messageToEvent(
-        await message.channel.messages.fetch(
-          message.reference.messageId,
-        ),
-      );
-    } catch (_) {
-      // If the parent message isn't available, we can't populate the parent event.
-      // This can happen if the parent message was deleted or is otherwise inaccessible.
-      // In this case, we'll just omit the parent event.
-    }
-
-    event.parent = parentMessage;
-  }
-
-  return event;
-};
-
-const DISCORD_DESCRIPTION_LIMIT = 100;
-function getCommandJson(name: string, {
-  description,
-  options,
-}: CommandObject) {
-  const builder = new SlashCommandBuilder().setName(name);
-
-  if (description) {
-    builder.setDescription(description.slice(0, DISCORD_DESCRIPTION_LIMIT));
-  }
-
-  if (options && options.length) {
-    for (const { name, description, type, required } of options) {
-      const buildOption = (option: any) => {
-        if (name) {
-          option.setName(name);
-        }
-
-        if (description) {
-          option.setDescription(description);
-        }
-
-        if (required) {
-          option.setRequired(required);
-        }
-
-        return option;
-      };
-
-      switch (type) {
-        case CommandOptionType.STRING:
-          builder.addStringOption(buildOption);
-          break;
-        case CommandOptionType.INTEGER:
-          builder.addIntegerOption(buildOption);
-          break;
-        case CommandOptionType.BOOLEAN:
-          builder.addBooleanOption(buildOption);
-          break;
-      }
-    }
-  }
-
-  return builder.toJSON();
 }

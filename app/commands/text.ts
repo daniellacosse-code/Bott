@@ -1,10 +1,9 @@
-// TODO(#16): encapsulate these concepts in infra
-import { AttachmentBuilder } from "npm:discord.js";
+import { BottEventType } from "@bott/model";
+import { CommandOptionType, createCommand, createTask } from "@bott/discord";
+import { generateTextFile } from "@bott/gemini";
 
-import { type CommandObject, CommandOptionType } from "@bott/discord";
-import { generateText } from "@bott/gemini";
-
-export const text: CommandObject = {
+export const text = createCommand<{ prompt: string }>({
+  name: "text",
   description: `Prompt @Bott for a text response as much as you like.`,
   options: [{
     name: "prompt",
@@ -12,18 +11,58 @@ export const text: CommandObject = {
     description: "Your prompt for @Bott.",
     required: true,
   }],
-  async command(interaction) {
-    const prompt = interaction.options.get("prompt")!.value as string;
+}, function (commandEvent) {
+  const taskBucketId = `text-${commandEvent.user?.id}`;
+  const prompt = commandEvent.details.options.prompt;
 
-    console.info(`[INFO] Recieved text prompt "${prompt}".`);
+  console.info(`[INFO] Received text prompt "${prompt}".`);
 
-    return interaction.followUp({
-      content: `Here's my text for your prompt: **"${prompt}"**`,
-      files: [
-        new AttachmentBuilder(await generateText(prompt), {
-          name: "generated.txt",
-        }),
-      ],
+  if (!this.taskManager.has(taskBucketId)) {
+    this.taskManager.add({
+      name: taskBucketId,
+      record: [],
+      remainingSwaps: 1,
+      config: {
+        maximumSequentialSwaps: 1,
+      },
     });
-  },
-};
+  }
+
+  return new Promise((resolve, reject) => {
+    this.taskManager.push(
+      taskBucketId,
+      createTask(async (abortSignal) => {
+        let file;
+
+        try {
+          file = await generateTextFile(prompt, {
+            abortSignal,
+          });
+        } catch (error) {
+          reject(error);
+          return;
+        }
+
+        if (abortSignal.aborted) {
+          return;
+        }
+
+        const event = {
+          id: crypto.randomUUID(),
+          type: BottEventType.FUNCTION_RESPONSE as const,
+          user: this.user,
+          channel: commandEvent.channel,
+          details: {
+            content: `Here's my text for your prompt: **"${prompt}"**`,
+          },
+          files: [file],
+          timestamp: new Date(),
+        };
+
+        file.parent = event;
+
+        resolve(event);
+      }),
+    );
+  });
+});

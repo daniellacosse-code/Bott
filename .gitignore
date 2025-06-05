@@ -1,5 +1,4 @@
 .env*
-gcp-key.json
+!.env.example
 
-output
-test.db
+fs_root

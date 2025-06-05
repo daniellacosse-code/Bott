@@ -1,4 +1,5 @@
 brew "git"
 brew "deno"
+brew "ffmpeg"
 cask "google-cloud-sdk"
 cask "docker"
