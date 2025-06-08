@@ -12,7 +12,7 @@ permissions:
   statuses: write
 
 jobs:
-  cla_assisstant:
+  cla_assistant:
     runs-on: ubuntu-latest
     steps:
       - name: "CLA Assistant"
