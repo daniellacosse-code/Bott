@@ -1,9 +1,8 @@
-<img width="465" alt="Screenshot 2025-04-26 at 12 19 21" src="https://github.com/user-attachments/assets/71c13505-5758-4202-8612-8a7f79f4fba0" />
+<img width="320" alt="Screenshot 2025-04-26 at 12 19 21" src="https://github.com/user-attachments/assets/71c13505-5758-4202-8612-8a7f79f4fba0" />
 
-# `@Bott`
+# 🤖 `@Bott`
 
-![wip](https://badgen.net/badge/status/wip/blue) ![github checks](https://github.com/daniellacosse-code/Bott/actions/workflows/test.yml/badge.svg) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![License: Proprietary (Commercial)](https://img.shields.io/badge/License-Proprietary-red.svg)](./LICENSE#commercial-use-proprietary-license) 
+![alpha](https://img.shields.io/badge/status/alpha/red) ![github checks](https://github.com/daniellacosse-code/Bott/actions/workflows/qualityChecks.yml/badge.svg)
 
 A Discord Bot, powered by Gemini.
 
