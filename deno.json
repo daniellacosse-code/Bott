@@ -13,10 +13,10 @@
   },
   "workspace": [
     "./model",
-    "./helpers/storage",
-    "./helpers/task",
-    "./helpers/gemini",
-    "./helpers/discord",
+    "./libraries/storage",
+    "./libraries/task",
+    "./libraries/gemini",
+    "./libraries/discord",
     "./app"
   ]
 }

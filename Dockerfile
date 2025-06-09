@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 USER deno
 COPY ./deno.json ./deno.lock* ./
 COPY ./app /app
-COPY ./helpers /helpers
+COPY ./libraries /libraries
 COPY ./model /model
 
 EXPOSE 8080
