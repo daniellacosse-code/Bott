@@ -11,4 +11,4 @@
 
 export * from "./bot/start.ts";
 export * from "./bot/types.ts";
-export * from "./embed/info.ts";
+export * from "./message/embed/info.ts";
