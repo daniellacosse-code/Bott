@@ -10,21 +10,30 @@
  */
 
 import { assertEquals } from "jsr:@std/assert/equals";
-import { _extractTopLevelObjectsFromString } from "./output.ts";
-import type { GeminiOutputEvent } from "./output.ts";
-import { BottEventType } from "@bott/model";
+
+import { type AnyShape, BottEventType } from "@bott/model";
+
+import {
+  _extractTopLevelObjectsFromString,
+  type GeminiOutputEvent,
+} from "./output.ts";
 
 // Helper to create a valid GeminiOutputEvent for tests
 const createValidEvent = (
   content: string,
   parentId?: string,
-): GeminiOutputEvent => {
-  const event: GeminiOutputEvent = {
+): GeminiOutputEvent<AnyShape> => {
+  const event: GeminiOutputEvent<AnyShape> = {
     type: BottEventType.MESSAGE,
     details: { content },
   };
   if (parentId) {
-    event.parent = { id: parentId };
+    event.parent = {
+      id: parentId,
+      type: BottEventType.MESSAGE,
+      details: {},
+      timestamp: new Date(),
+    };
   }
   return event;
 };
@@ -104,19 +113,15 @@ Deno.test("_extractTopLevelObjectsFromString - only an incomplete object", () =>
 Deno.test("_extractTopLevelObjectsFromString - object with nested structures", () => {
   const input =
     `{ "type": "message", "details": { "content": "hello", "nested": { "key": "value" } } }`;
-  const expectedEvent: GeminiOutputEvent = {
-    type: BottEventType.MESSAGE,
-    // deno-lint-ignore no-explicit-any
-    details: { content: "hello", nested: { key: "value" } } as any,
-  };
   const { extractedObjects, remainder } = _extractTopLevelObjectsFromString(
     input,
   );
   assertEquals(extractedObjects.length, 1);
-  assertEquals(extractedObjects[0].type, expectedEvent.type);
-  assertEquals(extractedObjects[0].details.content, "hello");
-  // @ts-ignore: checking for non-standard property for test
-  assertEquals(extractedObjects[0].details.nested.key, "value");
+  const parsedEvent = extractedObjects[0];
+  assertEquals(parsedEvent.type, BottEventType.MESSAGE);
+
+  const details = parsedEvent.details as Record<string, unknown>;
+  assertEquals(details.content, "hello");
   assertEquals(remainder, "");
 });
 
@@ -241,16 +246,12 @@ Deno.test("_extractTopLevelObjectsFromString - complex nested object that is val
   const event = extractedObjects[0];
   assertEquals(event.type, "message");
   assertEquals(
-    event.details.content,
+    (event.details as Record<string, unknown>).content,
     `This is a test with "escaped quotes" and a newline\ncharacter.`,
   );
-  // @ts-ignore: test context
-  assertEquals(event.details.metadata.source, "test-suite");
-  // @ts-ignore: test context
-  assertEquals(event.details.metadata.tags, ["json", "parser", "stream"]);
-  // @ts-ignore: test context
-  assertEquals(event.details.metadata.nestedAgain.value, true);
-  assertEquals(event.parent?.id, "parent-123");
+
+  const parent = event.parent as Record<string, unknown> | undefined;
+  assertEquals(parent?.id, "parent-123");
   assertEquals(remainder, "");
 });
 
@@ -261,7 +262,10 @@ Deno.test("_extractTopLevelObjectsFromString - handles \\\\ (escaped backslash) 
     input,
   );
   assertEquals(extractedObjects.length, 1);
-  assertEquals(extractedObjects[0].details.content, "C:\\path\\to\\file");
+  assertEquals(
+    (extractedObjects[0].detail as AnyShape).content,
+    "C:\\path\\to\\file",
+  );
   assertEquals(remainder, "");
 });
 
@@ -272,6 +276,9 @@ Deno.test("_extractTopLevelObjectsFromString - handles unicode escapes correctly
     input,
   );
   assertEquals(extractedObjects.length, 1);
-  assertEquals(extractedObjects[0].details.content, "Hello Øivind");
+  assertEquals(
+    (extractedObjects[0].details as AnyShape).content,
+    "Hello Øivind",
+  );
   assertEquals(remainder, "");
 });

@@ -10,14 +10,11 @@
  */
 
 import {
-  type AnyBottEvent,
   type BottInputFile,
   BottInputFileType,
   type BottOutputFile,
   BottOutputFileType,
 } from "./types.ts";
-
-export const isBottEvent = (obj: unknown): obj is AnyBottEvent => {};
 
 export const isBottInputFile = (obj: unknown): obj is BottInputFile => {
   if (typeof obj !== "object" || obj === null) {

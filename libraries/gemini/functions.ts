@@ -1,15 +1,16 @@
 import {
-  type AnyShape,
-  type BottRequestHandler,
-  BottRequestOptionType,
-} from "@bott/model";
-import {
   type FunctionDeclaration,
   Type as FunctionCallingParameterType,
 } from "npm:@google/genai";
 
-export const createGeminiFunctionDefinition = (
-  requestHandler: BottRequestHandler<AnyShape, AnyShape> & { name: string },
+import {
+  type AnyShape,
+  type BottRequestHandler,
+  BottRequestOptionType,
+} from "@bott/model";
+
+export const createGeminiFunctionDefinition = <O extends AnyShape>(
+  requestHandler: BottRequestHandler<O, AnyShape> & { name: string },
 ): FunctionDeclaration => {
   const properties: Record<
     string,

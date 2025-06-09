@@ -11,12 +11,18 @@
 
 import { delay } from "jsr:@std/async/delay";
 
-import { type BottEvent, BottEventType, BottResponseEvent } from "@bott/model";
+import {
+  type BottEvent,
+  BottEventType,
+  BottRequestEvent,
+  BottResponseEvent,
+} from "@bott/model";
 import {
   addEventData,
   getEventIdsForChannel,
   getEvents,
   startStorage,
+  storeNewInputFile,
 } from "@bott/storage";
 import { createTask } from "@bott/task";
 import { startDiscordBot } from "@bott/discord";
@@ -45,6 +51,7 @@ Deno.writeTextFileSync(STORAGE_DEPLOY_NONCE_PATH, deployNonce);
 
 startDiscordBot({
   addEventData,
+  storeNewInputFile,
   requestHandlerCommands: [help],
   identityToken: Deno.env.get("DISCORD_TOKEN")!,
   mount() {
@@ -116,6 +123,7 @@ startDiscordBot({
               user: this.user,
               channel: event.channel!,
             },
+            getEvents,
             requestHandlers: [generateMedia],
           },
         );
@@ -131,19 +139,26 @@ startDiscordBot({
           }
 
           switch (event.type) {
-            case BottEventType.REQUEST:
+            case BottEventType.REQUEST: {
               // We only have the "generateMedia" handler for now.
-              generateMedia(event).then(
-                async (responseEvent: BottResponseEvent) => {
-                  await this.send(responseEvent);
-
-                  responseEvent.parent = event;
-
-                  addEventData(responseEvent);
-                },
+              const responsePromise = generateMedia(
+                event as BottRequestEvent<GenerateMediaOptions>,
               );
-              break;
 
+              // We don't want to await here, it will hold up the process.
+              if ("then" in responsePromise) {
+                responsePromise.then(
+                  async (responseEvent: BottResponseEvent) => {
+                    await this.send(responseEvent);
+
+                    responseEvent.parent = event;
+
+                    addEventData(responseEvent);
+                  },
+                );
+              }
+              break;
+            }
             case BottEventType.MESSAGE:
             case BottEventType.REPLY: {
               const words = event.details.content.split(/\s+/).length;

@@ -150,7 +150,7 @@ const getAddUsersSql = (...users: BottUser[]) => {
   `;
 };
 
-export const addEventsData = (
+export const addEventData = (
   ...inputEvents: AnyBottEvent[]
 ): TransactionResults => {
   // Extract all unique entities (events, spaces, channels, users)

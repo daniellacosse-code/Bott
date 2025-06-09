@@ -14,7 +14,6 @@ import {
   type BottEvent,
   BottEventType,
   type BottRequestEvent,
-  isBottEvent,
 } from "@bott/model";
 
 import { Type as GeminiStructuredResponseType } from "npm:@google/genai";
@@ -23,9 +22,11 @@ import type {
   Schema as GeminiStructuredResponseSchema,
 } from "npm:@google/genai";
 
-export type GeminiOutputEvent<O extends AnyShape> =
+export type GeminiOutputEvent<O extends AnyShape> = Omit<
   | BottEvent
-  | BottRequestEvent<O>;
+  | BottRequestEvent<O>,
+  "id" | "timestamp"
+>;
 
 export const outputEventSchema: GeminiStructuredResponseSchema = {
   type: GeminiStructuredResponseType.ARRAY,
@@ -97,7 +98,7 @@ export async function* outputEventStream<O extends AnyShape>(
           type: BottEventType.REQUEST,
           details: {
             name: part.functionCall.name,
-            options: part.functionCall.args,
+            options: part.functionCall.args as O,
           },
         };
       }
@@ -120,8 +121,8 @@ export async function* outputEventStream<O extends AnyShape>(
       buffer,
     );
     for (const event of extractedObjects) {
-      if (isBottEvent(event)) {
-        yield event;
+      if (_isGeminiTextOutputEvent(event)) {
+        yield event as GeminiOutputEvent<O>;
       }
     }
     buffer = remainder;
@@ -133,8 +134,8 @@ export async function* outputEventStream<O extends AnyShape>(
       buffer,
     );
     for (const event of extractedObjects) {
-      if (isBottEvent(event)) {
-        yield event;
+      if (_isGeminiTextOutputEvent(event)) {
+        yield event as GeminiOutputEvent<O>;
       }
     }
 
@@ -240,3 +241,45 @@ export function _extractTopLevelObjectsFromString(
     remainder: current,
   };
 }
+
+const _isGeminiTextOutputEvent = (
+  obj: unknown,
+): obj is Omit<BottEvent<{ content: string }>, "id" | "timestamp"> => {
+  if (typeof obj !== "object" || obj === null) {
+    return false;
+  }
+
+  const event = obj as Record<string, unknown>;
+
+  if (
+    typeof event.type !== "string" ||
+    !(event.type === BottEventType.MESSAGE ||
+      event.type === BottEventType.REPLY ||
+      event.type === BottEventType.REACTION)
+  ) {
+    return false;
+  }
+
+  if (
+    typeof event.details !== "object" ||
+    event.details === null ||
+    typeof (event.details as Record<string, unknown>).content !== "string"
+  ) {
+    return false;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(event, "parent")) {
+    const parent = event.parent;
+    if (parent === undefined) {
+      // This case is fine if parent is optional and explicitly undefined
+    } else if (
+      typeof parent !== "object" ||
+      parent === null ||
+      typeof (parent as Record<string, unknown>).id !== "string"
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+};

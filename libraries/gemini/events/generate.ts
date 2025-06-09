@@ -18,6 +18,7 @@ import {
   type BottChannel,
   type BottEvent,
   BottEventType,
+  type BottRequestEvent,
   type BottRequestHandler,
   type BottUser,
 } from "@bott/model";
@@ -31,13 +32,9 @@ import {
 } from "../constants.ts";
 import { createGeminiFunctionDefinition } from "../functions.ts";
 import { assessResponse, generateResponse } from "./instructions.ts";
-import {
-  type GeminiOutputEvent,
-  outputEventSchema,
-  outputEventStream,
-} from "./output.ts";
+import { outputEventSchema, outputEventStream } from "./output.ts";
 
-type GeminiResponseContext = {
+type GeminiResponseContext<O extends AnyShape> = {
   abortSignal: AbortSignal;
   context: {
     identity: string;
@@ -46,7 +43,7 @@ type GeminiResponseContext = {
   };
   getEvents: typeof getEvents;
   model?: string;
-  requestHandlers?: BottRequestHandler<AnyShape, AnyShape>[];
+  requestHandlers?: BottRequestHandler<O, AnyShape>[];
 };
 
 export async function* generateEvents<O extends AnyShape>(
@@ -57,9 +54,10 @@ export async function* generateEvents<O extends AnyShape>(
     context,
     getEvents,
     requestHandlers,
-  }: GeminiResponseContext,
+  }: GeminiResponseContext<O>,
 ): AsyncGenerator<
-  GeminiOutputEvent<O>
+  | BottEvent
+  | BottRequestEvent<O>
 > {
   const modelUserId = context.user.id;
 
@@ -181,25 +179,38 @@ export async function* generateEvents<O extends AnyShape>(
 
             continue;
           }
-        }
 
-        console.debug("[DEBUG] Message passed assessment:", {
-          content: event.details.content,
-          score,
-        });
+          console.debug("[DEBUG] Message passed assessment:", {
+            content: event.details.content,
+            score,
+          });
+        }
       }
 
       assessmentHistory.push(eventAssessmentContent);
     }
 
-    yield {
+    const commonFields = {
       id: crypto.randomUUID(),
       timestamp: new Date(),
-      ...event,
       user: context.user,
       channel: context.channel,
       parent: event.parent ? (await getEvents(event.parent.id))[0] : undefined,
     };
+
+    if (event.type === BottEventType.REQUEST) {
+      yield {
+        ...commonFields,
+        type: event.type,
+        details: event.details as { name: string; options: O },
+      };
+    } else {
+      yield {
+        ...commonFields,
+        type: event.type,
+        details: event.details as { content: string },
+      };
+    }
   }
 
   return;
@@ -210,9 +221,7 @@ const transformBottEventToContent = (
   modelUserId: string,
 ): Content => {
   const { files: assets, ...eventForStringify } = event;
-
   const parts: Part[] = [{ text: JSON.stringify(eventForStringify) }];
-
   const content: Content = {
     role: (event.user && event.user.id === modelUserId) ? "model" : "user",
     parts,
@@ -228,5 +237,6 @@ const transformBottEventToContent = (
       });
     }
   }
+
   return content;
 };
