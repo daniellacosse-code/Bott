@@ -5,7 +5,7 @@ Instead, send an email to [D@nielLaCos.se](mailto:d@niellacos.se), making sure
 to include as much information as possible to help me reproduce the issue:
 
 - **Description of the vulnerability:** What is the nature of the security flaw?
-- **Steps to reproduce:** Be clear an concise here.
+- **Steps to reproduce:** Be clear and concise here.
 - **Impact:** What is the potential impact of this vulnerability? (e.g., data
   breach, remote code execution, denial of service).
 - **Any proof-of-concept code or screenshots:** These are extremely helpful.
