@@ -127,7 +127,6 @@ export const generateMedia: BottRequestHandler<
               reject(error);
             }
 
-            // TODO: Is this necessary?
             if (abortSignal.aborted) {
               throw new Error("Aborted task: after generating media");
             }
@@ -152,15 +151,18 @@ export const generateMedia: BottRequestHandler<
     );
   },
   {
-    description: "TODO",
+    description:
+      "You can use this tool to create images or other media based on a user's request or the conversational context. When you decide to use this tool, the system will handle the actual media generation based on the parameters you provide.",
     options: [{
       name: "type",
       type: BottRequestOptionType.STRING,
-      description: "TODO",
+      description:
+        `The type of media to generate. Supported values are: "${GeneratedMediaType.ESSAY}", "${GeneratedMediaType.PHOTO}", "${GeneratedMediaType.MOVIE}", "${GeneratedMediaType.SONG}".`,
     }, {
       name: "prompt",
       type: BottRequestOptionType.STRING,
-      description: "TODO",
+      description:
+        "A detailed description or prompt for the media to be generated. For example, 'a futuristic cityscape at sunset' for a photo, or 'a short story about a time-traveling cat' for an essay.",
     }],
   },
 );

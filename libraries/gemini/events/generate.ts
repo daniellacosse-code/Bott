@@ -124,6 +124,26 @@ export async function* generateEvents<O extends AnyShape>(
     return;
   }
 
+  let additionalToolsList = "";
+  if (requestHandlers && requestHandlers.length > 0) {
+    const toolEntries = requestHandlers
+      .filter((handler) => handler.name)
+      .map((handler) => {
+        const name = handler.name!;
+        const desc = handler.description ||
+          "No specific description provided for this tool.";
+
+        return `  * \`${name}\`: ${desc}`;
+      });
+
+    if (toolEntries.length > 0) {
+      additionalToolsList = "\n" + toolEntries.join("\n");
+    }
+  }
+
+  const systemInstructionText = (context.identity + generateResponse)
+    .replace("{{ADDITIONAL_TOOLS_LIST}}", additionalToolsList);
+
   const responseGenerator = await gemini.models.generateContentStream({
     model,
     contents,
@@ -131,7 +151,7 @@ export async function* generateEvents<O extends AnyShape>(
       abortSignal,
       candidateCount: 1,
       systemInstruction: {
-        parts: [{ text: context.identity + generateResponse }],
+        parts: [{ text: systemInstructionText }],
       },
       responseMimeType: "application/json",
       responseSchema: outputEventSchema,
