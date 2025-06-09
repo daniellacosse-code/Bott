@@ -25,7 +25,7 @@ export const createInfoEmbed = (title: string, {
   description,
   fields,
   footer,
-}: InfoEmbedOptions) => {
+}: InfoEmbedOptions): EmbedBuilder => {
   const embed = new EmbedBuilder().setColor(EmbedColor.BLUE).setTitle(title);
 
   if (description) {

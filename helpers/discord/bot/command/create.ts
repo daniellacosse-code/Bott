@@ -11,14 +11,15 @@
 
 import type { EmbedBuilder } from "npm:discord.js";
 
-import type { BottEvent, BottEventType } from "@bott/model";
+import type { BottEvent } from "@bott/model";
 
 import type { BotContext } from "../types.ts";
 
-export type CommandRequestEvent<O extends Record<string, unknown> = {}> =
-  BottEvent<
-    { name: string; options: O }
-  >;
+export type CommandRequestEvent<
+  O extends Record<string, unknown> = Record<string, unknown>,
+> = BottEvent<
+  { name: string; options: O }
+>;
 
 export type CommandResponseEvent = BottEvent<
   {
@@ -27,7 +28,9 @@ export type CommandResponseEvent = BottEvent<
   }
 >;
 
-export type Command<O extends Record<string, unknown> = {}> = {
+export type Command<
+  O extends Record<string, unknown> = Record<string, unknown>,
+> = {
   (
     this: BotContext,
     event: CommandRequestEvent<O>,
@@ -50,7 +53,9 @@ export enum CommandOptionType {
   BOOLEAN = "boolean",
 }
 
-export const createCommand = <O extends Record<string, unknown> = {}>(
+export const createCommand = <
+  O extends Record<string, unknown> = Record<string, unknown>,
+>(
   { name, ...params }: {
     name: string;
     description?: string;

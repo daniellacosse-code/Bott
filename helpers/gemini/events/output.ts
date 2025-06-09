@@ -84,6 +84,7 @@ function isGeminiOutputEvent(obj: unknown): obj is GeminiOutputEvent {
     return false;
   }
 
+  // deno-lint-ignore no-explicit-any
   const event = obj as Record<string, any>;
 
   if (
@@ -184,10 +185,12 @@ export async function* outputGenerator(
 export function _extractTopLevelObjectsFromString(
   input: string,
 ): {
+  // deno-lint-ignore no-explicit-any
   extractedObjects: Record<string, any>[];
   remainder: string;
 } {
   let current = input;
+  // deno-lint-ignore no-explicit-any
   const extractedObjects: Record<string, any>[] = [];
 
   // pointers

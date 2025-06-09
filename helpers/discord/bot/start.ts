@@ -34,7 +34,7 @@ import { TaskManager } from "./task/manager.ts";
 import type { BotContext } from "./types.ts";
 import type { Command } from "./command/create.ts";
 
-type BotOptions<O extends Record<string, unknown> = {}> = {
+type BotOptions<O extends Record<string, unknown> = Record<string, unknown>> = {
   commands?: Command<O>[];
   event?: (this: BotContext, event: BottEvent) => void;
   identityToken: string;
@@ -42,7 +42,9 @@ type BotOptions<O extends Record<string, unknown> = {}> = {
   mount?: (this: BotContext) => void;
 };
 
-export async function startBot<O extends Record<string, unknown> = {}>({
+export async function startBot<
+  O extends Record<string, unknown> = Record<string, unknown>,
+>({
   identityToken: token,
   commands,
   intents = [

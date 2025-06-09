@@ -13,6 +13,7 @@ import { STORAGE_DATA_CLIENT as client } from "../start.ts";
 import type { SqlInstructions } from "./sql.ts";
 
 export type TransactionResults = {
+  // deno-lint-ignore no-explicit-any
   reads: any[];
   writes: number;
 } | {
@@ -30,6 +31,7 @@ export const commit = (
     };
   }
 
+  // deno-lint-ignore no-explicit-any
   let reads: any[] = [];
   let writes = 0;
 

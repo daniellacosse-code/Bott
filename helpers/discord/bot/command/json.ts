@@ -15,7 +15,9 @@ import { type Command, CommandOptionType } from "./create.ts";
 
 const COMMAND_DESCRIPTION_LIMIT = 100;
 
-export function getCommandJson<O extends Record<string, unknown> = {}>({
+export function getCommandJson<
+  O extends Record<string, unknown> = Record<string, unknown>,
+>({
   commandName: name,
   description,
   options,
@@ -28,6 +30,7 @@ export function getCommandJson<O extends Record<string, unknown> = {}>({
 
   if (options && options.length) {
     for (const { name, description, type, required } of options) {
+      // deno-lint-ignore no-explicit-any
       const buildOption = (option: any) => {
         if (name) {
           option.setName(name);

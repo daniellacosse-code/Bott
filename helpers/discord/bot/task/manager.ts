@@ -58,7 +58,7 @@ export class TaskManager {
     this.flushTasks();
   }
 
-  has(name: TaskBucketName) {
+  has(name: TaskBucketName): boolean {
     return this.buckets.has(name);
   }
 

@@ -19,7 +19,9 @@ import {
 } from "npm:discord.js";
 import type { CommandRequestEvent } from "./create.ts";
 
-export function getCommandRequestEvent<O extends Record<string, unknown> = {}>(
+export function getCommandRequestEvent<
+  O extends Record<string, unknown> = Record<string, unknown>,
+>(
   interaction: ChatInputCommandInteraction,
 ): CommandRequestEvent<O> {
   let channel: BottChannel | undefined = undefined;

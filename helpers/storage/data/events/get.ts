@@ -26,6 +26,7 @@ import { commit } from "../commit.ts";
 import { sql } from "../sql.ts";
 
 const _getFileFromRow = (
+  // deno-lint-ignore no-explicit-any
   row: any,
 ): BottInputFile | BottOutputFile | undefined => {
   try {
@@ -123,6 +124,7 @@ export const getEvents = async (
       file.parent = event;
 
       // The type of array here shouldn't matter.
+      // deno-lint-ignore no-explicit-any
       (event.files as any[]).push(file);
 
       continue;
@@ -130,6 +132,7 @@ export const getEvents = async (
       file.parent = event;
 
       // The type of array here shouldn't matter.
+      // deno-lint-ignore no-explicit-any
       event.files = [file] as any[];
     }
 
@@ -176,5 +179,6 @@ export const getEventIdsForChannel = (channelId: string): string[] => {
     throw result.error;
   }
 
+  // deno-lint-ignore no-explicit-any
   return result.reads.map(({ id }: any) => id);
 };

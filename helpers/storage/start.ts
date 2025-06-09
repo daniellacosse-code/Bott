@@ -25,7 +25,7 @@ export let STORAGE_DATA_CLIENT: DatabaseSync;
 export const startStorage = (
   root: string,
   { assetSizeCautionBytes = 100_000 } = {},
-) => {
+): void => {
   // Create asset cache folder:
   const fileInputRoot = join(root, "files/input");
   const fileOutputRoot = join(root, "files/output");

@@ -16,6 +16,7 @@ export interface SqlInstructions {
   params: SupportedValueType[];
 }
 
+// deno-lint-ignore no-explicit-any
 function isSqlInstructions(value: any): value is SqlInstructions {
   return (
     typeof value === "object" &&
