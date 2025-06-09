@@ -1,3 +1,14 @@
+/**
+ * @license
+ * This file is part of Bott.
+ *
+ * This project is dual-licensed:
+ * - Non-commercial use: AGPLv3 (see LICENSE file for full text).
+ * - Commercial use: Proprietary License (contact D@nielLaCos.se for details).
+ *
+ * Copyright (C) 2025 DanielLaCos.se
+ */
+
 import { Buffer } from "node:buffer";
 import {
   AttachmentBuilder,
@@ -34,7 +45,9 @@ const REQUIRED_INTENTS = [
   GatewayIntentBits.MessageContent,
 ];
 
-type DiscordBotOptions<O extends Record<string, unknown> = {}> = {
+type DiscordBotOptions<
+  O extends Record<string, unknown> = Record<string, unknown>,
+> = {
   requestHandlerCommands?: BottRequestHandler<O, AnyShape>[];
   event?: (this: DiscordBotContext, event: BottEvent) => void;
   identityToken: string;
@@ -43,7 +56,9 @@ type DiscordBotOptions<O extends Record<string, unknown> = {}> = {
   storeNewInputFile: typeof storeNewInputFile;
 };
 
-export async function startDiscordBot<O extends Record<string, unknown> = {}>({
+export async function startDiscordBot<
+  O extends Record<string, unknown> = Record<string, unknown>,
+>({
   identityToken: token,
   requestHandlerCommands: commands,
   addEventData,

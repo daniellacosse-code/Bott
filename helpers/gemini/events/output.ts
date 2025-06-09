@@ -1,3 +1,14 @@
+/**
+ * @license
+ * This file is part of Bott.
+ *
+ * This project is dual-licensed:
+ * - Non-commercial use: AGPLv3 (see LICENSE file for full text).
+ * - Commercial use: Proprietary License (contact D@nielLaCos.se for details).
+ *
+ * Copyright (C) 2025 DanielLaCos.se
+ */
+
 import {
   type AnyShape,
   type BottEvent,
@@ -62,7 +73,7 @@ export const outputEventSchema: GeminiStructuredResponseSchema = {
     "A list of event objects to send. Send an empty array if no response is warranted.",
 };
 
-// outputEventStream processes the structured content stream from Gemini,
+// outputGenerator processes the structured content stream from Gemini,
 // extracting and yielding GeminiOutputEvent objects.
 export async function* outputEventStream<O extends AnyShape>(
   geminiResponseStream: AsyncGenerator<GenerateContentResponse>,
