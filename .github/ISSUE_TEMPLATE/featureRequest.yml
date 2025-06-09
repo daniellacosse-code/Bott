@@ -1,7 +1,7 @@
 name: Feature Request
 type: Feature
 description: Request a new feature!
-body: 
+body:
   - type: checkboxes
     id: code-of-conduct
     attributes:
