@@ -6,8 +6,6 @@
 
 A Discord Bot, powered by Gemini.
 
-[![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?git_repo=https://github.com/daniellacosse-code/Bott.git)
-
 ## Getting started
 
 Duplicate `.env.example` to `.env.development` and fill it out.
@@ -19,6 +17,8 @@ brew bundle
 gcloud auth login
 deno task start:app
 ```
+
+[![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?git_repo=https://github.com/daniellacosse-code/Bott.git)
 
 ## Contributing
 
