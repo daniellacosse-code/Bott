@@ -1,6 +1,6 @@
 # Contributing to Bott
 
-Thinking about contributing to Bott? There are number of ways you can help!
+Thinking about contributing to Bott? There are a number of ways you can help!
 
 ### Report Unexpected Behavior
 
