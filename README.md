@@ -20,10 +20,6 @@ deno task start:app
 
 [![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?git_repo=https://github.com/daniellacosse-code/Bott.git)
 
-## Contributing
-
-Please see the [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on how to submit issues, pull requests, and our Contributor License Agreement (CLA).
-
 ---
 
 ## Licensing
