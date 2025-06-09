@@ -21,20 +21,11 @@ import {
 // Helper to create a valid GeminiOutputEvent for tests
 const createValidEvent = (
   content: string,
-  parentId?: string,
 ): GeminiOutputEvent<AnyShape> => {
   const event: GeminiOutputEvent<AnyShape> = {
     type: BottEventType.MESSAGE,
     details: { content },
   };
-  if (parentId) {
-    event.parent = {
-      id: parentId,
-      type: BottEventType.MESSAGE,
-      details: {},
-      timestamp: new Date(),
-    };
-  }
   return event;
 };
 
@@ -77,14 +68,29 @@ Deno.test("_extractTopLevelObjectsFromString - two complete valid JSON objects, 
 
 Deno.test("_extractTopLevelObjectsFromString - objects with leading/trailing whitespace and around comma", () => {
   const input =
-    `  { "type": "message", "details": { "content": "event1" } }  ,  { "type": "message", "details": { "content": "event2" }, "parent": {"id": "p1"} }  `;
+    `  { "type": "message", "details": { "content": "event1" } }  ,  { "type": "message", "details": { "content": "event2" }, "parent": {"details": {}, "id": "p1", "type": "message", "timestamp": "1970-01-01T00:00:00.000Z" } }  `;
   const { extractedObjects, remainder } = _extractTopLevelObjectsFromString(
     input,
   );
-  assertEquals(extractedObjects, [
-    createValidEvent("event1"),
-    createValidEvent("event2", "p1"),
-  ]);
+
+  const expectedEvents = [
+    {
+      type: BottEventType.MESSAGE,
+      details: { content: "event1" },
+    },
+    {
+      type: BottEventType.MESSAGE,
+      details: { content: "event2" },
+      parent: {
+        details: {},
+        id: "p1",
+        type: "message",
+        timestamp: "1970-01-01T00:00:00.000Z",
+      },
+    },
+  ];
+
+  assertEquals(extractedObjects, expectedEvents);
   assertEquals(remainder, "  ");
 });
 
@@ -263,7 +269,7 @@ Deno.test("_extractTopLevelObjectsFromString - handles \\\\ (escaped backslash) 
   );
   assertEquals(extractedObjects.length, 1);
   assertEquals(
-    (extractedObjects[0].detail as AnyShape).content,
+    (extractedObjects[0].details as AnyShape).content,
     "C:\\path\\to\\file",
   );
   assertEquals(remainder, "");
