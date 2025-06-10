@@ -549,9 +549,11 @@ Focus solely on whether the most recent message is a direct and relevant answer 
 *   **Score 50-79 (Good Direct Fulfillment):**
     *   The message is a direct response to an explicit request or question but might be slightly incomplete or miss a minor nuance of the request.
     *   The message clearly attempts to fulfill the request but may require minor clarification or be slightly indirect.
+    *   **Alternatively, if the request cannot be fulfilled, the message directly and clearly explains valid reasons for non-fulfillment. The explanation itself should be concise and to the point, not evasive or overly verbose.**
     *   **Alternatively, the message might fully answer/perform the request but includes a small amount of related conversational filler or minor, non-essential information that prevents it from being perfectly concise.**
     *   Example (incomplete): Provides most of the requested information but omits a small detail.
     *   Example (fluff): User asks "What is the capital of France?". Response might be: "Ah, a classic question! The capital of France, a beautiful country known for its art and cuisine, is Paris." (Fulfills the request but adds fluff).
+    *   Example (cannot fulfill): User asks "Order me a pizza?". Response might be: "I can't order a pizza for you as I don't have the ability to interact with real-world services or make purchases." (Directly explains inability).
     *   If fulfillment is complete but accompanied by noticeable, unnecessary fluff, the score will be lower within this range. Significant fluff might push the score into the 'Partial' category.
 
 *   **Score 20-49 (Partial or Indirect Fulfillment):**

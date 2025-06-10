@@ -119,6 +119,7 @@ export async function startDiscordBot<
         }
         case BottEventType.REACTION: {
           const message = await currentChannel.messages.fetch(
+            // TODO: Sometimes this isn't a Discord ID...
             String(event.parent!.id),
           );
           return message.react(event.details.content);
