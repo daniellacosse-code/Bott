@@ -1,0 +1,73 @@
+/**
+ * @license
+ * This file is part of Bott.
+ *
+ * This project is dual-licensed:
+ * - Non-commercial use: AGPLv3 (see LICENSE file for full text).
+ * - Commercial use: Proprietary License (contact D@nielLaCos.se for details).
+ *
+ * Copyright (C) 2025 DanielLaCos.se
+ */
+
+import {
+  type AnyShape,
+  type BottChannel,
+  type BottEvent,
+  BottEventType,
+  type BottRequestEvent,
+  type BottUser,
+} from "@bott/model";
+
+import gemini from "../client.ts";
+import instructions from "./instructions.ts";
+
+export async function generateErrorResponse<O extends AnyShape>(
+  // deno-lint-ignore no-explicit-any
+  error: any,
+  requestEvent: BottRequestEvent<O>,
+  context: { user: BottUser; channel: BottChannel; identity: string },
+): Promise<BottEvent> {
+  const model = "gemini-2.5-flash-preview-05-20";
+
+  const geminiInput = {
+    request: {
+      name: requestEvent.details.name,
+      options: requestEvent.details.options,
+      user_message_content: requestEvent.parent?.details?.content,
+    },
+    error: {
+      message: error.message,
+      code: error.code,
+      details: error.rawError || error.details,
+    },
+  };
+
+  const result = await gemini.models.generateContent({
+    model,
+    contents: [{
+      role: "user",
+      parts: [{ text: JSON.stringify(geminiInput) }],
+    }],
+    config: {
+      candidateCount: 1,
+      systemInstruction: {
+        parts: [{ text: context.identity + instructions }],
+      },
+    },
+  });
+
+  const interpretation = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  return {
+    id: crypto.randomUUID(),
+    type: requestEvent.parent ? BottEventType.REPLY : BottEventType.MESSAGE,
+    details: {
+      content: interpretation ||
+        "[SYSTEM] An error occurred while processing your request.",
+    },
+    timestamp: new Date(),
+    user: context.user,
+    channel: context.channel,
+    parent: requestEvent.parent,
+  };
+}

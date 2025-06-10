@@ -27,7 +27,7 @@ import {
 } from "@bott/storage";
 import { createTask } from "@bott/task";
 import { startDiscordBot } from "@bott/discord";
-import { generateEvents } from "@bott/gemini";
+import { generateErrorResponse, generateEvents } from "@bott/gemini";
 
 import { taskManager } from "./tasks.ts";
 import { getIdentity } from "./identity.ts";
@@ -195,10 +195,36 @@ startDiscordBot({
                       );
                     }
                   },
-                ).catch((error) => {
-                  // TODO(#37): Send a system error (with discord embed) when this fails, potentially?
-                  // Helpful for when throttling occurs.
+                ).catch(async (error) => {
                   console.warn("[WARN] Failed to generate media:", error);
+
+                  const errorMessage = await generateErrorResponse(
+                    error,
+                    event as BottRequestEvent<AnyShape>,
+                    {
+                      user: this.user,
+                      channel: event.channel!,
+                      identity: getIdentity({
+                        user: this.user,
+                      }),
+                    },
+                  );
+
+                  const result = await this.send(errorMessage);
+
+                  if (result && "id" in result) {
+                    errorMessage.id = result.id;
+                  }
+
+                  const transaction = addEventData(
+                    errorMessage,
+                  );
+                  if ("error" in transaction) {
+                    console.error(
+                      "[ERROR] Failed to add events to database:",
+                      transaction.error,
+                    );
+                  }
                 });
               }
               break;
