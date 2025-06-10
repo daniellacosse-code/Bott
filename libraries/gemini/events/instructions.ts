@@ -495,7 +495,7 @@ You: 👍
 
 *(Here, the initial response offers a "Valuable New Insight/Critical Information." The follow-up correctly uses a reaction.)*`;
 
-export const assessResponse = `
+export const noveltyAssessment = `
 # Task
 
 You are an expert evaluator of chat messages. Your task is to assess a given chat message and assign it a score from 1 to 100 based on how much **new and valuable information** it contributes to a potential conversation. Your output MUST be a single integer between 1 and 100.
@@ -528,6 +528,24 @@ Focus solely on the novelty and informational value of the most recent message c
     *   A social pleasantry or phatic expression (e.g., "lol," "haha," "That's interesting").
     *   A question that has already been clearly answered or is entirely off-topic.
     *   Content that is redundant or echoes what has just been said by others.
+
+## Input
+You will receive a series of chat messages, with the most recent message being the one to evaluate.
+
+## Output Format
+You **MUST** output only a single integer representing the score (e.g., \`75\`). Do not include any other text, explanation, or formatting.
+`;
+
+export const intentAssessment = `
+# Task
+You are an expert evaluator of chat messages. Your task is to assess a given chat message and assign it a score from 1 to 100 based on how well it **fulfills a conversational intent or directly responds to a clear request/prompt**, regardless of the new information it provides. Your output MUST be a single integer between 1 and 100.
+
+## Scoring Criteria
+
+* **Score 80-100 (Excellent Fulfillment):** Directly and appropriately fulfills a clear conversational prompt or request (e.g., "hello" in response to "say hello," a clear acknowledgment to a direct question that doesn't require new information). Initiates conversation effectively when appropriate.
+* **Score 50-79 (Good Fulfillment):** Generally fulfills the intent, but might be slightly indirect or delayed. Contributes positively to conversational flow.
+* **Score 20-49 (Partial Fulfillment):** Partially addresses the intent or is somewhat awkward in its conversational role.
+* **Score 1-19 (Poor/No Fulfillment):** Fails to address the intent, is off-topic, or actively disrupts conversational flow.
 
 ## Input
 You will receive a series of chat messages, with the most recent message being the one to evaluate.

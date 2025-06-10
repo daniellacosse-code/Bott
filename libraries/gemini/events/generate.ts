@@ -32,8 +32,9 @@ import {
   INPUT_FILE_TOKEN_LIMIT,
 } from "../constants.ts";
 import {
-  assessResponse,
   getGenerateResponseInstructions,
+  intentAssessment,
+  noveltyAssessment,
 } from "./instructions.ts";
 import { getOutputEventSchema, outputEventStream } from "./output.ts";
 
@@ -107,7 +108,7 @@ export async function* generateEvents<O extends AnyShape>(
       delete event.parent.files;
     }
 
-    const content = transformBottEventToContent({
+    const content = _transformBottEventToContent({
       ...event,
       details: { ...event.details, seen: goingOverSeenEvents },
     } as BottEvent<object & { seen: boolean }>, modelUserId);
@@ -156,38 +157,35 @@ export async function* generateEvents<O extends AnyShape>(
         event.type !== BottEventType.REACTION &&
         event.type !== BottEventType.REQUEST
       ) {
-        // Assess quality of the message:
-        const assessmentResult = await gemini.models.generateContent({
-          model: "gemini-2.0-flash-lite",
-          contents: [...assessmentHistory, eventAssessmentContent],
-          config: {
-            candidateCount: 1,
-            systemInstruction: {
-              parts: [{ text: assessResponse }],
-            },
-          },
-        });
+        const assessmentContent = [
+          ...assessmentHistory,
+          eventAssessmentContent,
+        ];
 
-        const scoreText = assessmentResult.candidates?.[0]?.content?.parts?.[0]
-          ?.text;
+        const score = Math.max(
+          await _performAssessment(
+            assessmentContent,
+            noveltyAssessment,
+          ),
+          await _performAssessment(
+            assessmentContent,
+            intentAssessment,
+          ),
+        );
 
-        if (scoreText) {
-          const score = Number(scoreText.trim());
+        if (score < CONFIG_ASSESSMENT_SCORE_THRESHOLD) {
+          console.debug(
+            "[DEBUG] Message recieved poor assessment, skipping:",
+            { content: event.details.content, score },
+          );
 
-          if (!isNaN(score) && score < CONFIG_ASSESSMENT_SCORE_THRESHOLD) {
-            console.debug(
-              "[DEBUG] Message recieved poor assessment, skipping:",
-              { content: event.details.content, score },
-            );
-
-            continue;
-          }
-
-          console.debug("[DEBUG] Message passed assessment:", {
-            content: event.details.content,
-            score,
-          });
+          continue;
         }
+
+        console.debug("[DEBUG] Message passed assessment:", {
+          content: event.details.content,
+          score,
+        });
       }
 
       assessmentHistory.push(eventAssessmentContent);
@@ -219,23 +217,88 @@ export async function* generateEvents<O extends AnyShape>(
   return;
 }
 
-const transformBottEventToContent = (
+const _performAssessment = async (
+  contents: Content[],
+  assessmentInstructions: string,
+): Promise<number> => {
+  const assessmentResult = await gemini.models.generateContent({
+    model: "gemini-2.0-flash-lite",
+    contents,
+    config: {
+      candidateCount: 1,
+      systemInstruction: {
+        parts: [{ text: assessmentInstructions }],
+      },
+    },
+  });
+
+  const scoreText = assessmentResult.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (scoreText) {
+    const score = Number(scoreText.trim());
+    if (!isNaN(score)) {
+      return score;
+    }
+  }
+
+  // Return a default high score if assessment fails, to avoid blocking messages
+  // due to assessment errors.
+  return 100;
+};
+
+const _transformBottEventToContent = (
   event: BottEvent<object & { seen: boolean }>,
   modelUserId: string,
 ): Content => {
-  const { files: assets, ...eventForStringify } = event;
-  const parts: Part[] = [{ text: JSON.stringify(eventForStringify) }];
+  // Explicitly construct the object to be stringified to avoid circular references,
+  // (Especially from event.files[...].parent pointing back to the event itself.)
+  const eventToSerialize: Record<string, unknown> = {
+    id: event.id,
+    type: event.type,
+    details: event.details, // Assuming details are already JSON-serializable
+    timestamp: event.timestamp,
+    user: event.user ? { id: event.user.id, name: event.user.name } : undefined,
+    channel: event.channel
+      ? {
+        id: event.channel.id,
+        name: event.channel.name,
+        description: event.channel.description,
+        space: event.channel.space
+          ? {
+            id: event.channel.space.id,
+            name: event.channel.space.name,
+            description: event.channel.space.description,
+          }
+          : undefined,
+      }
+      : undefined,
+  };
+
+  if (event.parent) {
+    // The caller (generateEvents) should have already handled event.parent.files.
+    // We create a simplified parent reference here.
+    const { files: _files, ...parentDetails } = event.parent;
+
+    if (parentDetails.parent) {
+      // This level of nesting in this context is unnecessary.
+      delete parentDetails.parent;
+    }
+
+    eventToSerialize.parent = parentDetails;
+  }
+
+  const parts: Part[] = [{ text: JSON.stringify(eventToSerialize) }];
   const content: Content = {
     role: (event.user && event.user.id === modelUserId) ? "model" : "user",
     parts,
   };
 
-  if (assets) {
-    for (const asset of assets) {
+  if (event.files) {
+    for (const file of event.files) {
       parts.push({
         inlineData: {
-          mimeType: asset.type,
-          data: encodeBase64(asset.data),
+          mimeType: file.type,
+          data: encodeBase64(file.data),
         },
       });
     }
