@@ -58,6 +58,7 @@ export const generateSongFile: OutputFileGenerator = async (
   const outputFile = storeOutputFile(
     decodeBase64(predictions[0].bytesBase64Encoded),
     BottOutputFileType.WAV,
+    prompt.replaceAll(" ", "_").slice(0, 20),
   );
 
   return outputFile;

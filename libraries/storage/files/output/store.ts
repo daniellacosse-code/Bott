@@ -18,9 +18,10 @@ import { STORAGE_FILE_OUTPUT_ROOT } from "../../start.ts";
 export const storeOutputFile = (
   data: Uint8Array,
   type: BottOutputFileType,
+  filename?: string,
 ): BottOutputFile => {
   const id = crypto.randomUUID();
-  let path = type + "/" + id;
+  let path = type + "/" + (filename ?? id);
 
   for (const [key, value] of Object.entries(BottOutputFileType)) {
     if (value === type) {
