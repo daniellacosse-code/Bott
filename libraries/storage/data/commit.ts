@@ -34,9 +34,11 @@ export const commit = (
   // deno-lint-ignore no-explicit-any
   let reads: any[] = [];
   let writes = 0;
+  let transactionStarted = false;
 
   try {
     client.exec("begin");
+    transactionStarted = true;
 
     for (const instruction of instructions) {
       if (!instruction) {
@@ -58,7 +60,9 @@ export const commit = (
 
     client.exec("commit");
   } catch (error) {
-    client.exec("rollback");
+    if (transactionStarted) {
+      client.exec("rollback");
+    }
 
     return { error: error as Error };
   }
