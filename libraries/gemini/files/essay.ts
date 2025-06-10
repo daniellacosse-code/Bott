@@ -43,7 +43,7 @@ export const generateEssayFile: OutputFileGenerator = async (
     config: {
       candidateCount: 1,
       systemInstruction:
-        "Remove the citation numbers (e.g. [1, 2]) from this text.",
+        "Remove the citation numbers (e.g. [1, 2]) from this text. It is **crucial** you only output the sanitized text.",
     },
   });
 

@@ -94,22 +94,28 @@ export async function startDiscordBot<
     send: async (event: BottEvent) => {
       if (!currentChannel) return;
 
+      const files = event.files?.map((
+        file,
+      ) =>
+        new AttachmentBuilder(Buffer.from(file.data), {
+          name: file.path.split("/").at(-1),
+        })
+      );
+
       switch (event.type) {
         case BottEventType.MESSAGE:
           return currentChannel.send({
             content: event.details.content,
-            files: event.files?.map((file) =>
-              new AttachmentBuilder(
-                Buffer.from(file.data),
-                { name: file.path.split("/").at(-1) },
-              )
-            ),
+            files,
           });
         case BottEventType.REPLY: {
           const message = await currentChannel.messages.fetch(
             String(event.parent!.id),
           );
-          return message.reply(event.details.content);
+          return message.reply({
+            content: event.details.content,
+            files,
+          });
         }
         case BottEventType.REACTION: {
           const message = await currentChannel.messages.fetch(
