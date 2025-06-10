@@ -157,10 +157,14 @@ export const generateMedia: BottRequestHandler<
       IMPORTANT NOTE: Generating an 'essay' is particularly helpful when the situation calls for factual accuracy or nuance.`,
     options: [{
       name: "type",
-      // TODO: support 'enum'
       type: BottRequestOptionType.STRING,
-      description:
-        `The type of media to generate. Supported values are: "${GeneratedMediaType.ESSAY}", "${GeneratedMediaType.PHOTO}", "${GeneratedMediaType.MOVIE}", "${GeneratedMediaType.SONG}".`,
+      allowedValues: [
+        GeneratedMediaType.ESSAY,
+        GeneratedMediaType.PHOTO,
+        GeneratedMediaType.MOVIE,
+        GeneratedMediaType.SONG,
+      ],
+      description: "The type of media to generate.",
     }, {
       name: "prompt",
       type: BottRequestOptionType.STRING,

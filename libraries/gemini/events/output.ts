@@ -92,6 +92,7 @@ export const getOutputEventSchema = <O extends AnyShape>(
                   type,
                   description:
                     `${option.description} Required for a "request" of name "${handler.name}"`,
+                  enum: option.allowedValues,
                 };
               }
 

@@ -176,6 +176,7 @@ export enum BottRequestOptionType {
 export type BottRequestOption = {
   name: string;
   type: BottRequestOptionType;
+  allowedValues?: string[];
   /** Optional description of the option. */
   description?: string;
   /** Optional flag indicating if the option is required. */

@@ -196,6 +196,8 @@ startDiscordBot({
                     }
                   },
                 ).catch((error) => {
+                  // TODO(#37): Send a system error (with discord embed) when this fails, potentially?
+                  // Helpful for when throttling occurs.
                   console.warn("[WARN] Failed to generate media:", error);
                 });
               }

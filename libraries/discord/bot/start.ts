@@ -123,7 +123,8 @@ export async function startDiscordBot<
     },
   });
 
-  // Attempt to hydrate the DB. (TODO: Skip if the DB has data in it.)
+  // Attempt to hydrate the DB.
+  // TODO(#36): Skip if the DB has data in it.
   const events: BottEvent[] = [];
 
   // Discord "guilds" are equivalent to Bott's "spaces":
@@ -264,7 +265,7 @@ export async function startDiscordBot<
     addEventData(responseEvent);
   });
 
-  // Sync commands with discord origin via their custom http client 🙄:ß
+  // Sync commands with discord origin via their custom http client 🙄:
   const body = [];
   for (const command of commands) {
     body.push(getCommandJson<O>(command));

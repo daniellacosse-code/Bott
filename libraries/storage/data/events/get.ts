@@ -166,7 +166,6 @@ export const getEvents = async (
   return [...events.values()];
 };
 
-// TODO: get channel history in a single query
 export const getEventIdsForChannel = (channelId: string): string[] => {
   const result = commit(
     sql`
