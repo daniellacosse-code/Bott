@@ -9,9 +9,10 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { delay } from "jsr:@std/async/delay";
+import { delay } from "jsr:@std/async";
 
 import {
+  type AnyShape,
   type BottEvent,
   BottEventType,
   BottRequestEvent,
@@ -128,34 +129,73 @@ startDiscordBot({
           },
         );
 
-        // 2. Send one event (message) at a time:
+        // 2. Send one event at a time:
         for await (const event of eventGenerator) {
           if (abortSignal.aborted) {
             throw new Error("Aborted task: before typing message");
           }
 
-          if (event.type !== BottEventType.REACTION) {
+          if (
+            event.type !== BottEventType.REACTION &&
+            event.type !== BottEventType.REQUEST
+          ) {
             this.startTyping();
           }
 
           switch (event.type) {
             case BottEventType.REQUEST: {
-              // We only have the "generateMedia" handler for now.
-              const responsePromise = generateMedia(
-                event as BottRequestEvent<GenerateMediaOptions>,
-              );
+              let responsePromise;
+
+              switch ((event as BottRequestEvent<AnyShape>).details.name) {
+                // We only have the "generateMedia" handler for now.
+                case "generateMedia":
+                default:
+                  responsePromise = generateMedia(
+                    event as BottRequestEvent<GenerateMediaOptions>,
+                  );
+                  break;
+              }
 
               // We don't want to await here, it will hold up the process.
               if ("then" in responsePromise) {
                 responsePromise.then(
                   async (responseEvent: BottResponseEvent) => {
-                    await this.send(responseEvent);
-
                     responseEvent.parent = event;
 
-                    addEventData(responseEvent);
+                    // Request/response events are system-only.
+                    const messageEvent: BottEvent = {
+                      id: crypto.randomUUID(),
+                      type: BottEventType.MESSAGE,
+                      details: {
+                        content: responseEvent.details.content || "",
+                      },
+                      files: responseEvent.files,
+                      timestamp: new Date(),
+                      user: this.user,
+                      channel: event.channel,
+                      parent: responseEvent,
+                    };
+
+                    const result = await this.send(messageEvent);
+
+                    if (result && "id" in result) {
+                      responseEvent.id = result.id;
+                    }
+
+                    const eventTransaction = addEventData(
+                      responseEvent,
+                      messageEvent,
+                    );
+                    if ("error" in eventTransaction) {
+                      console.error(
+                        "[ERROR] Failed to add events to database:",
+                        eventTransaction.error,
+                      );
+                    }
                   },
-                );
+                ).catch((error) => {
+                  console.warn("[WARN] Failed to generate media:", error);
+                });
               }
               break;
             }
@@ -196,7 +236,7 @@ startDiscordBot({
   },
 });
 
-// need to respond to GCP health probe
+// Need to respond to GCP health probe:
 Deno.serve(
   { port: Number(Deno.env.get("PORT") ?? 8080) },
   () => new Response("OK", { status: 200 }),

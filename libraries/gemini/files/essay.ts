@@ -16,7 +16,7 @@ import { BottOutputFileType } from "@bott/model";
 
 // NOTE: This stores output files to disk, even if they
 // are not in the database yet.
-export const generateTextFile: OutputFileGenerator = async (
+export const generateEssayFile: OutputFileGenerator = async (
   prompt: string,
   {
     model = "gemini-2.5-pro-preview-05-06",

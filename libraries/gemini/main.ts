@@ -10,7 +10,7 @@
  */
 
 export * from "./events/generate.ts";
-export * from "./files/music.ts";
+export * from "./files/song.ts";
 export * from "./files/photo.ts";
-export * from "./files/text.ts";
-export * from "./files/video.ts";
+export * from "./files/essay.ts";
+export * from "./files/movie.ts";

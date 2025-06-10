@@ -20,10 +20,10 @@ import {
 import { storeOutputFile } from "@bott/storage";
 import { createTask } from "@bott/task";
 import {
-  generateMusicFile,
+  generateEssayFile,
+  generateMovieFile,
   generatePhotoFile,
-  generateTextFile,
-  generateVideoFile,
+  generateSongFile,
 } from "@bott/gemini";
 
 import { taskManager } from "../tasks.ts";
@@ -86,10 +86,10 @@ export const generateMedia: BottRequestHandler<
 
       taskManager.add({
         name: type,
-        remainingSwaps: 3,
+        remainingSwaps: 1, // Don't override media calls.
         record: [],
         config: {
-          maximumSequentialSwaps: 3,
+          maximumSequentialSwaps: 1,
           throttle,
         },
       });
@@ -113,14 +113,14 @@ export const generateMedia: BottRequestHandler<
                   file = await generatePhotoFile(prompt, context);
                   break;
                 case GeneratedMediaType.MOVIE:
-                  file = await generateVideoFile(prompt, context);
+                  file = await generateMovieFile(prompt, context);
                   break;
                 case GeneratedMediaType.SONG:
-                  file = await generateMusicFile(prompt, context);
+                  file = await generateSongFile(prompt, context);
                   break;
                 case GeneratedMediaType.ESSAY:
                 default:
-                  file = await generateTextFile(prompt, context);
+                  file = await generateEssayFile(prompt, context);
                   break;
               }
             } catch (error) {

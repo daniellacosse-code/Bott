@@ -22,7 +22,7 @@ import type { OutputFileGenerator } from "./types.ts";
 
 // NOTE: This stores output files to disk, even if they
 // are not in the database yet.
-export const generateVideoFile: OutputFileGenerator = async (
+export const generateMovieFile: OutputFileGenerator = async (
   prompt: string,
   {
     model = "veo-2.0-generate-001",

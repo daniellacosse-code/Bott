@@ -96,8 +96,6 @@ export async function startDiscordBot<
 
       switch (event.type) {
         case BottEventType.MESSAGE:
-          return currentChannel.send(event.details.content);
-        case BottEventType.RESPONSE:
           return currentChannel.send({
             content: event.details.content,
             files: event.files?.map((file) =>
@@ -258,30 +256,15 @@ export async function startDiscordBot<
       return;
     }
 
-    const outputFiles = [];
-
-    for (const outputFile of responseEvent.files || []) {
-      if (!outputFile.data) {
-        continue;
-      }
-
-      outputFiles.push(
-        new AttachmentBuilder(Buffer.from(outputFile.data), {
-          name: outputFile.path.split("/").at(-1),
-        }),
-      );
-    }
-
     interaction.followUp({
       content: responseEvent.details.content as string || undefined,
       embeds: responseEvent.details.embeds as EmbedBuilder[],
-      files: outputFiles,
     });
 
     addEventData(responseEvent);
   });
 
-  // Sync commands with discord origin via their custom http client 🙄
+  // Sync commands with discord origin via their custom http client 🙄:ß
   const body = [];
   for (const command of commands) {
     body.push(getCommandJson<O>(command));

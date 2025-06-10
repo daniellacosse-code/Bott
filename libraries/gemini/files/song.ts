@@ -29,7 +29,7 @@ const VERTEX_API_URL =
 
 // NOTE: This stores output files to disk, even if they
 // are not in the database yet.
-export const generateMusicFile: OutputFileGenerator = async (
+export const generateSongFile: OutputFileGenerator = async (
   prompt,
   { abortSignal, storeOutputFile },
 ) => {
