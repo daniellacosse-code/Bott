@@ -165,7 +165,9 @@ startDiscordBot({
                     // Request/response events are system-only.
                     const messageEvent: BottEvent = {
                       id: crypto.randomUUID(),
-                      type: BottEventType.MESSAGE,
+                      type: event.parent
+                        ? BottEventType.REPLY
+                        : BottEventType.MESSAGE,
                       details: {
                         content: responseEvent.details.content || "",
                       },
@@ -173,7 +175,7 @@ startDiscordBot({
                       timestamp: new Date(),
                       user: this.user,
                       channel: event.channel,
-                      parent: responseEvent,
+                      parent: event.parent,
                     };
 
                     const result = await this.send(messageEvent);
