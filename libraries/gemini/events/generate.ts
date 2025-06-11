@@ -35,7 +35,7 @@ import {
   getGenerateResponseInstructions,
   greetingAssessment,
   noveltyAssessment,
-  requestFulfillmentAssessment,
+  requestRelatednessAssessment,
 } from "./instructions.ts";
 import { getOutputEventSchema, outputEventStream } from "./output.ts";
 
@@ -171,7 +171,7 @@ export async function* generateEvents<O extends AnyShape>(
           ),
           requestFulfillment: await _performAssessment(
             assessmentContent,
-            requestFulfillmentAssessment,
+            requestRelatednessAssessment,
           ),
           novelty: await _performAssessment(
             assessmentContent,

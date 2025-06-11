@@ -30,6 +30,8 @@ export const generateEssayFile: OutputFileGenerator = async (
     config: {
       tools: [{ googleSearch: {} }],
       candidateCount: 1,
+      systemInstruction:
+        "Do NOT ask for additional information: fullfill the request as written to the best of your ability.",
     },
   });
 
