@@ -98,6 +98,14 @@ export const getOutputEventSchema = <O extends AnyShape>(
 
               return acc;
             }, {} as Record<string, GeminiStructuredResponseSchema>),
+            // This is weird, as we are flattening the requirements
+            // across all calls, but we can just ignore the parameters
+            // we don't need in a given context.
+            required: requestHandlers.flatMap((handler) =>
+              handler.options?.filter((option) => option.required).map(
+                (option) => option.name,
+              ) ?? []
+            ),
           },
         },
       },

@@ -115,7 +115,7 @@ export async function* generateEvents<O extends AnyShape>(
     } as BottEvent<object & { seen: boolean }>, modelUserId);
 
     if (!goingOverSeenEvents) {
-      assessmentHistory.push(content);
+      assessmentHistory.unshift(content);
     }
 
     contents.unshift(content);
@@ -159,8 +159,8 @@ export async function* generateEvents<O extends AnyShape>(
         event.type !== BottEventType.REQUEST
       ) {
         const assessmentContent = [
-          ...assessmentHistory,
           eventAssessmentContent,
+          ...assessmentHistory,
         ];
 
         // TODO (nit): Combine these into a single call.
@@ -198,7 +198,7 @@ export async function* generateEvents<O extends AnyShape>(
         });
       }
 
-      assessmentHistory.push(eventAssessmentContent);
+      assessmentHistory.unshift(eventAssessmentContent);
     }
 
     const commonFields = {
