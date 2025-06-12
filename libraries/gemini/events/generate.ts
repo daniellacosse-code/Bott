@@ -35,7 +35,7 @@ import {
   getGenerateResponseInstructions,
   greetingAssessment,
   noveltyAssessment,
-  requestFulfillmentAssessment,
+  requestRelatednessAssessment,
 } from "./instructions.ts";
 import { getOutputEventSchema, outputEventStream } from "./output.ts";
 
@@ -115,7 +115,7 @@ export async function* generateEvents<O extends AnyShape>(
     } as BottEvent<object & { seen: boolean }>, modelUserId);
 
     if (!goingOverSeenEvents) {
-      assessmentHistory.push(content);
+      assessmentHistory.unshift(content);
     }
 
     contents.unshift(content);
@@ -159,30 +159,34 @@ export async function* generateEvents<O extends AnyShape>(
         event.type !== BottEventType.REQUEST
       ) {
         const assessmentContent = [
-          ...assessmentHistory,
           eventAssessmentContent,
+          ...assessmentHistory,
         ];
 
         // TODO (nit): Combine these into a single call.
-        const score = Math.max(
-          await _performAssessment(
+        const scores = {
+          greeting: await _performAssessment(
             assessmentContent,
             greetingAssessment,
           ),
-          await _performAssessment(
+          requestFulfillment: await _performAssessment(
             assessmentContent,
-            requestFulfillmentAssessment,
+            requestRelatednessAssessment,
           ),
-          await _performAssessment(
+          novelty: await _performAssessment(
             assessmentContent,
             noveltyAssessment,
           ),
+        };
+
+        const score = Math.max(
+          ...Object.values(scores),
         );
 
         if (score < CONFIG_ASSESSMENT_SCORE_THRESHOLD) {
           console.debug(
             "[DEBUG] Message recieved poor assessment, skipping:",
-            { content: event.details.content, score },
+            { content: event.details.content, scores },
           );
 
           continue;
@@ -190,11 +194,11 @@ export async function* generateEvents<O extends AnyShape>(
 
         console.debug("[DEBUG] Message passed assessment:", {
           content: event.details.content,
-          score,
+          scores,
         });
       }
 
-      assessmentHistory.push(eventAssessmentContent);
+      assessmentHistory.unshift(eventAssessmentContent);
     }
 
     const commonFields = {

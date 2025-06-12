@@ -57,6 +57,11 @@ export const generateMedia: BottRequestHandler<
   ) {
     const { type, prompt } = requestEvent.details.options;
 
+    console.debug("[DEBUG] generateMedia() called with options:", {
+      type,
+      prompt,
+    });
+
     if (!taskManager.has(type)) {
       let throttle;
 
@@ -86,10 +91,10 @@ export const generateMedia: BottRequestHandler<
 
       taskManager.add({
         name: type,
-        remainingSwaps: 1, // Don't override media calls.
-        record: [],
+        remainingSwaps: 0, // Don't override media calls.
+        completions: [],
         config: {
-          maximumSequentialSwaps: 1,
+          maximumSequentialSwaps: 0,
           throttle,
         },
       });
@@ -152,10 +157,10 @@ export const generateMedia: BottRequestHandler<
   },
   {
     description:
-      `You can use this request to create photos, songs, videos and essays based on a user's message or the conversational context.
+      `You can use this request to create photos, songs, movies and essays based on a user's message or the conversational context.
       When you decide to make this request, the system will handle the actual media generation based on the parameters you provide.
-      IMPORTANT NOTE: Generating an 'essay' is particularly helpful when the situation calls for factual accuracy or nuance. When doing so, be sure to use user's names (e.g. "despoina") and not their ids (e.g. "<@USER_ID_001>").
-      IMPORTANT NOTE: Avoid generating text in photos, it often looks like gibberish to humans.`,
+      IMPORTANT NOTE: Generating an 'essay' is particularly helpful when the situation calls for factual accuracy or nuance. When doing so, be sure to use user's names (e.g. "despoina") and not their user id (e.g. "<@USER_ID_001>").
+      IMPORTANT NOTE: Don't generate text in photos, unless the text is under 20 characters.`,
     options: [{
       name: "type",
       type: BottRequestOptionType.STRING,
@@ -165,12 +170,15 @@ export const generateMedia: BottRequestHandler<
         GeneratedMediaType.MOVIE,
         GeneratedMediaType.SONG,
       ],
-      description: "The type of media to generate.",
+      description:
+        "The type of media to generate. Can be a essay, photo, movie, or song.",
+      required: true,
     }, {
       name: "prompt",
       type: BottRequestOptionType.STRING,
       description:
         "A detailed description or prompt for the media to be generated. For example, 'a futuristic cityscape at sunset' for a photo, or 'a short story about a time-traveling cat' for an essay.",
+      required: true,
     }],
   },
 );

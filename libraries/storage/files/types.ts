@@ -18,9 +18,10 @@ export enum SupportedRawFileType {
   // PDF = "application/pdf",
   PNG = "image/png",
   JPEG = "image/jpeg",
-  // TXT = "text/plain",
+
   WAV = "audio/x-wav",
   MP3 = "audio/mp3",
+  TXT = "text/plain",
 }
 
 export type InputFileDataTransformer = (

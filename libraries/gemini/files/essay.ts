@@ -30,6 +30,8 @@ export const generateEssayFile: OutputFileGenerator = async (
     config: {
       tools: [{ googleSearch: {} }],
       candidateCount: 1,
+      systemInstruction:
+        "Do NOT ask for additional information: fullfill the request as written to the best of your ability.",
     },
   });
 
@@ -54,7 +56,7 @@ export const generateEssayFile: OutputFileGenerator = async (
   const outputFile = storeOutputFile(
     new TextEncoder().encode(sanitizedResponse.text),
     BottOutputFileType.TXT,
-    prompt.toLowerCase().replaceAll(" ", "-").replaceAll(/[,.]/, "").slice(
+    prompt.toLowerCase().replaceAll(" ", "-").replaceAll(/[,.]/g, "").slice(
       0,
       35,
     ),
