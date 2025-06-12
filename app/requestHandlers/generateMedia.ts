@@ -91,10 +91,10 @@ export const generateMedia: BottRequestHandler<
 
       taskManager.add({
         name: type,
-        remainingSwaps: 1, // Don't override media calls.
-        record: [],
+        remainingSwaps: 0, // Don't override media calls.
+        completions: [],
         config: {
-          maximumSequentialSwaps: 1,
+          maximumSequentialSwaps: 0,
           throttle,
         },
       });

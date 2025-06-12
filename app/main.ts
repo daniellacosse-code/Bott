@@ -86,7 +86,7 @@ startDiscordBot({
       taskManager.add({
         name: event.channel.name,
         remainingSwaps: DEFAULT_RESPONSE_SWAPS,
-        record: [],
+        completions: [],
         config: {
           maximumSequentialSwaps: DEFAULT_RESPONSE_SWAPS,
         },
