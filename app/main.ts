@@ -155,32 +155,31 @@ startDiscordBot({
                   break;
               }
 
-              // We don't want to await here, it will hold up the process.
-              if ("then" in responsePromise) {
-                responsePromise.then(
-                  (responseEvent: BottResponseEvent) => {
-                    responseEvent.parent = genEvent;
+              (async () => {
+                try {
+                  const responseEvent = await responsePromise;
+                  responseEvent.parent = genEvent;
 
-                    // Request/response events are system-only.
-                    this.send({
-                      id: crypto.randomUUID(),
-                      type: genEvent.parent
-                        ? BottEventType.REPLY
-                        : BottEventType.MESSAGE,
-                      details: {
-                        content: responseEvent.details.content || "",
-                      },
-                      files: responseEvent.files,
-                      timestamp: new Date(),
-                      user: this.user,
-                      channel: thisChannel,
-                      parent: genEvent.parent,
-                    });
+                  // Request/response events are system-only.
+                  this.send({
+                    id: crypto.randomUUID(),
+                    type: genEvent.parent
+                      ? BottEventType.REPLY
+                      : BottEventType.MESSAGE,
+                    details: {
+                      content: responseEvent.details.content || "",
+                    },
+                    files: responseEvent.files,
+                    timestamp: new Date(),
+                    user: this.user,
+                    channel: thisChannel,
+                    parent: genEvent.parent,
+                  });
 
-                    addEventData(responseEvent);
-                  },
-                ).catch(async (error) => {
+                  addEventData(responseEvent);
+                } catch (error) {
                   console.warn("[WARN] Failed to generate media:", error);
+
                   this.send(
                     await generateErrorMessage(
                       error,
@@ -188,8 +187,8 @@ startDiscordBot({
                       context,
                     ),
                   );
-                });
-              }
+                }
+              })();
               break;
             }
             case BottEventType.MESSAGE:
