@@ -117,9 +117,9 @@ applications.
   terms of the **GNU Affero General Public License v3.0 (AGPLv3)**.
   - Read the full AGPLv3 license details in the [LICENSE file](./LICENSE).
 
-- **For Commercial Use:** Use of this software for any purpose that is
-  intended for commercial advantage or monetary compensation requires a
-  **Proprietary Commercial License**. Please contact
-  [D@nielLaCos.se](mailto:d@niellacos.se) to discuss licensing terms.
+- **For Commercial Use:** Use of this software for any purpose that is intended
+  for commercial advantage or monetary compensation requires a **Proprietary
+  Commercial License**. Please contact [D@nielLaCos.se](mailto:d@niellacos.se)
+  to discuss licensing terms.
 
 **Copyright (C) 2025 DanielLaCos.se**

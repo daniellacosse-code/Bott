@@ -26,12 +26,12 @@ To support this dual-licensing model, we require contributors to sign this CLA.
   documentation, and assets.
 
 ## **2\. Your Grant of Rights**
- 
+
 You hereby grant to the Project a perpetual, worldwide, non-exclusive,
 no-charge, royalty-free, irrevocable copyright license to reproduce, prepare
 derivative works of, publicly display, publicly perform, sublicense, and
 distribute Your Contributions and such derivative works.
- 
+
 This grant gives the Project the explicit and irrevocable right to license Your
 Contributions to third parties under any license terms the Project chooses,
 including, but not limited to, the GNU Affero General Public License v3.0
