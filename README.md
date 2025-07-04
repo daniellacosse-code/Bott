@@ -94,13 +94,15 @@ graph TD
 
   %% Flow from Discord User to Bot and back
   Discord -- "User Message" --> BottDiscord
-  BottDiscord -- "BottEvent (Input)" --> App
-  App -- "BottEvent (Request)" --> BottGemini
+  BottDiscord -- "BottEvent" --> App
+  App -- "BottEvent" --> BottGemini
   BottGemini -- "Calls Gemini API" --> Gemini
-  Gemini -- "AI Model Response / Generated Data" --> BottGemini
-  BottGemini -- "BottEvent (Response)" --> App
-  App -- "BottEvent (Output)" --> BottDiscord
+  Gemini -- "Generated Data" --> BottGemini
+  BottGemini -- "BottEvent" --> App
+  App -- "BottEvent" --> BottDiscord
   BottDiscord -- "System Message" --> Discord
+
+  style App fill:darkblue;
 ```
 
 ---
