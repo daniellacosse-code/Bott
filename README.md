@@ -60,16 +60,37 @@ Bott is configured via a series of environment variables.
 | `CONFIG_RATE_LIMIT_VIDEOS`          | The maximum number of videos Bott can generate per month.                                                                 | 10          |
 | `DISCORD_TOKEN`                     | The authentication token for your Discord bot application.                                                                | -           |
 | `FILE_SYSTEM_ROOT`                  | The root directory on the local file system for storing input and output files.                                           | `./fs_root` |
-| `GOOGLE_ACCESS_TOKEN`               | An access token for authenticating with Google Cloud APIs.                                                                | -           |
-| `GOOGLE_PROJECT_ID`                 | The ID of your Google Cloud project.                                                                                      | -           |
-| `GOOGLE_PROJECT_LOCATION`           | The GCP region where your Vertex AI resources are located (e.g., `us-central1`).                                          | -           |
+| `GOOGLE_ACCESS_TOKEN`               | An access token for authenticating with Google Cloud APIs (for local development).                                        | -           |
+| `GOOGLE_PROJECT_ID`                 | The ID of your Google Cloud project. (Automatically set during Cloud Run deployment.)                                     | -           |
+| `GOOGLE_PROJECT_LOCATION`           | The GCP region where your Vertex AI resources are located. (Automatically set during Cloud Run deployment.)               | -           |
 | `PORT`                              | The port of the health check server required for GCP Cloud Run.                                                           | 8080        |
 
 ### Deploying Bott
 
-Due to the nature of the Vertex AI API, Bott supports only GCP.
+Deploying Bott to Google Cloud Run involves two main steps: deploying the
+service itself, then configuring the necessary permissions.
+
+#### 1. Deploy the Service
+
+Click this button to deploy the Bott service:
 
 [![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?git_repo=https://github.com/daniellacosse-code/Bott.git)
+
+#### 2. Configure Permissions _(TODO: confirm this)_
+
+1. Navigate to the
+   **[IAM & Admin](https://console.cloud.google.com/iam-admin/iam)** page in
+   your Google Cloud project.
+2. Find the service account that was created for your new Cloud Run service.
+3. Click the **pencil icon** to edit its permissions.
+4. Click **+ ADD ANOTHER ROLE** and add the following two roles:
+   - `Vertex AI User` (allows the bot to access Gemini models)
+   - `Storage Object Admin` (allows the bot to read/write temporary files)
+5. Click **SAVE**.
+
+Bott should now be running correctly. You may need to trigger a new revision
+deployment from the Cloud Run console for the permission changes to take effect
+immediately.
 
 ### High-level Architecture
 
