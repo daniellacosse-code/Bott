@@ -27,7 +27,7 @@ export async function generateErrorMessage<O extends AnyShape>(
   requestEvent: BottRequestEvent<O>,
   context: { user: BottUser; channel: BottChannel; identity: string },
 ): Promise<BottEvent> {
-  const model = "gemini-2.5-flash-preview-05-20";
+  const model = "gemini-2.5-flash";
 
   const geminiInput = {
     request: {

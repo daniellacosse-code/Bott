@@ -25,7 +25,7 @@ import type { OutputFileGenerator } from "./types.ts";
 export const generateMovieFile: OutputFileGenerator = async (
   prompt: string,
   {
-    model = "veo-2.0-generate-001",
+    model = "veo-3.0-generate-preview",
     gemini = _gemini,
     abortSignal,
     storeOutputFile,

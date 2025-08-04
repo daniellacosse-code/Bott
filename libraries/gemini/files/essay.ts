@@ -19,7 +19,7 @@ import { BottOutputFileType } from "@bott/model";
 export const generateEssayFile: OutputFileGenerator = async (
   prompt: string,
   {
-    model = "gemini-2.5-pro-preview-05-06",
+    model = "gemini-2.5-pro",
     gemini = _gemini,
     storeOutputFile,
   },

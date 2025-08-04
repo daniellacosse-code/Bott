@@ -33,7 +33,7 @@ import {
 import type { addEventData, storeNewInputFile } from "@bott/storage";
 
 import { createErrorEmbed } from "../message/embed/error.ts";
-import { getMessageEvent } from "../message/event.ts";
+import { messageToBottEvent } from "../message/event.ts";
 import { getCommandRequestEvent } from "./command/request.ts";
 import { getCommandJson } from "./command/json.ts";
 import type { DiscordBotContext } from "./types.ts";
@@ -163,7 +163,7 @@ export async function startDiscordBot<
 
         try {
           for (const [_, message] of await channel.messages.fetch()) {
-            events.push(await getMessageEvent(message, storeNewInputFile));
+            events.push(await messageToBottEvent(message, storeNewInputFile));
           }
         } catch (_) {
           // Likely don't haveaccess to this channel
@@ -189,7 +189,7 @@ export async function startDiscordBot<
       return;
     }
 
-    const event: BottEvent = await getMessageEvent(
+    const event = await messageToBottEvent(
       message as Message<true>,
       storeNewInputFile,
     );
@@ -233,7 +233,7 @@ export async function startDiscordBot<
     }
 
     if (reaction.message.content) {
-      event.parent = await getMessageEvent(
+      event.parent = await messageToBottEvent(
         reaction.message as Message<true>,
         storeNewInputFile,
       );

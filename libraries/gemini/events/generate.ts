@@ -58,7 +58,7 @@ type GeminiResponseContext<O extends AnyShape> = {
 export async function* generateEvents<O extends AnyShape>(
   inputEvents: AnyBottEvent[],
   {
-    model = "gemini-2.5-flash-preview-05-20",
+    model = "gemini-2.5-flash",
     abortSignal,
     context,
     getEvents,
@@ -101,29 +101,29 @@ export async function* generateEvents<O extends AnyShape>(
     // Determine if this event was from the model itself:
     if (event.user?.id === modelUserId) goingOverSeenEvents = true;
 
-    // Remove unnecessary parent assets from events:
+    // Remove unnecessary parent files from events:
     if (event.parent) {
       delete event.parent.files;
     }
 
-    // Prune old, stale assets that bloat the context window:
+    // Prune old, stale files that bloat the context window:
     if (event.files?.length) {
       const filesToKeep = [];
-      for (const asset of event.files) {
+      for (const file of event.files) {
         let shouldPrune = false;
 
         if (
-          resourceAccumulator.estimatedTokens + asset.data.byteLength >
+          resourceAccumulator.estimatedTokens + file.data.byteLength >
             INPUT_FILE_TOKEN_LIMIT
         ) {
           shouldPrune = true;
         } else if (
-          asset.type === BottInputFileType.OPUS &&
+          file.type === BottInputFileType.OPUS &&
           resourceAccumulator.audioFiles >= INPUT_FILE_AUDIO_COUNT_LIMIT
         ) {
           shouldPrune = true;
         } else if (
-          asset.type === BottInputFileType.MP4 &&
+          file.type === BottInputFileType.MP4 &&
           resourceAccumulator.videoFiles >= INPUT_FILE_VIDEO_COUNT_LIMIT
         ) {
           shouldPrune = true;
@@ -133,15 +133,15 @@ export async function* generateEvents<O extends AnyShape>(
           continue;
         }
 
-        filesToKeep.push(asset);
+        filesToKeep.push(file);
 
-        if (asset.type === BottInputFileType.OPUS) {
+        if (file.type === BottInputFileType.OPUS) {
           resourceAccumulator.audioFiles++;
-        } else if (asset.type === BottInputFileType.MP4) {
+        } else if (file.type === BottInputFileType.MP4) {
           resourceAccumulator.videoFiles++;
         }
 
-        resourceAccumulator.estimatedTokens += asset.data.byteLength;
+        resourceAccumulator.estimatedTokens += file.data.byteLength;
       }
 
       if (filesToKeep.length) {
@@ -279,7 +279,7 @@ const _performAssessment = async (
   assessmentInstructions: string,
 ): Promise<number> => {
   const assessmentResult = await gemini.models.generateContent({
-    model: "gemini-2.0-flash-lite",
+    model: "gemini-2.5-flash-lite",
     contents,
     config: {
       candidateCount: 1,

@@ -16,9 +16,8 @@ import type { storeNewInputFile } from "@bott/storage";
 
 import { getMarkdownLinks } from "./markdown.ts";
 
-// NOTE: this stores input files to disk, even if they
-// are not in the database yet.
-export const getMessageEvent = async (
+// NOTE: this currently stores attached files as inputs to the file system.
+export const messageToBottEvent = async (
   message: Message<true>,
   storeFile: typeof storeNewInputFile,
 ): Promise<BottEvent> => {
@@ -53,7 +52,7 @@ export const getMessageEvent = async (
     let parentMessage: BottEvent | undefined;
 
     try {
-      parentMessage = await getMessageEvent(
+      parentMessage = await messageToBottEvent(
         await message.channel.messages.fetch(
           message.reference.messageId,
         ),

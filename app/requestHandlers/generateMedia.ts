@@ -149,6 +149,9 @@ export const generateMedia: BottRequestHandler<
               },
               files: [file],
               timestamp: new Date(),
+              user: requestEvent.user,
+              channel: requestEvent.channel,
+              parent: requestEvent,
             });
           }),
         );
