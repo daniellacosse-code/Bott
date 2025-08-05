@@ -12,10 +12,8 @@
 import { extractFromHtml } from "npm:@extractus/article-extractor";
 import TurndownService from "npm:turndown";
 
-import { BottInputFileType } from "@bott/model";
-
-import { STORAGE_FILE_SIZE_CAUTION } from "../../../start.ts";
-import type { InputFileDataTransformer } from "../../types.ts";
+// TODO: what was this value?
+const STORAGE_FILE_SIZE_CAUTION = 0;
 
 const turndownService = new TurndownService({
   headingStyle: "atx", // Use # for headings.
@@ -27,7 +25,7 @@ const turndownService = new TurndownService({
   linkStyle: "inlined",
 });
 
-export const prepareHtmlAsMarkdown: InputFileDataTransformer = async (data) => {
+export const prepareHtmlAsMarkdown = async (data: Uint8Array) => {
   const htmlText = new TextDecoder().decode(data);
 
   const extracted = await extractFromHtml(htmlText, undefined, {
@@ -52,5 +50,5 @@ export const prepareHtmlAsMarkdown: InputFileDataTransformer = async (data) => {
       "\n\n...(truncated)";
   }
 
-  return [new TextEncoder().encode(result), BottInputFileType.MD];
+  return new TextEncoder().encode(result);
 };

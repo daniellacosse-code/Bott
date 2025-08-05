@@ -11,12 +11,7 @@
 
 import { join } from "jsr:@std/path";
 
-import type {
-  AnyBottEvent,
-  BottEventType,
-  BottInputFile,
-  BottOutputFile,
-} from "@bott/model";
+import type { AnyBottEvent, BottEventType, BottFile } from "@bott/model";
 
 import {
   STORAGE_FILE_INPUT_ROOT,
@@ -24,41 +19,7 @@ import {
 } from "../../start.ts";
 import { commit } from "../commit.ts";
 import { sql } from "../sql.ts";
-
-const _getFileFromRow = (
-  // deno-lint-ignore no-explicit-any
-  row: any,
-): BottInputFile | BottOutputFile | undefined => {
-  try {
-    if (
-      row.i_url &&
-      Deno.statSync(join(STORAGE_FILE_INPUT_ROOT, row.i_path)).isFile
-    ) {
-      return {
-        url: new URL(row.i_url),
-        path: row.i_path,
-        type: row.i_type,
-        data: Deno.readFileSync(join(STORAGE_FILE_INPUT_ROOT, row.i_path)),
-      };
-    }
-
-    if (
-      row.o_id &&
-      Deno.statSync(join(STORAGE_FILE_OUTPUT_ROOT, row.o_path)).isFile
-    ) {
-      return {
-        id: row.o_id,
-        path: row.o_path,
-        type: row.o_type,
-        data: Deno.readFileSync(join(STORAGE_FILE_OUTPUT_ROOT, row.o_path)),
-      };
-    }
-  } catch (_) {
-    return undefined;
-  }
-
-  return undefined;
-};
+import { resolveFile } from "../../files/resolve.ts";
 
 export const getEvents = async (
   ...ids: string[]
@@ -71,8 +32,9 @@ export const getEvents = async (
         s.id as s_id, s.name as s_name, s.description as s_description, -- space
         u.id as u_id, u.name as u_name, -- user
         p.id as p_id, -- parent event
-        i.url as i_url, i.type as i_type, i.path as i_path, -- input file
-        o.id as o_id, o.type as o_type, o.path as o_path -- output file
+        f.id as f_id, f.source_url as f_source_url, -- file (main)
+          f.raw_type as f_raw_type, f.raw_path as f_raw_path, -- file (raw)
+          f.compressed_type as f_compressed_type, f.compressed_path as f_compressed_path -- file (compressed)
       from
         events e
       left join
@@ -84,9 +46,7 @@ export const getEvents = async (
       left join
         users u on e.user_id = u.id
       left join
-        input_files i on e.id = i.parent_id
-      left join
-        output_files o on e.id = o.parent_id
+        files f on e.id = f.parent_id
       where
         e.id in (${ids})
       order by e.timestamp asc`,
@@ -107,34 +67,37 @@ export const getEvents = async (
       ...context
     } of result.reads
   ) {
-    let event: AnyBottEvent = {
+    let fileInRow: BottFile | undefined;
+    if (context.f_id) {
+      fileInRow = await resolveFile({
+        id: context.f_id,
+        source: new URL(context.f_source_url),
+        raw: {
+          type: context.f_raw_type,
+          path: join(STORAGE_FILE_INPUT_ROOT, context.f_raw_path),
+        },
+        compressed: {
+          type: context.f_compressed_type,
+          path: join(STORAGE_FILE_OUTPUT_ROOT, context.f_compressed_path),
+        },
+      });
+    }
+
+    if (events.has(id)) {
+      if (fileInRow) {
+        events.get(id)!.files!.push(fileInRow);
+      }
+
+      continue;
+    }
+
+    const event: AnyBottEvent = {
       id,
       type: type as BottEventType,
       details: JSON.parse(details),
       timestamp: new Date(timestamp),
+      files: fileInRow ? [fileInRow] : [],
     };
-
-    const file = _getFileFromRow(context);
-
-    if (file && events.has(id)) {
-      event = events.get(id)!;
-      file.parent = event;
-
-      event.files ??= [];
-      file.parent = event;
-
-      // The type of array here shouldn't matter.
-      // deno-lint-ignore no-explicit-any
-      (event.files as any[]).push(file);
-
-      continue;
-    } else if (file) {
-      file.parent = event;
-
-      // The type of array here shouldn't matter.
-      // deno-lint-ignore no-explicit-any
-      event.files = [file] as any[];
-    }
 
     if (context.c_id) {
       event.channel = {
@@ -157,7 +120,7 @@ export const getEvents = async (
     }
 
     if (context.p_id) {
-      event.parent = (await getEvents(context.p_id))[0];
+      [event.parent] = await getEvents(context.p_id);
     }
 
     events.set(id, event);

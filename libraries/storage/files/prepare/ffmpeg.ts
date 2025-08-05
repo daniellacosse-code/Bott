@@ -9,9 +9,6 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BottInputFileType } from "@bott/model";
-import type { InputFileDataTransformer } from "../../types.ts";
-
 const _ffmpeg = async (
   args: string[],
   input: Uint8Array,
@@ -63,8 +60,8 @@ const _ffmpeg = async (
 
 const MAX_DIMENSION = 480;
 
-export const prepareStaticImageAsWebp: InputFileDataTransformer = async (
-  data,
+export const prepareStaticImageAsWebp = async (
+  data: Uint8Array,
 ) => {
   const args = [
     "-y",
@@ -87,11 +84,11 @@ export const prepareStaticImageAsWebp: InputFileDataTransformer = async (
     "webp", // Output format container
     "{{OUTPUT_FILE}}",
   ];
-  return [await _ffmpeg(args, data), BottInputFileType.WEBP];
+  return await _ffmpeg(args, data);
 };
 
-export const prepareAudioAsOpus: InputFileDataTransformer = async (
-  data,
+export const prepareAudioAsOpus = async (
+  data: Uint8Array,
 ) => {
   const DURATION_SECONDS = 60;
 
@@ -116,11 +113,11 @@ export const prepareAudioAsOpus: InputFileDataTransformer = async (
     "opus", // Output format
     "{{OUTPUT_FILE}}",
   ];
-  return [await _ffmpeg(args, data), BottInputFileType.OPUS];
+  return await _ffmpeg(args, data);
 };
 
-export const prepareDynamicImageAsMp4: InputFileDataTransformer = async (
-  data,
+export const prepareDynamicImageAsMp4 = async (
+  data: Uint8Array,
 ) => {
   const DURATION_SECONDS = 30;
   const FRAME_RATE = 15;
@@ -142,5 +139,5 @@ export const prepareDynamicImageAsMp4: InputFileDataTransformer = async (
     "{{OUTPUT_FILE}}",
   ];
 
-  return [await _ffmpeg(args, data), BottInputFileType.MP4];
+  return await _ffmpeg(args, data);
 };

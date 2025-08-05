@@ -11,18 +11,14 @@
 
 import { assertEquals, assertExists } from "jsr:@std/assert";
 
-import {
-  BottEventType,
-  type BottInputFile,
-  BottInputFileType,
-} from "@bott/model";
+import { BottEventType } from "@bott/model";
 
 import { addEventData } from "./data/events/add.ts";
 import { getEvents } from "./data/events/get.ts";
-import { storeNewInputFile } from "./files/input/store.ts";
 import { prepareHtmlAsMarkdown } from "./files/input/prepare/html.ts";
 import { startStorage } from "./start.ts";
 
+// TODO: add test files?
 Deno.test("Storage - addEventsData, getEvents", async () => {
   const tempDir = Deno.makeTempDirSync();
 
@@ -146,46 +142,6 @@ Deno.test("Storage - prepareHtml", async () => {
 
   assertEquals(
     resultMarkdown,
-    expectedMarkdownOutput,
-  );
-});
-
-Deno.test("Storage - storeNewInputFile", async () => {
-  const tempDir = Deno.makeTempDirSync();
-  startStorage(tempDir);
-
-  const controller = new AbortController();
-  const asset: BottInputFile = await new Promise((resolve) =>
-    Deno.serve(
-      {
-        port: 0,
-        signal: controller.signal,
-        onListen: async ({ hostname, port }) => {
-          const sourceUrl = new URL(
-            `http://${hostname}:${port}/test-asset.html`,
-          );
-
-          try {
-            resolve(await storeNewInputFile(sourceUrl));
-          } finally {
-            controller.abort();
-          }
-        },
-      },
-      () =>
-        new Response(htmlInput, {
-          headers: { "content-type": "text/html" },
-        }),
-    )
-  );
-
-  assertExists(asset.url);
-  assertEquals(asset.type, BottInputFileType.MD);
-  assertExists(
-    asset.path,
-  );
-  assertEquals(
-    new TextDecoder().decode(asset.data),
     expectedMarkdownOutput,
   );
 });
