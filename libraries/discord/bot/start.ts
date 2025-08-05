@@ -92,13 +92,19 @@ export async function startDiscordBot<
     send: async (event: BottEvent) => {
       if (!currentChannel) return;
 
-      const files = event.files?.map((
-        file,
-      ) =>
-        new AttachmentBuilder(Buffer.from(file.raw.data as Uint8Array), {
-          name: file.id,
-        })
-      );
+      const files = [];
+
+      for (const file of event.files ?? []) {
+        if (!file.raw) {
+          continue;
+        }
+
+        files.push(
+          new AttachmentBuilder(Buffer.from(file.raw.data as Uint8Array), {
+            name: file.id,
+          }),
+        );
+      }
 
       let messageResult;
       switch (event.type) {

@@ -127,7 +127,7 @@ export interface BottEvent<
   /** Optional user who triggered or is associated with the event. */
   user?: BottUser;
   /** Optional array of files associated with the event. */
-  files?: BottFile[];
+  files?: Partial<BottFile>[];
 }
 
 /**

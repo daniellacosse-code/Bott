@@ -112,6 +112,10 @@ export async function* generateEvents<O extends AnyShape>(
       for (const file of event.files) {
         let shouldPrune = false;
 
+        if (!file.compressed) {
+          continue;
+        }
+
         if (
           resourceAccumulator.estimatedTokens +
               file.compressed.data!.byteLength >
@@ -353,6 +357,10 @@ const _transformBottEventToContent = (
 
   if (event.files) {
     for (const file of event.files) {
+      if (!file.compressed) {
+        continue;
+      }
+
       parts.push({
         inlineData: {
           mimeType: file.compressed.type,

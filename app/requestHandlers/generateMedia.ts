@@ -145,7 +145,6 @@ export const generateMedia: BottRequestHandler<
               details: {
                 content: "",
               },
-              // TODO: how to handle this case (partial file state?)
               files: [{
                 id: crypto.randomUUID(),
                 raw: fileData,

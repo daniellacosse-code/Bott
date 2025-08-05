@@ -70,7 +70,7 @@ export const messageToBottEvent = async (
 
   if (urls.length) {
     // TODO: how to handle this case (partial state?)
-    event.files = urls.map<BottFile>((url) => ({
+    event.files = urls.map<Partial<BottFile>>((url) => ({
       id: crypto.randomUUID(),
       source: new URL(url),
       parent: event,
