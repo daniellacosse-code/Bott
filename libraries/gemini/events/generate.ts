@@ -118,7 +118,7 @@ export async function* generateEvents<O extends AnyShape>(
 
         if (
           resourceAccumulator.estimatedTokens +
-              file.compressed.data!.byteLength >
+              file.compressed.data.byteLength >
             INPUT_FILE_TOKEN_LIMIT
         ) {
           shouldPrune = true;
@@ -146,7 +146,7 @@ export async function* generateEvents<O extends AnyShape>(
           resourceAccumulator.videoFiles++;
         }
 
-        resourceAccumulator.estimatedTokens += file.compressed.data!.byteLength;
+        resourceAccumulator.estimatedTokens += file.compressed.data.byteLength;
       }
 
       if (filesToKeep.length) {

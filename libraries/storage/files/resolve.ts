@@ -37,7 +37,7 @@ export const resolveFile = async (
   partialFile: Partial<BottFile>,
 ): Promise<BottFile> => {
   if (!partialFile.id) {
-    throw new Error("resolveFile: File ID is required.");
+    throw new Error("File ID is required.");
   }
 
   const resolvedFileRoot = join(STORAGE_FILE_ROOT, partialFile.id);
@@ -75,15 +75,20 @@ export const resolveFile = async (
   } else if (!rawFilePath && !partialFile.raw) {
     if (!partialFile.source) {
       throw new Error(
-        "resolveFile: File source is required when raw data is missing.",
+        "File source is required when raw data is missing.",
       );
     }
 
     const response = await fetch(partialFile.source);
     const data = new Uint8Array(await response.arrayBuffer());
-    const type = _getResponseContentType(response) as BottFileType;
+    const type = response.headers.get("content-type")?.split(";")[0].trim() ??
+      "";
 
-    partialFile.raw = { data, type };
+    if (!(type in BottFileType)) {
+      throw new Error(`Unsupported content type: ${type}`);
+    }
+
+    partialFile.raw = { data, type: type as BottFileType };
   }
 
   if (compressedFilePath && !partialFile.compressed) {
