@@ -107,7 +107,7 @@ export const resolveFile = async (
         resolvedFileRoot,
         `compressed.${
           REVERSE_FILE_TYPE_ENUM[partialFile.compressed.type]
-            .toLocaleLowerCase()
+            .toLowerCase()
         }`,
       ),
       partialFile.compressed.data,
