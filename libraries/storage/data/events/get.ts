@@ -71,6 +71,8 @@ export const getEvents = async (
 
     if (events.has(id)) {
       if (fileInRow) {
+        events.get(id)!.files ??= [];
+
         events.get(id)!.files!.push(fileInRow);
       }
 
@@ -82,7 +84,7 @@ export const getEvents = async (
       type: type as BottEventType,
       details: JSON.parse(details),
       timestamp: new Date(timestamp),
-      files: fileInRow ? [fileInRow] : [],
+      files: fileInRow ? [fileInRow] : undefined,
     };
 
     if (context.c_id) {

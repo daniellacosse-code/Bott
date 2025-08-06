@@ -106,8 +106,14 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
       file.compressed.data,
     );
   } else if (!compressedFilePath && !file.compressed) {
-    const rawData = file.raw!.data as Uint8Array;
-    const rawType = file.raw!.type;
+    if (!file.raw) {
+      throw new Error(
+        "File raw data is required when compressed data is missing.",
+      );
+    }
+
+    const rawData = file.raw.data as Uint8Array;
+    const rawType = file.raw.type;
 
     switch (rawType) {
       case BottFileType.TXT: {
