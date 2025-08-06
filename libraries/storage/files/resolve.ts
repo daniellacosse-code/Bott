@@ -59,7 +59,7 @@ export const resolveFile = async (
     partialFile.raw = {
       data: Deno.readFileSync(rawFilePath),
       type: BottFileType[
-        rawFileExtension?.toLocaleUpperCase() as keyof typeof BottFileType
+        rawFileExtension?.toUpperCase() as keyof typeof BottFileType
       ],
     };
   } else if (!rawFilePath && partialFile.raw) {
