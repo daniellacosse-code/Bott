@@ -10,34 +10,38 @@
  */
 
 import { BottInputFileType } from "@bott/model";
+import { validateFilePath, validateFFmpegArgs, buildSafeFFmpegArgs } from "@bott/security";
 import type { InputFileDataTransformer } from "../../types.ts";
 
 const _ffmpeg = async (
   args: string[],
   input: Uint8Array,
 ): Promise<Uint8Array> => {
+  // Generate secure temporary file paths with proper validation
+  const tempDir = "/tmp";
   const tempInputFilePath = await Deno.makeTempFile({
     prefix: "bott_ffmpeg_in_",
+    suffix: ".input",
   });
   const tempOutputFilePath = await Deno.makeTempFile({
     prefix: "bott_ffmpeg_out_",
+    suffix: ".output",
   });
 
   try {
+    // Validate temp file paths are in safe location
+    validateFilePath(tempInputFilePath, tempDir);
+    validateFilePath(tempOutputFilePath, tempDir);
+
     await Deno.writeFile(tempInputFilePath, input);
 
-    const processedArgs = args.map((arg) => {
-      switch (arg) {
-        case "{{INPUT_FILE}}":
-          return tempInputFilePath;
-        case "{{OUTPUT_FILE}}":
-          return tempOutputFilePath;
-      }
-      return arg;
-    });
+    // Use secure FFmpeg argument building
+    const safeArgs = buildSafeFFmpegArgs(args, tempInputFilePath, tempOutputFilePath);
+
+    console.debug("[DEBUG] Executing FFmpeg with validated args:", safeArgs);
 
     const command = new Deno.Command("ffmpeg", {
-      args: processedArgs,
+      args: safeArgs,
       stdin: "null",
       stdout: "null",
       stderr: "piped",
@@ -56,8 +60,17 @@ const _ffmpeg = async (
 
     return Deno.readFile(tempOutputFilePath);
   } finally {
-    await Deno.remove(tempInputFilePath);
-    await Deno.remove(tempOutputFilePath);
+    // Securely clean up temporary files
+    try {
+      await Deno.remove(tempInputFilePath);
+    } catch {
+      // Ignore errors during cleanup
+    }
+    try {
+      await Deno.remove(tempOutputFilePath);
+    } catch {
+      // Ignore errors during cleanup
+    }
   }
 };
 

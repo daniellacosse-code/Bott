@@ -32,3 +32,18 @@ export const STORAGE_DEPLOY_NONCE_PATH = join(
   STORAGE_ROOT,
   ".deploy-nonce",
 );
+
+// Security Constants
+export const SECURITY_MAX_EVENT_HISTORY = Number(
+  Deno.env.get("CONFIG_INPUT_EVENT_LIMIT") ?? 2000,
+);
+
+export const SECURITY_MAX_FILE_TOKEN_LIMIT = Number(
+  Deno.env.get("CONFIG_INPUT_FILE_TOKEN_LIMIT") ?? 500000,
+);
+
+// Security: Request timeout for external resources
+export const SECURITY_REQUEST_TIMEOUT_MS = 30000;
+
+// Security: Maximum concurrent operations
+export const SECURITY_MAX_CONCURRENT_OPERATIONS = 10;

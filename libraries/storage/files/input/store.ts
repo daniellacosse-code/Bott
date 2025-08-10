@@ -12,6 +12,7 @@
 import { join } from "jsr:@std/path";
 
 import { type BottInputFile, BottInputFileType } from "@bott/model";
+import { validateFilePath, validateFileContent, sanitizeString } from "@bott/security";
 
 import { commit } from "../../data/commit.ts";
 import { prepareHtmlAsMarkdown } from "./prepare/html.ts";
@@ -64,6 +65,12 @@ const _getInputFile = (url: URL): BottInputFile | undefined => {
 const MAX_TXT_WORDS = 600;
 const TRUNCATED_MARKER = " (truncated)";
 
+// Security: Maximum URL length to prevent abuse
+const MAX_URL_LENGTH = 2048;
+
+// Security: Maximum file size for downloads (100MB)
+const MAX_DOWNLOAD_SIZE = 100 * 1024 * 1024;
+
 export const storeNewInputFile = async (
   url: URL,
 ): Promise<BottInputFile> => {
@@ -73,15 +80,59 @@ export const storeNewInputFile = async (
     );
   }
 
+  // Security: Validate URL
+  if (url.toString().length > MAX_URL_LENGTH) {
+    throw new Error("URL is too long");
+  }
+
+  // Security: Only allow HTTP/HTTPS protocols
+  if (!["http:", "https:"].includes(url.protocol)) {
+    throw new Error(`Unsupported URL protocol: ${url.protocol}`);
+  }
+
   const existingFile = _getInputFile(url);
   if (existingFile) {
     return existingFile;
   }
 
-  // Resolve source URL:
-  const response = await fetch(url);
+  // Resolve source URL with security headers:
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "Bott/1.0 (Security-Hardened File Fetcher)",
+    },
+    redirect: "follow",
+    // Security: Set timeout to prevent hanging
+    signal: AbortSignal.timeout(30000), // 30 second timeout
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+  }
+
+  // Security: Check content length before downloading
+  const contentLengthHeader = response.headers.get("content-length");
+  if (contentLengthHeader) {
+    const contentLength = parseInt(contentLengthHeader, 10);
+    if (contentLength > MAX_DOWNLOAD_SIZE) {
+      throw new Error(`File too large: ${contentLength} bytes (max: ${MAX_DOWNLOAD_SIZE})`);
+    }
+  }
+
   const sourceData = new Uint8Array(await response.arrayBuffer());
+  
+  // Security: Double-check actual size
+  if (sourceData.length > MAX_DOWNLOAD_SIZE) {
+    throw new Error(`File too large: ${sourceData.length} bytes (max: ${MAX_DOWNLOAD_SIZE})`);
+  }
+
   const sourceType = _getResponseContentType(response);
+
+  // Security: Validate file content
+  try {
+    validateFileContent(sourceData, sourceType);
+  } catch (error) {
+    throw new Error(`File content validation failed: ${error.message}`);
+  }
 
   // Prepare file of type:
   let resultData, resultType;
@@ -90,6 +141,10 @@ export const storeNewInputFile = async (
       {
         const textDecoder = new TextDecoder();
         let textContent = textDecoder.decode(sourceData);
+        
+        // Security: Sanitize text content
+        textContent = sanitizeString(textContent, { allowHtml: false, maxLength: 50000 });
+        
         const words = textContent.split(/\s+/);
 
         if (words.length > MAX_TXT_WORDS) {
@@ -97,7 +152,7 @@ export const storeNewInputFile = async (
             TRUNCATED_MARKER;
           resultData = new TextEncoder().encode(textContent);
         } else {
-          resultData = sourceData;
+          resultData = new TextEncoder().encode(textContent);
         }
       }
       resultType = BottInputFileType.MD;
@@ -121,9 +176,15 @@ export const storeNewInputFile = async (
       throw new Error(`Unsupported source type: ${sourceType}`);
   }
 
-  // Write to disk:
+  // Security: Validate result file path and generate safe filename
   let path = resultType as string;
   let name = url.pathname.split("/").pop() || "index";
+  
+  // Security: Sanitize filename
+  name = sanitizeString(name, { allowHtml: false, maxLength: 100 });
+  if (!name || name.trim() === "") {
+    name = "file";
+  }
 
   for (const [key, value] of Object.entries(BottInputFileType)) {
     if (resultType === value) {
@@ -136,10 +197,20 @@ export const storeNewInputFile = async (
 
   path += `/${name}`;
 
-  Deno.mkdirSync(join(STORAGE_FILE_INPUT_ROOT, resultType), {
+  // Security: Validate the final path
+  try {
+    validateFilePath(path, STORAGE_FILE_INPUT_ROOT);
+  } catch (error) {
+    throw new Error(`Invalid file path generated: ${error.message}`);
+  }
+
+  const fullInputPath = join(STORAGE_FILE_INPUT_ROOT, resultType);
+  const fullFilePath = join(STORAGE_FILE_INPUT_ROOT, path);
+
+  Deno.mkdirSync(fullInputPath, {
     recursive: true,
   });
-  Deno.writeFileSync(join(STORAGE_FILE_INPUT_ROOT, path), resultData);
+  Deno.writeFileSync(fullFilePath, resultData);
 
   // Return BottInputFile:
   const file = {
