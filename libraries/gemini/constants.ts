@@ -28,3 +28,11 @@ export const INPUT_FILE_VIDEO_COUNT_LIMIT = Number(
 export const INPUT_EVENT_LIMIT = Number(
   Deno.env.get("CONFIG_INPUT_EVENT_LIMIT") ?? 2000,
 );
+
+export const GEMINI_ESSAY_MODEL = Deno.env.get("GEMINI_ESSAY_MODEL") ?? "gemini-2.5-pro";
+
+export const GEMINI_EVENTS_MODEL = Deno.env.get("GEMINI_EVENTS_MODEL") ?? "gemini-2.5-flash";
+
+export const GEMINI_ASSESSMENT_MODEL = Deno.env.get("GEMINI_ASSESSMENT_MODEL") ?? "gemini-2.5-flash-lite";
+
+export const GEMINI_ERROR_MODEL = Deno.env.get("GEMINI_ERROR_MODEL") ?? "gemini-2.5-flash";

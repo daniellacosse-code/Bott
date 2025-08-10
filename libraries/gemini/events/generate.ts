@@ -34,6 +34,8 @@ import {
   INPUT_FILE_AUDIO_COUNT_LIMIT,
   INPUT_FILE_TOKEN_LIMIT,
   INPUT_FILE_VIDEO_COUNT_LIMIT,
+  GEMINI_EVENTS_MODEL,
+  GEMINI_ASSESSMENT_MODEL,
 } from "../constants.ts";
 import {
   getGenerateResponseInstructions,
@@ -58,7 +60,7 @@ type GeminiResponseContext<O extends AnyShape> = {
 export async function* generateEvents<O extends AnyShape>(
   inputEvents: AnyBottEvent[],
   {
-    model = "gemini-2.5-flash",
+    model = GEMINI_EVENTS_MODEL,
     abortSignal,
     context,
     getEvents,
@@ -279,7 +281,7 @@ const _performAssessment = async (
   assessmentInstructions: string,
 ): Promise<number> => {
   const assessmentResult = await gemini.models.generateContent({
-    model: "gemini-2.5-flash-lite",
+    model: GEMINI_ASSESSMENT_MODEL,
     contents,
     config: {
       candidateCount: 1,
