@@ -112,7 +112,11 @@ export async function startDiscordBot<
     );
 
     if (handleEvent) {
-      callWithContext(handleEvent, { client, channel: currentChannel, event });
+      callWithContext(handleEvent, {
+        client,
+        channel: currentChannel,
+        arguments: [event],
+      });
     }
   });
 
@@ -188,11 +192,13 @@ export async function startDiscordBot<
 
     let responseEvent: BottResponseEvent;
     try {
-      const requestEvent = await resolveCommandRequestEvent<O>(interaction);
-
       responseEvent = await resolveCommandResponseEvent<O>(
         command,
-        requestEvent,
+        {
+          request: await resolveCommandRequestEvent<O>(interaction),
+          client,
+          channel: interaction.channel,
+        },
       );
     } catch (error) {
       return interaction.editReply({
@@ -200,10 +206,7 @@ export async function startDiscordBot<
       });
     }
 
-    interaction.followUp({
-      content: responseEvent.details.content as string || undefined,
-      embeds: responseEvent.details.embeds as EmbedBuilder[],
-    });
+    interaction.followUp(responseEvent.details);
   });
 
   // Sync commands with discord origin via their custom http client 🙄:

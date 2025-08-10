@@ -9,7 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { GuildTextBasedChannel } from "npm:discord.js";
+import type {
+  Client,
+  EmbedBuilder,
+  GuildTextBasedChannel,
+} from "npm:discord.js";
 import type {
   BottRequestEvent,
   BottRequestHandler,
@@ -18,16 +22,25 @@ import type {
 import { addEventData } from "@bott/storage";
 import { callWithContext } from "../context.ts";
 
+type DiscordResponseEvent = BottResponseEvent<
+  { content: string; embeds: EmbedBuilder[] }
+>;
+
 export const resolveCommandResponseEvent = async <
   O extends Record<string, unknown>,
 >(
   command: BottRequestHandler<O>,
-  requestEvent: BottRequestEvent<O>,
-): Promise<BottResponseEvent> => {
+  { client, request, channel }: {
+    client: Client;
+    request: BottRequestEvent<O>;
+    channel: GuildTextBasedChannel;
+  },
+): Promise<DiscordResponseEvent> => {
   const response = await callWithContext(command, {
-    channel: interaction.channel as GuildTextBasedChannel,
-    arguments: [requestEvent],
-  });
+    client,
+    channel,
+    arguments: [request],
+  }) as DiscordResponseEvent;
 
   const result = addEventData(response);
   if ("error" in result) {

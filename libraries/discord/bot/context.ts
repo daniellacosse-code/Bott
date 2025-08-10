@@ -31,17 +31,20 @@ export type DiscordBotContext = {
   send: (
     event: BottEvent,
   ) => Promise<AnyBottEvent | undefined>;
-  startTyping: () => Promise<void>;
+  startTyping: () => Promise<void> | undefined;
 };
 
-export const callWithContext = (
-  functionToCall: (this: DiscordBotContext) => void,
+export const callWithContext = <
+  A extends unknown[] = [],
+  B extends unknown = unknown,
+>(
+  functionToCall: (this: DiscordBotContext, ...args: A) => B,
   {
     arguments: args,
     client,
     channel,
   }: {
-    arguments?: unknown[];
+    arguments?: A;
     client: Client;
     channel?: GuildTextBasedChannel;
   },
@@ -108,6 +111,6 @@ export const callWithContext = (
         }
       },
     },
-    ...args,
+    ...(args ?? [] as unknown as A),
   );
 };
