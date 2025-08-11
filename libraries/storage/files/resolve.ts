@@ -11,7 +11,11 @@
 
 import { join } from "jsr:@std/path";
 
-import { type BottFile, BottFileType } from "@bott/model";
+import {
+  BOTT_FILE_TYPE_LOOKUP,
+  type BottFile,
+  BottFileType,
+} from "@bott/model";
 
 import { STORAGE_FILE_ROOT } from "../start.ts";
 import { prepareHtmlAsMarkdown } from "./prepare/html.ts";
@@ -22,10 +26,6 @@ import {
 } from "./prepare/ffmpeg.ts";
 
 const MAX_TXT_WORDS = 600;
-
-const REVERSE_FILE_TYPE_ENUM = Object.fromEntries(
-  Object.entries(BottFileType).map(([key, value]) => [value, key]),
-);
 
 /**
  * Fully resolves a `BottFile` object by ensuring its `raw` and `compressed` data are available.
@@ -89,7 +89,7 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
     Deno.writeFileSync(
       join(
         fileRoot,
-        `raw.${REVERSE_FILE_TYPE_ENUM[file.raw.type].toLowerCase()}`,
+        `raw.${BOTT_FILE_TYPE_LOOKUP[file.raw.type].toLowerCase()}`,
       ),
       file.raw.data,
     );
@@ -171,7 +171,7 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
       join(
         fileRoot,
         `compressed.${
-          REVERSE_FILE_TYPE_ENUM[file.compressed.type]
+          BOTT_FILE_TYPE_LOOKUP[file.compressed.type]
             .toLowerCase()
         }`,
       ),
