@@ -11,13 +11,14 @@
 
 import _gemini from "../client.ts";
 import type { BottFileDataGenerator } from "./types.ts";
+import { CONFIG_ESSAY_MODEL } from "../constants.ts";
 
 import { BottFileType } from "@bott/model";
 
 export const generateEssayData: BottFileDataGenerator = async (
   prompt: string,
   {
-    model = "gemini-2.5-pro",
+    model = CONFIG_ESSAY_MODEL,
     gemini = _gemini,
   },
 ) => {
