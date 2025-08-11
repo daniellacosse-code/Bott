@@ -12,7 +12,7 @@
 import { join } from "jsr:@std/path";
 
 import { type BottOutputFile, BottOutputFileType } from "@bott/model";
-import { validateFilePath, sanitizeString } from "@bott/security";
+import { validateFilePath, sanitizeString } from "../../security.ts";
 
 import { STORAGE_FILE_OUTPUT_ROOT } from "../../start.ts";
 

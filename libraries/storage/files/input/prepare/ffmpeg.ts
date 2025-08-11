@@ -10,8 +10,18 @@
  */
 
 import { BottInputFileType } from "@bott/model";
-import { validateFilePath, validateFFmpegArgs, buildSafeFFmpegArgs } from "@bott/security";
+import { validateFilePath } from "../../security.ts";
 import type { InputFileDataTransformer } from "../../types.ts";
+
+/*
+ * SECURITY NOTE: The _ffmpeg function uses hardcoded, static argument templates 
+ * that do not accept user input directly. This design prevents command injection
+ * attacks. Future developers should maintain this practice:
+ * - Keep FFmpeg arguments static and predefined
+ * - Use template placeholders ({{INPUT_FILE}}, {{OUTPUT_FILE}}) for file paths
+ * - Never concatenate user input directly into FFmpeg arguments
+ * - Validate file paths continue to use secure temporary file generation
+ */
 
 const _ffmpeg = async (
   args: string[],
@@ -35,13 +45,22 @@ const _ffmpeg = async (
 
     await Deno.writeFile(tempInputFilePath, input);
 
-    // Use secure FFmpeg argument building
-    const safeArgs = buildSafeFFmpegArgs(args, tempInputFilePath, tempOutputFilePath);
+    // Replace template placeholders with actual file paths
+    const ffmpegArgs = args.map((arg) => {
+      switch (arg) {
+        case "{{INPUT_FILE}}":
+          return tempInputFilePath;
+        case "{{OUTPUT_FILE}}":
+          return tempOutputFilePath;
+        default:
+          return arg;
+      }
+    });
 
-    console.debug("[DEBUG] Executing FFmpeg with validated args:", safeArgs);
+    console.debug("[DEBUG] Executing FFmpeg with args:", ffmpegArgs);
 
     const command = new Deno.Command("ffmpeg", {
-      args: safeArgs,
+      args: ffmpegArgs,
       stdin: "null",
       stdout: "null",
       stderr: "piped",

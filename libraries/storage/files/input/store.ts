@@ -12,7 +12,7 @@
 import { join } from "jsr:@std/path";
 
 import { type BottInputFile, BottInputFileType } from "@bott/model";
-import { validateFilePath, validateFileContent, sanitizeString } from "@bott/security";
+import { validateFilePath, validateFileContent, sanitizeString } from "../../security.ts";
 
 import { commit } from "../../data/commit.ts";
 import { prepareHtmlAsMarkdown } from "./prepare/html.ts";
