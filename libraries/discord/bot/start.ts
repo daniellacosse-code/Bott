@@ -71,8 +71,8 @@ export async function startDiscordBot<
     throw new Error("Bot user is not set!");
   }
 
+  // Attempt to hydrate the DB.
   (async () => {
-    // Attempt to hydrate the DB.
     // Discord "guilds" are equivalent to Bott's "spaces":
     for (const space of client.guilds.cache.values()) {
       for (const channel of space.channels.cache.values()) {
