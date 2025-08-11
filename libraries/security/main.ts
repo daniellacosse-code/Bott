@@ -10,6 +10,6 @@
  */
 
 export { validateFilePath } from "./validators/filePath.ts";
-export { validateFFmpegArgs } from "./validators/ffmpeg.ts";
+export { validateFFmpegArgs, buildSafeFFmpegArgs } from "./validators/ffmpeg.ts";
 export { validateFileContent } from "./validators/fileContent.ts";
 export { sanitizeString } from "./sanitizers/string.ts";

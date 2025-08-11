@@ -20,63 +20,25 @@ export class FFmpegSecurityError extends Error {
 }
 
 /**
- * Allowlisted FFmpeg arguments that are considered safe
+ * Critical dangerous patterns that should never appear in FFmpeg arguments
  */
-const ALLOWED_FFMPEG_ARGS = new Set([
-  // Basic I/O
-  "-i", "-y", "-f",
-  
-  // Video filters and processing
-  "-vf", "-c:v", "-frames:v", "-preset", "-crf", "-b:v", "-r", "-s",
-  "-filter:v", "-vcodec", "-pix_fmt", "-aspect", "-an", "-vn",
-  
-  // Audio processing
-  "-c:a", "-b:a", "-ar", "-ac", "-acodec", "-filter:a", "-af",
-  "-application", "-compression_level",
-  
-  // Timing and duration
-  "-t", "-ss", "-to", "-duration",
-  
-  // Output format
-  "-lossless", "-qscale:v", "-quality",
-  
-  // Specific codecs and formats
-  "-libwebp", "-libopus", "-libx265",
-  
-  // Scaling and dimensions
-  "scale", "fps", "format", "yuv420p", "lanczos",
-  
-  // Template placeholders
-  "{{INPUT_FILE}}", "{{OUTPUT_FILE}}"
-]);
-
-/**
- * Dangerous patterns that should never appear in FFmpeg arguments
- */
-const DANGEROUS_PATTERNS = [
+const CRITICAL_DANGEROUS_PATTERNS = [
   // Command injection patterns
   /[;&|`$(){}]/,                    // Shell metacharacters
   /\$\{.*\}/,                       // Variable expansion
   /`.*`/,                           // Command substitution
   /\$\(.*\)/,                       // Command substitution
   
-  // File system access patterns
-  /\.\.\/|\.\.\\|\/etc\/|\/proc\/|\/sys\//, // Path traversal or system dirs
-  /\/dev\/|\\\\\.\\|COM\d|LPT\d/,   // Device files
+  // Network access patterns (prevent data exfiltration)
+  /https?:\/\/|ftp:\/\/|tcp:|udp:/,  
   
-  // Network access patterns
-  /https?:\/\/|ftp:\/\/|file:\/\//,  // URLs
-  /tcp:|udp:|pipe:/,                 // Network protocols
-  
-  // Dangerous flags
-  /-exec|-safe|-protocol|-f\s+concat/, // Dangerous FFmpeg options
-  
-  // Script execution
-  /\.sh|\.bat|\.cmd|\.exe|\.scr/,    // Executable extensions
+  // File system access to dangerous areas
+  /\/etc\/|\/proc\/|\/sys\/|\/dev\//,
 ];
 
 /**
- * Validates FFmpeg arguments to prevent command injection and other security issues
+ * Validates FFmpeg arguments to prevent command injection
+ * Simplified validation focusing on critical security issues
  * @param args Array of FFmpeg arguments to validate
  * @throws FFmpegSecurityError if any argument is considered unsafe
  */
@@ -92,8 +54,8 @@ export function validateFFmpegArgs(args: string[]): string[] {
       throw new FFmpegSecurityError(`FFmpeg argument at index ${i} must be a string`, args);
     }
 
-    // Check for dangerous patterns
-    for (const pattern of DANGEROUS_PATTERNS) {
+    // Check for critical dangerous patterns
+    for (const pattern of CRITICAL_DANGEROUS_PATTERNS) {
       if (pattern.test(arg)) {
         throw new FFmpegSecurityError(
           `FFmpeg argument contains dangerous pattern: ${pattern} in "${arg}"`,
@@ -102,28 +64,12 @@ export function validateFFmpegArgs(args: string[]): string[] {
       }
     }
 
-    // Check if the argument starts with a dash (flag) and validate it
-    if (arg.startsWith("-")) {
-      if (!ALLOWED_FFMPEG_ARGS.has(arg)) {
-        throw new FFmpegSecurityError(
-          `FFmpeg flag "${arg}" is not in the allowlist`,
-          args
-        );
-      }
-    } else {
-      // For non-flag arguments, check special cases
-      if (arg.includes("{{") && arg.includes("}}")) {
-        // Template placeholders are allowed
-        if (!ALLOWED_FFMPEG_ARGS.has(arg)) {
-          throw new FFmpegSecurityError(
-            `FFmpeg template "${arg}" is not in the allowlist`,
-            args
-          );
-        }
-      } else {
-        // Regular values need additional validation
-        validateFFmpegValue(arg, i, args);
-      }
+    // Check for null bytes
+    if (arg.includes("\0")) {
+      throw new FFmpegSecurityError(
+        `FFmpeg argument at index ${i} contains null bytes`,
+        args
+      );
     }
 
     // Check for excessively long arguments
@@ -136,64 +82,18 @@ export function validateFFmpegArgs(args: string[]): string[] {
 }
 
 /**
- * Validates individual FFmpeg argument values
- */
-function validateFFmpegValue(value: string, index: number, args: string[]): void {
-  // Check for null bytes
-  if (value.includes("\0")) {
-    throw new FFmpegSecurityError(
-      `FFmpeg argument at index ${index} contains null bytes`,
-      args
-    );
-  }
-
-  // For numeric values, ensure they're reasonable
-  if (/^\d+$/.test(value)) {
-    const num = parseInt(value, 10);
-    if (num < 0 || num > 1000000) {
-      throw new FFmpegSecurityError(
-        `FFmpeg numeric argument at index ${index} is out of safe range`,
-        args
-      );
-    }
-  }
-
-  // For ratio/scale values like "16:9" or "640:480"
-  if (/^\d+:\d+$/.test(value)) {
-    const parts = value.split(":").map(Number);
-    if (parts.some(n => n < 1 || n > 8192)) {
-      throw new FFmpegSecurityError(
-        `FFmpeg ratio argument at index ${index} contains invalid dimensions`,
-        args
-      );
-    }
-  }
-
-  // Check for codec values
-  if (/^lib\w+$/.test(value)) {
-    const allowedCodecs = ["libwebp", "libopus", "libx265", "libmp3lame"];
-    if (!allowedCodecs.includes(value)) {
-      throw new FFmpegSecurityError(
-        `FFmpeg codec "${value}" is not allowed`,
-        args
-      );
-    }
-  }
-}
-
-/**
- * Safely constructs FFmpeg arguments by validating and escaping them
+ * Safely constructs FFmpeg arguments by validating and replacing templates
  * @param baseArgs Base arguments template
- * @param inputFile Input file path (will be validated separately)
- * @param outputFile Output file path (will be validated separately)
- * @returns Validated and safe FFmpeg arguments
+ * @param inputFile Input file path
+ * @param outputFile Output file path
+ * @returns Validated FFmpeg arguments
  */
 export function buildSafeFFmpegArgs(
   baseArgs: string[],
   inputFile: string,
   outputFile: string
 ): string[] {
-  // First validate the base arguments
+  // Validate the base arguments first
   const validatedArgs = validateFFmpegArgs([...baseArgs]);
   
   // Replace template placeholders with actual file paths

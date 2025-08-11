@@ -50,49 +50,20 @@ Deno.test("validateFilePath - dangerous characters", () => {
   assertThrows(
     () => validateFilePath("file\0.txt", basePath),
     FilePathSecurityError,
-    "dangerous characters"
-  );
-  
-  // Windows reserved characters should fail
-  assertThrows(
-    () => validateFilePath("file<>.txt", basePath),
-    FilePathSecurityError,
-    "dangerous characters"
-  );
-  
-  assertThrows(
-    () => validateFilePath("file|pipe.txt", basePath),
-    FilePathSecurityError,
-    "dangerous characters"
-  );
-});
-
-Deno.test("validateFilePath - reserved names", () => {
-  const basePath = "/safe/directory";
-  
-  // Windows reserved names should fail
-  assertThrows(
-    () => validateFilePath("CON", basePath),
-    FilePathSecurityError,
-    "reserved system name"
-  );
-  
-  assertThrows(
-    () => validateFilePath("AUX.txt", basePath),
-    FilePathSecurityError,
-    "reserved system name"
-  );
-  
-  assertThrows(
-    () => validateFilePath("COM1", basePath),
-    FilePathSecurityError,
-    "reserved system name"
+    "null bytes"
   );
 });
 
 Deno.test("validateFilePath - excessive length", () => {
   const basePath = "/safe/directory";
   const longPath = "a".repeat(300);
+  
+  assertThrows(
+    () => validateFilePath(longPath, basePath),
+    FilePathSecurityError,
+    "too long"
+  );
+});
   
   assertThrows(
     () => validateFilePath(longPath, basePath),

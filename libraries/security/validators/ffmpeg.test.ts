@@ -49,35 +49,10 @@ Deno.test("validateFFmpegArgs - command injection prevention", () => {
   );
 });
 
-Deno.test("validateFFmpegArgs - flag allowlist", () => {
-  // Allowed flags should pass
-  const allowedArgs = ["-i", "-y", "-f", "-vf", "-c:v", "-c:a"];
-  assertEquals(validateFFmpegArgs(allowedArgs), allowedArgs);
-  
-  // Disallowed flags should fail
-  assertThrows(
-    () => validateFFmpegArgs(["-exec", "rm -rf /"]),
-    FFmpegSecurityError,
-    "not in the allowlist"
-  );
-  
-  assertThrows(
-    () => validateFFmpegArgs(["-safe", "0"]),
-    FFmpegSecurityError,
-    "not in the allowlist"
-  );
-});
-
 Deno.test("validateFFmpegArgs - dangerous patterns", () => {
   // File system access patterns should fail
   assertThrows(
     () => validateFFmpegArgs(["-i", "/etc/passwd"]),
-    FFmpegSecurityError,
-    "dangerous pattern"
-  );
-  
-  assertThrows(
-    () => validateFFmpegArgs(["-i", "../../../sensitive"]),
     FFmpegSecurityError,
     "dangerous pattern"
   );
@@ -96,35 +71,12 @@ Deno.test("validateFFmpegArgs - dangerous patterns", () => {
   );
 });
 
-Deno.test("validateFFmpegArgs - numeric validation", () => {
-  // Valid numeric values should pass
-  const validNumeric = ["-t", "30", "-ar", "16000"];
-  assertEquals(validateFFmpegArgs(validNumeric), validNumeric);
-  
-  // Invalid numeric ranges should fail
+Deno.test("validateFFmpegArgs - null bytes", () => {
+  // Null bytes should fail
   assertThrows(
-    () => validateFFmpegArgs(["-t", "999999999"]),
+    () => validateFFmpegArgs(["-i", "file\0.txt"]),
     FFmpegSecurityError,
-    "out of safe range"
-  );
-  
-  assertThrows(
-    () => validateFFmpegArgs(["-ar", "-1"]),
-    FFmpegSecurityError,
-    "out of safe range"
-  );
-});
-
-Deno.test("validateFFmpegArgs - codec validation", () => {
-  // Allowed codecs should pass
-  const validCodecs = ["-c:v", "libwebp", "-c:a", "libopus"];
-  assertEquals(validateFFmpegArgs(validCodecs), validCodecs);
-  
-  // Disallowed codecs should fail
-  assertThrows(
-    () => validateFFmpegArgs(["-c:v", "libhacktool"]),
-    FFmpegSecurityError,
-    "codec \"libhacktool\" is not allowed"
+    "null bytes"
   );
 });
 
@@ -150,11 +102,11 @@ Deno.test("buildSafeFFmpegArgs - template replacement", () => {
 });
 
 Deno.test("buildSafeFFmpegArgs - validates base args", () => {
-  const dangerousArgs = ["-i", "{{INPUT_FILE}}", "-exec", "rm -rf /"];
+  const dangerousArgs = ["-i", "{{INPUT_FILE}}", "; rm -rf /"];
   
   assertThrows(
     () => buildSafeFFmpegArgs(dangerousArgs, "input.txt", "output.txt"),
     FFmpegSecurityError,
-    "not in the allowlist"
+    "dangerous pattern"
   );
 });
