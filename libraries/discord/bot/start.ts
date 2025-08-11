@@ -12,9 +12,9 @@
 import {
   ChannelType,
   Client,
-  type EmbedBuilder,
   Events,
   GatewayIntentBits,
+  type GuildTextBasedChannel,
   type Message,
   REST,
   Routes,
@@ -197,7 +197,7 @@ export async function startDiscordBot<
         {
           request: await resolveCommandRequestEvent<O>(interaction),
           client,
-          channel: interaction.channel,
+          channel: interaction.channel! as GuildTextBasedChannel,
         },
       );
     } catch (error) {

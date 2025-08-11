@@ -15,6 +15,7 @@ import type {
   GuildTextBasedChannel,
 } from "npm:discord.js";
 import type {
+  AnyShape,
   BottRequestEvent,
   BottRequestHandler,
   BottResponseEvent,
@@ -29,7 +30,7 @@ type DiscordResponseEvent = BottResponseEvent<
 export const resolveCommandResponseEvent = async <
   O extends Record<string, unknown>,
 >(
-  command: BottRequestHandler<O>,
+  command: BottRequestHandler<O, AnyShape>,
   { client, request, channel }: {
     client: Client;
     request: BottRequestEvent<O>;
