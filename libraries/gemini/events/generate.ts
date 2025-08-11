@@ -29,13 +29,13 @@ import type { getEvents } from "@bott/storage";
 
 import gemini from "../client.ts";
 import {
+  CONFIG_ASSESSMENT_MODEL,
   CONFIG_ASSESSMENT_SCORE_THRESHOLD,
+  CONFIG_EVENTS_MODEL,
   INPUT_EVENT_LIMIT,
   INPUT_FILE_AUDIO_COUNT_LIMIT,
   INPUT_FILE_TOKEN_LIMIT,
   INPUT_FILE_VIDEO_COUNT_LIMIT,
-  CONFIG_EVENTS_MODEL,
-  CONFIG_ASSESSMENT_MODEL,
 } from "../constants.ts";
 import {
   getGenerateResponseInstructions,
