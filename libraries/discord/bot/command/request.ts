@@ -22,6 +22,7 @@ import {
   type CommandInteractionOption,
   type GuildTextBasedChannel,
 } from "npm:discord.js";
+import { logger } from "@bott/logger";
 
 export function resolveCommandRequestEvent<
   O extends Record<string, unknown> = Record<string, unknown>,
@@ -66,7 +67,7 @@ export function resolveCommandRequestEvent<
 
   const result = addEventData(event);
   if ("error" in result) {
-    console.error(
+    logger.error(
       "[ERROR] Failed to resolve request event to database:",
       result.error,
     );

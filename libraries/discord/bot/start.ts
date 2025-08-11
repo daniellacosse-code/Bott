@@ -35,6 +35,7 @@ import { getCommandJson } from "./command/json.ts";
 import type { DiscordBotContext } from "./context.ts";
 import { resolveCommandResponseEvent } from "./command/response.ts";
 import { callWithContext } from "./context.ts";
+import { logger } from "@bott/logger";
 
 const REQUIRED_INTENTS = [
   GatewayIntentBits.GuildMembers,
@@ -64,7 +65,7 @@ export async function startDiscordBot<
   const client = new Client({ intents: REQUIRED_INTENTS });
 
   await client.login(token);
-  console.debug("[DEBUG] Logged in.");
+  logger.debug("[DEBUG] Logged in.");
 
   // This is the Bott user object.
   if (!client.user) {
@@ -106,7 +107,7 @@ export async function startDiscordBot<
       message as Message<true>,
     )) as BottEvent;
 
-    console.debug(
+    logger.debug(
       "[DEBUG] Message event:",
       { id: event.id, preview: event.details?.content.slice(0, 100) },
     );
@@ -156,7 +157,7 @@ export async function startDiscordBot<
       );
     }
 
-    console.debug("[DEBUG] Reaction event:", {
+    logger.debug("[DEBUG] Reaction event:", {
       id: event.id,
       details: event.details,
     });

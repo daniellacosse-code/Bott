@@ -22,6 +22,7 @@ import type {
 } from "@bott/model";
 import { addEventData } from "@bott/storage";
 import { callWithContext } from "../context.ts";
+import { logger } from "@bott/logger";
 
 type DiscordResponseEvent = BottResponseEvent<
   { content: string; embeds: EmbedBuilder[] }
@@ -45,7 +46,7 @@ export const resolveCommandResponseEvent = async <
 
   const result = addEventData(response);
   if ("error" in result) {
-    console.error(
+    logger.error(
       "[ERROR] Failed to resolve response event to database:",
       result.error,
     );

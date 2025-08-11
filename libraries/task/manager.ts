@@ -10,6 +10,7 @@
  */
 
 import type { Task } from "./create.ts";
+import { logger } from "@bott/logger";
 
 type TaskBucketName = string;
 
@@ -86,7 +87,7 @@ export class TaskManager {
       const newTask = bucket.next;
 
       if (currentTask && bucket.remainingSwaps >= 1) {
-        console.debug(
+        logger.debug(
           "[DEBUG] Replacing current task:",
           bucket.name,
           `${currentTask.nonce} -> ${newTask.nonce}`,
@@ -101,7 +102,7 @@ export class TaskManager {
         bucket.current = newTask;
         bucket.next = undefined;
 
-        console.debug(
+        logger.debug(
           "[DEBUG] Starting new task:",
           `${bucket.name}:${newTask.nonce}`,
         );
@@ -111,7 +112,7 @@ export class TaskManager {
             await newTask(newTask.controller.signal);
             bucket.remainingSwaps = bucket.config.maximumSequentialSwaps;
             bucket.completions.push(new Date());
-            console.debug(
+            logger.debug(
               "[DEBUG] Task completed:",
               `${bucket.name}:${newTask.nonce}`,
             );
@@ -120,12 +121,12 @@ export class TaskManager {
               (error as Error).name === "AbortError" ||
               (error as Error).message.includes("AbortError")
             ) {
-              console.warn(
+              logger.warn(
                 "[WARN] Task aborted:",
                 `${bucket.name}:${newTask.nonce}`,
               );
             } else {
-              console.warn(
+              logger.warn(
                 "[WARN] Task failed:",
                 `${bucket.name}:${newTask.nonce}`,
                 error,
@@ -164,7 +165,7 @@ export class TaskManager {
       }
     }
 
-    console.debug("[DEBUG] Task manager status:", {
+    logger.debug("[DEBUG] Task manager status:", {
       running: runningTasks,
       idle: idleTasks,
       totalCompletions: this.buckets.values().reduce((sum, bucket) => {

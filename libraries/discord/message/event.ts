@@ -18,6 +18,7 @@ import {
   type BottFile,
 } from "@bott/model";
 import { addEventData, getEvents } from "@bott/storage";
+import { logger } from "@bott/logger";
 
 import { getMarkdownLinks } from "./markdown.ts";
 
@@ -90,7 +91,7 @@ export const resolveBottEventFromMessage = async (
 
   const result = await addEventData(event);
   if ("error" in result) {
-    console.error(
+    logger.error(
       "[ERROR] Failed to resolve message event to database:",
       result.error,
     );
