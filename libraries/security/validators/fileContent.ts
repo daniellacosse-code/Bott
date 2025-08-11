@@ -45,7 +45,7 @@ export const ALLOWED_MIME_TYPES = new Set(Object.keys(MAX_FILE_SIZES));
  */
 const CRITICAL_DANGEROUS_PATTERNS = [
   // Script injection patterns
-  /<script[\s\S]*?>[\s\S]*?<\/script>/gi,
+  /<script\b[^>]*>[\s\S]*?<\/script[^>]*>/gi, // Improved: matches script end tags with optional whitespace/attributes
   /javascript:/gi,
   /vbscript:/gi,
   
