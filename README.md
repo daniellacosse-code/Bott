@@ -70,7 +70,7 @@ Bott is configured via a series of environment variables.
 | `GOOGLE_ACCESS_TOKEN`               | An access token for authenticating with Google Cloud APIs (for local development).                                        | -                                 |
 | `GOOGLE_PROJECT_ID`                 | The ID of your Google Cloud project. (Automatically set during Cloud Run deployment.)                                     | -                                 |
 | `GOOGLE_PROJECT_LOCATION`           | The GCP region where your Vertex AI resources are located. (Automatically set during Cloud Run deployment.)               | -                                 |
-| `LOG_TOPICS`                        | Controls which log topics to display. Comma-separated list of topics: debug, info, warn, error, performance.              | info,warn,error                   |
+| `LOG_TOPICS`                        | Controls which log topics to display. Comma-separated list of topics: debug, info, warn, error, perf.                     | info,warn,error                   |
 | `PORT`                              | The port of the health check server required for GCP Cloud Run.                                                           | 8080                              |
 
 ### Deploying Bott
