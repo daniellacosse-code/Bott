@@ -9,52 +9,41 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
-}
+// Parse LOG_TOPICS environment variable into a Set of allowed topics
+const allowedTopics = new Set(
+  (Deno.env.get("LOG_TOPICS") || "info,warn,error")
+    .toLowerCase()
+    .split(",")
+    .map(topic => topic.trim())
+    .filter(topic => topic.length > 0)
+);
 
-const getCurrentLevel = (): LogLevel => {
-  const envLevel = Deno.env.get("LOG_LEVEL")?.toUpperCase();
-  switch (envLevel) {
-    case "DEBUG": return LogLevel.DEBUG;
-    case "INFO": return LogLevel.INFO;
-    case "WARN": return LogLevel.WARN;
-    case "ERROR": return LogLevel.ERROR;
-    default: return LogLevel.INFO; // Default to INFO level
-  }
-};
-
-const currentLevel = getCurrentLevel();
-
-const shouldLog = (level: LogLevel): boolean => {
-  return level >= currentLevel;
+const shouldLog = (topic: string): boolean => {
+  return allowedTopics.has(topic.toLowerCase());
 };
 
 // Export a simple logger object
 export const log = {
   debug(...args: unknown[]): void {
-    if (shouldLog(LogLevel.DEBUG)) {
+    if (shouldLog("debug")) {
       console.debug(...args);
     }
   },
 
   info(...args: unknown[]): void {
-    if (shouldLog(LogLevel.INFO)) {
+    if (shouldLog("info")) {
       console.info(...args);
     }
   },
 
   warn(...args: unknown[]): void {
-    if (shouldLog(LogLevel.WARN)) {
+    if (shouldLog("warn")) {
       console.warn(...args);
     }
   },
 
   error(...args: unknown[]): void {
-    if (shouldLog(LogLevel.ERROR)) {
+    if (shouldLog("error")) {
       console.error(...args);
     }
   },

@@ -12,10 +12,8 @@
 import { assertEquals } from "jsr:@std/assert";
 import { log } from "./main.ts";
 
-Deno.test("Logger respects LOG_LEVEL environment variable", () => {
-  // The logger should default to INFO level if LOG_LEVEL is not set
-  // Since we can't easily test console output without complex mocking,
-  // we'll test the internal behavior by checking if methods exist
+Deno.test("Logger exports expected methods", () => {
+  // Verify the logger exports the expected methods
   assertEquals(typeof log.debug, "function");
   assertEquals(typeof log.info, "function");
   assertEquals(typeof log.warn, "function");
