@@ -16,7 +16,7 @@ import {
   type BottFile,
   BottFileType,
 } from "@bott/model";
-import { validateUrl, validateFileSize, MAX_FILE_SIZE } from "../validation.ts";
+import { throwIfUnsafeUrl, throwIfUnsafeFileSize, MAX_FILE_SIZE } from "../validation.ts";
 import { log } from "@bott/logger";
 
 import { STORAGE_FILE_ROOT } from "../start.ts";
@@ -27,7 +27,6 @@ import {
   prepareStaticImageAsWebp,
 } from "./prepare/ffmpeg.ts";
 
-// Request timeout in milliseconds (30 seconds)
 const FETCH_TIMEOUT_MS = 30 * 1000;
 
 const MAX_TXT_WORDS = 600;
@@ -71,9 +70,7 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
       );
     }
 
-    if (!validateUrl(file.source)) {
-      throw new Error(`Invalid or blocked URL: ${file.source}`);
-    }
+    throwIfUnsafeUrl(file.source);
 
     log.debug(
       `Fetching raw file from source URL: ${file.source}`,
@@ -83,7 +80,6 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
       const response = await fetch(file.source, {
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
         redirect: "follow",
-        // Security headers
         headers: {
           "User-Agent": "Bott",
         },
@@ -95,9 +91,7 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
       
       const data = new Uint8Array(await response.arrayBuffer());
       
-      if (!validateFileSize(data)) {
-        throw new Error(`File size ${data.length} exceeds maximum allowed size ${MAX_FILE_SIZE}`);
-      }
+      throwIfUnsafeFileSize(data);
       
       const type = response.headers.get("content-type")?.split(";")[0].trim() ??
         "";

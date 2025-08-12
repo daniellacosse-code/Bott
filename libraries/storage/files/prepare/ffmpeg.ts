@@ -10,7 +10,7 @@
  */
 
 import { BottFileType } from "@bott/model";
-import { validateFileSize, MAX_FILE_SIZE } from "@bott/storage";
+import { throwIfUnsafeFileSize, MAX_FILE_SIZE } from "@bott/storage";
 
 // Security Note: _ffmpeg is not exported and all arguments are hardcoded below.
 // If this function is ever modified to accept user input, implement proper
@@ -22,9 +22,7 @@ const _ffmpeg = async (
   args: string[],
   input: Uint8Array,
 ): Promise<Uint8Array> => {
-  if (!validateFileSize(input)) {
-    throw new Error(`File size ${input.length} exceeds maximum allowed size ${MAX_FILE_SIZE}`);
-  }
+  throwIfUnsafeFileSize(input);
 
   const tempInputFilePath = await Deno.makeTempFile({
     prefix: "bott_ffmpeg_in_",
@@ -68,9 +66,7 @@ const _ffmpeg = async (
 
     const outputData = await Deno.readFile(tempOutputFilePath);
     
-    if (!validateFileSize(outputData)) {
-      throw new Error(`Output file size ${outputData.length} exceeds maximum allowed size ${MAX_FILE_SIZE}`);
-    }
+    throwIfUnsafeFileSize(outputData);
     
     return outputData;
   } finally {
