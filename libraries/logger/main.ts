@@ -14,8 +14,8 @@ const allowedTopics = new Set(
   (Deno.env.get("LOG_TOPICS") || "info,warn,error")
     .toLowerCase()
     .split(",")
-    .map(topic => topic.trim())
-    .filter(topic => topic.length > 0)
+    .map((topic) => topic.trim())
+    .filter((topic) => topic.length > 0),
 );
 
 const shouldLog = (topic: string): boolean => {

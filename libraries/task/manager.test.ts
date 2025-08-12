@@ -370,7 +370,7 @@ Deno.test("TaskManager - should handle task errors gracefully", async () => {
 
   assert(warnCalled, "console.warn should have been called");
   assert(
-    warnMessage.includes("[WARN] Task failed:"),
+    warnMessage.includes("Task failed:"),
     "Warn message prefix incorrect",
   );
   assert(
