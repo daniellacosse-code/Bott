@@ -334,8 +334,13 @@ Deno.test("processMultiPhaseResponse - valid response with scored events", () =>
           })
         }]
       }
-    }]
-  };
+    }],
+    text: "",
+    data: {},
+    functionCalls: [],
+    executableCode: [],
+    codeExecutionResult: undefined,
+  } as any; // Use 'as any' to bypass strict typing for test
 
   const result = processMultiPhaseResponse(mockResponse);
   
@@ -353,8 +358,13 @@ Deno.test("processMultiPhaseResponse - empty response", () => {
           text: ""
         }]
       }
-    }]
-  };
+    }],
+    text: "",
+    data: {},
+    functionCalls: [],
+    executableCode: [],
+    codeExecutionResult: undefined,
+  } as any;
 
   const result = processMultiPhaseResponse(mockResponse);
   
@@ -389,8 +399,13 @@ Deno.test("processMultiPhaseResponse - no output events filtered", () => {
           })
         }]
       }
-    }]
-  };
+    }],
+    text: "",
+    data: {},
+    functionCalls: [],
+    executableCode: [],
+    codeExecutionResult: undefined,
+  } as any;
 
   const result = processMultiPhaseResponse(mockResponse);
   
