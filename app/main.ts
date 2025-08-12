@@ -49,12 +49,12 @@ startDiscordBot({
   identityToken: Deno.env.get("DISCORD_TOKEN")!,
   mount() {
     logger.info(
-      `[INFO] Running bot "${this.user.name}" at user id "<@${this.user.id}>"`,
+      `Running bot "${this.user.name}" at user id "<@${this.user.id}>"`,
     );
   },
   event(event) {
     if (deployNonce !== _getCurrentDeployNonce()) {
-      logger.debug("[DEBUG] Deploy nonce mismatch, ignoring event.");
+      logger.debug("Deploy nonce mismatch, ignoring event.");
       return;
     }
 
@@ -71,7 +71,7 @@ startDiscordBot({
     const result = addEventData(event);
 
     if ("error" in result) {
-      logger.error("[ERROR] Failed to add event to database:", result);
+      logger.error("Failed to add event to database:", result);
       return;
     }
 
@@ -172,7 +172,7 @@ startDiscordBot({
                   // Also store the "response" event.
                   addEventData(responseEvent);
                 } catch (error) {
-                  logger.warn("[WARN] Failed to generate media:", error);
+                  logger.warn("Failed to generate media:", error);
 
                   this.send(
                     await generateErrorMessage(

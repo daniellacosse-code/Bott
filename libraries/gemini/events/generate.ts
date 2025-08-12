@@ -181,7 +181,7 @@ export async function* generateEvents<O extends AnyShape>(
   }
 
   logger.debug(
-    `[DEBUG] Generating response to ${resourceAccumulator.unseenEvents} events, with ${resourceAccumulator.audioFiles} audio files and ${resourceAccumulator.videoFiles} video files...`,
+    `Generating response to ${resourceAccumulator.unseenEvents} events, with ${resourceAccumulator.audioFiles} audio files and ${resourceAccumulator.videoFiles} video files...`,
   );
 
   const responseGenerator = await gemini.models.generateContentStream({
@@ -240,14 +240,14 @@ export async function* generateEvents<O extends AnyShape>(
 
         if (score < CONFIG_ASSESSMENT_SCORE_THRESHOLD) {
           logger.debug(
-            "[DEBUG] Message recieved poor assessment, skipping:",
+            "Message recieved poor assessment, skipping:",
             { content: event.details.content, scores },
           );
 
           continue;
         }
 
-        logger.debug("[DEBUG] Message passed assessment:", {
+        logger.debug("Message passed assessment:", {
           content: event.details.content,
           scores,
         });

@@ -165,7 +165,7 @@ export const addEventData = async (
             parent: event,
           });
         } catch (e) {
-          logger.warn(`[WARN] Failed to resolve file [${file.id}]: ${e}`);
+          logger.warn(`Failed to resolve file [${file.id}]: ${e}`);
         }
       }
     }

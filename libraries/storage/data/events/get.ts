@@ -70,7 +70,7 @@ export const getEvents = async (
             : undefined,
         });
       } catch (e) {
-        logger.warn(`[WARN] Failed to resolve file [${rowData.f_id}]: ${e}`);
+        logger.warn(`Failed to resolve file [${rowData.f_id}]: ${e}`);
       }
     }
 

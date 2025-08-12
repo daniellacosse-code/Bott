@@ -65,7 +65,7 @@ export async function startDiscordBot<
   const client = new Client({ intents: REQUIRED_INTENTS });
 
   await client.login(token);
-  logger.debug("[DEBUG] Logged in.");
+  logger.debug("Logged in.");
 
   // This is the Bott user object.
   if (!client.user) {
@@ -108,7 +108,7 @@ export async function startDiscordBot<
     )) as BottEvent;
 
     logger.debug(
-      "[DEBUG] Message event:",
+      "Message event:",
       { id: event.id, preview: event.details?.content.slice(0, 100) },
     );
 
@@ -157,7 +157,7 @@ export async function startDiscordBot<
       );
     }
 
-    logger.debug("[DEBUG] Reaction event:", {
+    logger.debug("Reaction event:", {
       id: event.id,
       details: event.details,
     });

@@ -57,7 +57,7 @@ export const generateMedia: BottRequestHandler<
   ) {
     const { type, prompt } = requestEvent.details.options;
 
-    logger.debug("[DEBUG] generateMedia() called with options:", {
+    logger.debug("generateMedia() called with options:", {
       type,
       prompt,
     });

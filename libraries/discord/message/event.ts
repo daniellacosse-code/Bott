@@ -92,7 +92,7 @@ export const resolveBottEventFromMessage = async (
   const result = await addEventData(event);
   if ("error" in result) {
     logger.error(
-      "[ERROR] Failed to resolve message event to database:",
+      "Failed to resolve message event to database:",
       result.error,
     );
   }

@@ -47,7 +47,7 @@ export const resolveCommandResponseEvent = async <
   const result = addEventData(response);
   if ("error" in result) {
     logger.error(
-      "[ERROR] Failed to resolve response event to database:",
+      "Failed to resolve response event to database:",
       result.error,
     );
   }

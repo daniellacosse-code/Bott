@@ -88,7 +88,7 @@ export class TaskManager {
 
       if (currentTask && bucket.remainingSwaps >= 1) {
         logger.debug(
-          "[DEBUG] Replacing current task:",
+          "Replacing current task:",
           bucket.name,
           `${currentTask.nonce} -> ${newTask.nonce}`,
         );
@@ -103,7 +103,7 @@ export class TaskManager {
         bucket.next = undefined;
 
         logger.debug(
-          "[DEBUG] Starting new task:",
+          "Starting new task:",
           `${bucket.name}:${newTask.nonce}`,
         );
 
@@ -113,7 +113,7 @@ export class TaskManager {
             bucket.remainingSwaps = bucket.config.maximumSequentialSwaps;
             bucket.completions.push(new Date());
             logger.debug(
-              "[DEBUG] Task completed:",
+              "Task completed:",
               `${bucket.name}:${newTask.nonce}`,
             );
           } catch (error) {
@@ -122,12 +122,12 @@ export class TaskManager {
               (error as Error).message.includes("AbortError")
             ) {
               logger.warn(
-                "[WARN] Task aborted:",
+                "Task aborted:",
                 `${bucket.name}:${newTask.nonce}`,
               );
             } else {
               logger.warn(
-                "[WARN] Task failed:",
+                "Task failed:",
                 `${bucket.name}:${newTask.nonce}`,
                 error,
               );
@@ -165,7 +165,7 @@ export class TaskManager {
       }
     }
 
-    logger.debug("[DEBUG] Task manager status:", {
+    logger.debug("Task manager status:", {
       running: runningTasks,
       idle: idleTasks,
       totalCompletions: this.buckets.values().reduce((sum, bucket) => {

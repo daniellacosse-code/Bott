@@ -184,8 +184,8 @@ export async function* outputEventStream<O extends AnyShape>(
     const finalTrimmedBuffer = remainder.trim();
     if (finalTrimmedBuffer.length > 0 && finalTrimmedBuffer !== "]") {
       const warningMessage = finalTrimmedBuffer.startsWith("{")
-        ? "[WARN] Stream ended with what appears to be an incomplete JSON object in buffer:"
-        : "[WARN] Stream ended with unprocessed trailing data in buffer:";
+        ? "Stream ended with what appears to be an incomplete JSON object in buffer:"
+        : "Stream ended with unprocessed trailing data in buffer:";
       logger.warn(
         warningMessage,
         finalTrimmedBuffer.substring(0, 200) +

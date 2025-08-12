@@ -68,7 +68,7 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
     }
 
     logger.debug(
-      `[DEBUG] Fetching raw file from source URL: ${file.source}`,
+      `Fetching raw file from source URL: ${file.source}`,
     );
     const response = await fetch(file.source);
     const data = new Uint8Array(await response.arrayBuffer());
@@ -84,7 +84,7 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
 
   if (!rawFilePath) {
     logger.debug(
-      `[DEBUG] Writing raw file to disk: ${file.id}, type: ${file.raw.type}`,
+      `Writing raw file to disk: ${file.id}, type: ${file.raw.type}`,
     );
 
     Deno.writeFileSync(
@@ -165,7 +165,7 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
 
   if (!compressedFilePath) {
     logger.debug(
-      `[DEBUG] Writing compressed file to disk: ${file.id}, type: ${file.compressed.type}`,
+      `Writing compressed file to disk: ${file.id}, type: ${file.compressed.type}`,
     );
 
     Deno.writeFileSync(

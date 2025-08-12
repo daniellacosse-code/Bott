@@ -68,7 +68,7 @@ export function resolveCommandRequestEvent<
   const result = addEventData(event);
   if ("error" in result) {
     logger.error(
-      "[ERROR] Failed to resolve request event to database:",
+      "Failed to resolve request event to database:",
       result.error,
     );
   }
