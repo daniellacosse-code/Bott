@@ -93,15 +93,15 @@ Take any events generated in Phase 2 and break them into smaller, more chat-frie
 - Only the first message addressing a parent should be type "reply", subsequent messages should be type "message"
 
 Example transformation:
-```
+\`\`\`
 Original: "That's an interesting development. It sounds like they are aiming for higher integration. Have you tested it yet?"
-```
+\`\`\`
 Becomes:
-```
-Event 1: {type: "reply", details: {content: "Interesting!"}}
-Event 2: {type: "message", details: {content: "Sounds like they're aiming for higher integration."}}  
-Event 3: {type: "message", details: {content: "Have you tested it yet?"}}
-```
+\`\`\`
+Event 1: \\{type: "reply", details: \\{content: "Interesting!"\\}\\}
+Event 2: \\{type: "message", details: \\{content: "Sounds like they're aiming for higher integration."\\}\\}  
+Event 3: \\{type: "message", details: \\{content: "Have you tested it yet?"\\}\\}
+\`\`\`
 
 ## Phase 4: Score Outgoing Events
 
