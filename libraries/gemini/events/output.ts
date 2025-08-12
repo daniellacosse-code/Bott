@@ -10,6 +10,7 @@
  */
 
 import {
+  type AnyBottEvent,
   type AnyShape,
   type BottEvent,
   BottEventType,
@@ -32,169 +33,210 @@ export type GeminiOutputEvent<O extends AnyShape> = Omit<
   "id" | "timestamp"
 >;
 
+export type GeminiMultiPhaseResponse<O extends AnyShape> = {
+  scoredInputEvents: AnyBottEvent[];
+  filteredOutputEvents: GeminiOutputEvent<O>[];
+};
+
 export const getOutputEventSchema = <O extends AnyShape>(
   requestHandlers: BottRequestHandler<O, AnyShape>[],
 ): GeminiStructuredResponseSchema => ({
-  type: GeminiStructuredResponseType.ARRAY,
-  items: {
-    type: GeminiStructuredResponseType.OBJECT,
-    properties: {
-      type: {
-        type: GeminiStructuredResponseType.STRING,
-        enum: [
-          BottEventType.MESSAGE,
-          BottEventType.REPLY,
-          BottEventType.REACTION,
-          BottEventType.REQUEST,
-        ],
-        description:
-          "The type of event to send: 'message', 'reply', 'reaction', or 'request'.",
-      },
-      details: {
+  type: GeminiStructuredResponseType.OBJECT,
+  properties: {
+    scoredInputEvents: {
+      type: GeminiStructuredResponseType.ARRAY,
+      description: "Array of input events with scores added to details.scores for events that had seen:false and no existing scores",
+      items: {
         type: GeminiStructuredResponseType.OBJECT,
         properties: {
-          content: {
-            type: GeminiStructuredResponseType.STRING,
-            description:
-              "The content of the message or reaction (e.g., an emoji for reactions). Required if event is of type 'message', 'reply', or 'reaction'.",
-          },
-          name: {
-            type: GeminiStructuredResponseType.STRING,
-            enum: requestHandlers.map((handler) => handler.name),
-            description:
-              "The name of the request to make. Required if event is of type 'request'.",
-          },
-          options: {
+          id: { type: GeminiStructuredResponseType.STRING },
+          type: { type: GeminiStructuredResponseType.STRING },
+          details: {
             type: GeminiStructuredResponseType.OBJECT,
-            description:
-              "The options to pass to the request. Required if event is of type 'request'.",
-            properties: requestHandlers.reduce((acc, handler) => {
-              if (!handler.options) {
-                return acc;
-              }
-
-              for (const option of handler.options) {
-                let type: GeminiStructuredResponseType;
-
-                switch (option.type) {
-                  case BottRequestOptionType.INTEGER:
-                    type = GeminiStructuredResponseType.NUMBER;
-                    break;
-                  case BottRequestOptionType.BOOLEAN:
-                    type = GeminiStructuredResponseType.BOOLEAN;
-                    break;
-                  case BottRequestOptionType.STRING:
-                  default:
-                    type = GeminiStructuredResponseType.STRING;
-                    break;
-                }
-
-                acc[option.name] = {
-                  type,
-                  description:
-                    `${option.description} Required for a "request" of name "${handler.name}"`,
-                  enum: option.allowedValues,
-                };
-              }
-
-              return acc;
-            }, {} as Record<string, GeminiStructuredResponseSchema>),
-            // This is weird, as we are flattening the requirements
-            // across all calls, but we can just ignore the parameters
-            // we don't need in a given context.
-            required: requestHandlers.flatMap((handler) =>
-              handler.options?.filter((option) => option.required).map(
-                (option) => option.name,
-              ) ?? []
-            ),
+            properties: {
+              content: { type: GeminiStructuredResponseType.STRING },
+              seen: { type: GeminiStructuredResponseType.BOOLEAN },
+              scores: {
+                type: GeminiStructuredResponseType.OBJECT,
+                description: "Scores for incoming events (1-5 scale)",
+                properties: {
+                  seriousness: { type: GeminiStructuredResponseType.NUMBER, description: "1=very sarcastic, 5=very serious" },
+                  importance: { type: GeminiStructuredResponseType.NUMBER, description: "1=low priority, 5=high priority" },
+                  directedAtBott: { type: GeminiStructuredResponseType.NUMBER, description: "1=not directed, 5=directly addressed" },
+                  factCheckingNeed: { type: GeminiStructuredResponseType.NUMBER, description: "1=no checking needed, 5=needs verification" },
+                  supportNeed: { type: GeminiStructuredResponseType.NUMBER, description: "1=no support needed, 5=needs help" },
+                },
+              },
+            },
+          },
+          timestamp: { type: GeminiStructuredResponseType.STRING },
+          user: {
+            type: GeminiStructuredResponseType.OBJECT,
+            properties: {
+              id: { type: GeminiStructuredResponseType.STRING },
+              name: { type: GeminiStructuredResponseType.STRING },
+            },
+          },
+          channel: {
+            type: GeminiStructuredResponseType.OBJECT,
+            properties: {
+              id: { type: GeminiStructuredResponseType.STRING },
+              name: { type: GeminiStructuredResponseType.STRING },
+              description: { type: GeminiStructuredResponseType.STRING },
+            },
+          },
+          parent: {
+            type: GeminiStructuredResponseType.OBJECT,
+            properties: {
+              id: { type: GeminiStructuredResponseType.STRING },
+            },
           },
         },
-      },
-      parent: {
-        type: GeminiStructuredResponseType.OBJECT,
-        properties: {
-          id: {
-            type: GeminiStructuredResponseType.STRING,
-            description:
-              "The string ID of the message being replied or reacted to. Required if 'parent' object is present.",
-          },
-        },
-        required: ["id"],
       },
     },
-    required: ["type", "details"],
-    description:
-      "An event object representing an action to take (message, reply, or reaction).",
+    filteredOutputEvents: {
+      type: GeminiStructuredResponseType.ARRAY,
+      description: "Array of filtered outgoing events from Phase 5, empty array if no response warranted",
+      items: {
+        type: GeminiStructuredResponseType.OBJECT,
+        properties: {
+          type: {
+            type: GeminiStructuredResponseType.STRING,
+            enum: [
+              BottEventType.MESSAGE,
+              BottEventType.REPLY,
+              BottEventType.REACTION,
+              BottEventType.REQUEST,
+            ],
+            description: "The type of event to send: 'message', 'reply', 'reaction', or 'request'.",
+          },
+          details: {
+            type: GeminiStructuredResponseType.OBJECT,
+            properties: {
+              content: {
+                type: GeminiStructuredResponseType.STRING,
+                description: "Content of the message or reaction. Use descriptive slugs in examples.",
+              },
+              name: {
+                type: GeminiStructuredResponseType.STRING,
+                enum: requestHandlers.map((handler) => handler.name),
+                description: "The name of the request to make. Required if event is of type 'request'.",
+              },
+              options: {
+                type: GeminiStructuredResponseType.OBJECT,
+                description: "The options to pass to the request. Required if event is of type 'request'.",
+                properties: requestHandlers.reduce((acc, handler) => {
+                  if (!handler.options) {
+                    return acc;
+                  }
+
+                  for (const option of handler.options) {
+                    let type: GeminiStructuredResponseType;
+
+                    switch (option.type) {
+                      case BottRequestOptionType.INTEGER:
+                        type = GeminiStructuredResponseType.NUMBER;
+                        break;
+                      case BottRequestOptionType.BOOLEAN:
+                        type = GeminiStructuredResponseType.BOOLEAN;
+                        break;
+                      case BottRequestOptionType.STRING:
+                      default:
+                        type = GeminiStructuredResponseType.STRING;
+                        break;
+                    }
+
+                    acc[option.name] = {
+                      type,
+                      description: `${option.description} Required for a "request" of name "${handler.name}"`,
+                      enum: option.allowedValues,
+                    };
+                  }
+
+                  return acc;
+                }, {} as Record<string, GeminiStructuredResponseSchema>),
+                required: requestHandlers.flatMap((handler) =>
+                  handler.options?.filter((option) => option.required).map(
+                    (option) => option.name,
+                  ) ?? []
+                ),
+              },
+              scores: {
+                type: GeminiStructuredResponseType.OBJECT,
+                description: "Scores for outgoing events (1-100 scale)",
+                properties: {
+                  relevance: { type: GeminiStructuredResponseType.NUMBER, description: "1-100: How relevant to current conversation" },
+                  redundancy: { type: GeminiStructuredResponseType.NUMBER, description: "1=very redundant, 100=adds new value" },
+                  wordiness: { type: GeminiStructuredResponseType.NUMBER, description: "1=too verbose, 100=appropriately concise" },
+                  necessity: { type: GeminiStructuredResponseType.NUMBER, description: "1-100: How necessary for conversation flow" },
+                },
+              },
+            },
+          },
+          parent: {
+            type: GeminiStructuredResponseType.OBJECT,
+            properties: {
+              id: {
+                type: GeminiStructuredResponseType.STRING,
+                description: "The string ID of the message being replied or reacted to. Required if 'parent' object is present.",
+              },
+            },
+            required: ["id"],
+          },
+        },
+        required: ["type", "details"],
+      },
+    },
   },
-  description:
-    "A list of event objects to send. Send an empty array if no response is warranted.",
+  required: ["scoredInputEvents", "filteredOutputEvents"],
+  description: "Multi-phase evaluation result with scored input events and filtered output events",
 });
 
-// outputGenerator processes the structured content stream from Gemini,
-// extracting and yielding GeminiOutputEvent objects.
-export async function* outputEventStream<O extends AnyShape>(
-  geminiResponseStream: AsyncGenerator<GenerateContentResponse>,
-): AsyncGenerator<
-  GeminiOutputEvent<O>
-> {
-  let buffer = "";
-  let firstChunkProcessed = false;
+// processMultiPhaseResponse handles the complete structured response from Gemini
+// and extracts the multi-phase evaluation results.
+export function processMultiPhaseResponse<O extends AnyShape>(
+  geminiResponse: GenerateContentResponse,
+): GeminiMultiPhaseResponse<O> {
+  const responseText = geminiResponse.candidates?.[0]?.content?.parts
+    ?.filter((part: Part) => "text" in part && typeof part.text === "string")
+    .map((part: Part) => (part as { text: string }).text)
+    .join("") ?? "";
 
-  for await (const streamPart of geminiResponseStream) {
-    const textFromPart = streamPart.candidates?.[0]?.content?.parts
-      ?.filter((part: Part) => "text" in part && typeof part.text === "string")
-      .map((part: Part) => (part as { text: string }).text)
-      .join("") ?? "";
-
-    if (textFromPart) {
-      buffer += textFromPart;
-    }
-
-    // Attempt to strip leading array bracket `[` and whitespace, only once from the beginning of the stream.
-    if (!firstChunkProcessed && buffer.length > 0) {
-      const initialBracketMatch = buffer.match(/^\s*\[\s*/);
-      if (initialBracketMatch) {
-        buffer = buffer.substring(initialBracketMatch[0].length);
-      }
-      firstChunkProcessed = true;
-    }
-
-    const { extractedObjects, remainder } = _extractTopLevelObjectsFromString(
-      buffer,
-    );
-    for (const event of extractedObjects) {
-      if (_isGeminiOutputEvent(event)) {
-        yield event as GeminiOutputEvent<O>;
-      }
-    }
-    buffer = remainder;
+  if (!responseText) {
+    log.warn("Empty response from Gemini");
+    return {
+      scoredInputEvents: [],
+      filteredOutputEvents: [],
+    };
   }
 
-  // After the stream has finished, attempt to parse any remaining content in the buffer.
-  if (buffer.length > 0) {
-    const { extractedObjects, remainder } = _extractTopLevelObjectsFromString(
-      buffer,
+  try {
+    const parsed = JSON.parse(responseText) as GeminiMultiPhaseResponse<O>;
+    
+    // Validate the response structure
+    if (!parsed.scoredInputEvents || !Array.isArray(parsed.scoredInputEvents)) {
+      log.warn("Invalid scoredInputEvents in response");
+      parsed.scoredInputEvents = [];
+    }
+    
+    if (!parsed.filteredOutputEvents || !Array.isArray(parsed.filteredOutputEvents)) {
+      log.warn("Invalid filteredOutputEvents in response");
+      parsed.filteredOutputEvents = [];
+    }
+
+    // Validate each output event
+    parsed.filteredOutputEvents = parsed.filteredOutputEvents.filter((event) => 
+      _isGeminiOutputEvent(event)
     );
-    for (const event of extractedObjects) {
-      if (_isGeminiOutputEvent(event)) {
-        yield event as GeminiOutputEvent<O>;
-      }
-    }
 
-    const finalTrimmedBuffer = remainder.trim();
-    if (finalTrimmedBuffer.length > 0 && finalTrimmedBuffer !== "]") {
-      const warningMessage = finalTrimmedBuffer.startsWith("{")
-        ? "Stream ended with what appears to be an incomplete JSON object in buffer:"
-        : "Stream ended with unprocessed trailing data in buffer:";
-      log.warn(
-        warningMessage,
-        finalTrimmedBuffer.substring(0, 200) +
-          (finalTrimmedBuffer.length > 200 ? "..." : ""),
-      );
-    }
+    return parsed;
+  } catch (error) {
+    log.error("Failed to parse multi-phase response:", { error, responseText: responseText.substring(0, 200) });
+    return {
+      scoredInputEvents: [],
+      filteredOutputEvents: [],
+    };
   }
-
-  return;
 }
 
 // _extractTopLevelObjectsFromString attempts to extract and parse complete JSON objects

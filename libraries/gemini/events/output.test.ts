@@ -16,6 +16,7 @@ import { type AnyShape, BottEventType } from "@bott/model";
 import {
   _extractTopLevelObjectsFromString,
   type GeminiOutputEvent,
+  processMultiPhaseResponse,
 } from "./output.ts";
 
 // Helper to create a valid GeminiOutputEvent for tests
@@ -287,4 +288,112 @@ Deno.test("_extractTopLevelObjectsFromString - handles unicode escapes correctly
     "Hello Øivind",
   );
   assertEquals(remainder, "");
+});
+
+// New tests for multi-phase response processing
+Deno.test("processMultiPhaseResponse - valid response with scored events", () => {
+  const mockResponse = {
+    candidates: [{
+      content: {
+        parts: [{
+          text: JSON.stringify({
+            scoredInputEvents: [
+              {
+                id: "input-1",
+                type: "message",
+                details: {
+                  content: "Hello Bott!",
+                  seen: false,
+                  scores: {
+                    seriousness: 4,
+                    importance: 3,
+                    directedAtBott: 5,
+                    factCheckingNeed: 1,
+                    supportNeed: 2
+                  }
+                },
+                timestamp: "2023-01-01T00:00:00Z",
+                user: { id: "user1", name: "TestUser" }
+              }
+            ],
+            filteredOutputEvents: [
+              {
+                type: "reply",
+                details: {
+                  content: "Hello there!",
+                  scores: {
+                    relevance: 85,
+                    redundancy: 75,
+                    wordiness: 90,
+                    necessity: 80
+                  }
+                },
+                parent: { id: "input-1" }
+              }
+            ]
+          })
+        }]
+      }
+    }]
+  };
+
+  const result = processMultiPhaseResponse(mockResponse);
+  
+  assertEquals(result.scoredInputEvents.length, 1);
+  assertEquals(result.filteredOutputEvents.length, 1);
+  assertEquals(result.scoredInputEvents[0].id, "input-1");
+  assertEquals(result.filteredOutputEvents[0].type, "reply");
+});
+
+Deno.test("processMultiPhaseResponse - empty response", () => {
+  const mockResponse = {
+    candidates: [{
+      content: {
+        parts: [{
+          text: ""
+        }]
+      }
+    }]
+  };
+
+  const result = processMultiPhaseResponse(mockResponse);
+  
+  assertEquals(result.scoredInputEvents, []);
+  assertEquals(result.filteredOutputEvents, []);
+});
+
+Deno.test("processMultiPhaseResponse - no output events filtered", () => {
+  const mockResponse = {
+    candidates: [{
+      content: {
+        parts: [{
+          text: JSON.stringify({
+            scoredInputEvents: [
+              {
+                id: "input-1",
+                type: "message", 
+                details: {
+                  content: "Low quality message",
+                  seen: false,
+                  scores: {
+                    seriousness: 1,
+                    importance: 1,
+                    directedAtBott: 1,
+                    factCheckingNeed: 1,
+                    supportNeed: 1
+                  }
+                }
+              }
+            ],
+            filteredOutputEvents: []
+          })
+        }]
+      }
+    }]
+  };
+
+  const result = processMultiPhaseResponse(mockResponse);
+  
+  assertEquals(result.scoredInputEvents.length, 1);
+  assertEquals(result.filteredOutputEvents.length, 0);
 });

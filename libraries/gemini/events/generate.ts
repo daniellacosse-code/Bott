@@ -37,14 +37,9 @@ import {
   INPUT_FILE_TOKEN_LIMIT,
   INPUT_FILE_VIDEO_COUNT_LIMIT,
 } from "../constants.ts";
-import {
-  getGenerateResponseInstructions,
-  greetingAssessment,
-  noveltyAssessment,
-  requestRelatednessAssessment,
-} from "./instructions.ts";
+import { getGenerateResponseInstructions } from "./instructions.ts";
 import { log } from "@bott/logger";
-import { getOutputEventSchema, outputEventStream } from "./output.ts";
+import { getOutputEventSchema, processMultiPhaseResponse } from "./output.ts";
 
 type GeminiResponseContext<O extends AnyShape> = {
   abortSignal: AbortSignal;
@@ -75,9 +70,6 @@ export async function* generateEvents<O extends AnyShape>(
   const contents: Content[] = [];
   let pointer = inputEvents.length;
   let goingOverSeenEvents = false;
-
-  // Accumulates relevant history for assessing quality of messages later.
-  const assessmentHistory = [];
 
   // We only want the model to respond to the most recent user messages,
   // since the model's last response:
@@ -165,7 +157,6 @@ export async function* generateEvents<O extends AnyShape>(
     } as BottEvent<object & { seen: boolean }>, modelUserId);
 
     if (!goingOverSeenEvents) {
-      assessmentHistory.unshift(content);
       resourceAccumulator.unseenEvents++;
     }
 
@@ -181,10 +172,11 @@ export async function* generateEvents<O extends AnyShape>(
   }
 
   log.debug(
-    `Generating response to ${resourceAccumulator.unseenEvents} events, with ${resourceAccumulator.audioFiles} audio files and ${resourceAccumulator.videoFiles} video files...`,
+    `Generating multi-phase response to ${resourceAccumulator.unseenEvents} events, with ${resourceAccumulator.audioFiles} audio files and ${resourceAccumulator.videoFiles} video files...`,
   );
 
-  const responseGenerator = await gemini.models.generateContentStream({
+  // Use generateContent instead of generateContentStream for complete response
+  const response = await gemini.models.generateContent({
     model,
     contents,
     config: {
@@ -200,62 +192,17 @@ export async function* generateEvents<O extends AnyShape>(
     },
   });
 
-  for await (const event of outputEventStream(responseGenerator)) {
-    if (
-      "content" in event.details
-    ) {
-      const eventAssessmentContent = {
-        role: "user",
-        parts: [{ text: event.details.content }],
-      };
+  const multiPhaseResult = processMultiPhaseResponse<O>(response);
 
-      if (
-        event.type !== BottEventType.REACTION &&
-        event.type !== BottEventType.REQUEST
-      ) {
-        const assessmentContent = [
-          eventAssessmentContent,
-          ...assessmentHistory,
-        ];
+  // First, yield the scored input events for database update
+  // Note: In a real implementation, the scored input events would be processed 
+  // separately to update the database, but here we'll log them for now
+  log.debug(
+    `Received ${multiPhaseResult.scoredInputEvents.length} scored input events and ${multiPhaseResult.filteredOutputEvents.length} filtered output events`,
+  );
 
-        // TODO (#42): Combine these into a single call.
-        const scores = {
-          greeting: await _performAssessment(
-            assessmentContent,
-            greetingAssessment,
-          ),
-          requestFulfillment: await _performAssessment(
-            assessmentContent,
-            requestRelatednessAssessment,
-          ),
-          novelty: await _performAssessment(
-            assessmentContent,
-            noveltyAssessment,
-          ),
-        };
-
-        const score = Math.max(
-          ...Object.values(scores),
-        );
-
-        if (score < CONFIG_ASSESSMENT_SCORE_THRESHOLD) {
-          log.debug(
-            "Message recieved poor assessment, skipping:",
-            { content: event.details.content, scores },
-          );
-
-          continue;
-        }
-
-        log.debug("Message passed assessment:", {
-          content: event.details.content,
-          scores,
-        });
-      }
-
-      assessmentHistory.unshift(eventAssessmentContent);
-    }
-
+  // Yield the filtered output events
+  for (const event of multiPhaseResult.filteredOutputEvents) {
     const commonFields = {
       id: crypto.randomUUID(),
       timestamp: new Date(),
@@ -281,35 +228,6 @@ export async function* generateEvents<O extends AnyShape>(
 
   return;
 }
-
-const _performAssessment = async (
-  contents: Content[],
-  assessmentInstructions: string,
-): Promise<number> => {
-  const assessmentResult = await gemini.models.generateContent({
-    model: CONFIG_ASSESSMENT_MODEL,
-    contents,
-    config: {
-      candidateCount: 1,
-      systemInstruction: {
-        parts: [{ text: assessmentInstructions }],
-      },
-    },
-  });
-
-  const scoreText = assessmentResult.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (scoreText) {
-    const score = Number(scoreText.trim());
-    if (!isNaN(score)) {
-      return score;
-    }
-  }
-
-  // Return a default high score if assessment fails, to avoid blocking messages
-  // due to assessment errors.
-  return 100;
-};
 
 const _transformBottEventToContent = (
   event: BottEvent<object & { seen: boolean }>,
