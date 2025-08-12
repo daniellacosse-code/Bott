@@ -16,7 +16,7 @@ import {
   type BottFile,
   BottFileType,
 } from "@bott/model";
-import { validateUrl, validateFileSize } from "../validation.ts";
+import { validateUrl, validateFileSize, MAX_FILE_SIZE } from "../validation.ts";
 import { log } from "@bott/logger";
 
 import { STORAGE_FILE_ROOT } from "../start.ts";
@@ -71,8 +71,9 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
       );
     }
 
-    // Security validation: validate URL for SSRF protection
-    validateUrl(file.source);
+    if (!validateUrl(file.source)) {
+      throw new Error(`Invalid or blocked URL: ${file.source}`);
+    }
 
     log.debug(
       `Fetching raw file from source URL: ${file.source}`,
@@ -94,8 +95,9 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
       
       const data = new Uint8Array(await response.arrayBuffer());
       
-      // Security validation: check file size
-      validateFileSize(data);
+      if (!validateFileSize(data)) {
+        throw new Error(`File size ${data.length} exceeds maximum allowed size ${MAX_FILE_SIZE}`);
+      }
       
       const type = response.headers.get("content-type")?.split(";")[0].trim() ??
         "";

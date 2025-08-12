@@ -18,28 +18,30 @@ export const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 /**
  * Validates file size
+ * @param data File data to validate
+ * @returns true if valid, false if too large
  */
-export function validateFileSize(data: Uint8Array): void {
-  if (data.length > MAX_FILE_SIZE) {
-    throw new Error(`File size ${data.length} exceeds maximum allowed size ${MAX_FILE_SIZE}`);
-  }
+export function validateFileSize(data: Uint8Array): boolean {
+  return data.length <= MAX_FILE_SIZE;
 }
 
 /**
  * Validates URL for SSRF protection
+ * @param url URL to validate
+ * @returns true if valid, false if not allowed
  */
-export function validateUrl(url: string): void {
+export function validateUrl(url: string): boolean {
   let parsedUrl: URL;
   
   try {
     parsedUrl = new URL(url);
   } catch {
-    throw new Error(`Invalid URL: ${url}`);
+    return false;
   }
   
   // Only allow HTTP and HTTPS
   if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    throw new Error(`Unsupported protocol: ${parsedUrl.protocol}`);
+    return false;
   }
   
   // Block localhost and private IP ranges
@@ -47,7 +49,7 @@ export function validateUrl(url: string): void {
   
   // Block localhost variations
   if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") {
-    throw new Error("Localhost access is not allowed");
+    return false;
   }
   
   // Block private IP ranges (IPv4)
@@ -59,7 +61,7 @@ export function validateUrl(url: string): void {
   ];
   
   if (ipv4Patterns.some(pattern => pattern.test(hostname))) {
-    throw new Error("Private IP access is not allowed");
+    return false;
   }
   
   // Block common internal hostnames
@@ -72,6 +74,8 @@ export function validateUrl(url: string): void {
   ];
   
   if (blockedHostnames.some(blocked => hostname.includes(blocked))) {
-    throw new Error(`Access to ${hostname} is not allowed`);
+    return false;
   }
+  
+  return true;
 }

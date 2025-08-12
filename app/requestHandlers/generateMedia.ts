@@ -26,6 +26,10 @@ import {
 } from "@bott/gemini";
 import { log } from "@bott/logger";
 
+// Constants for AI prompt processing
+const MAX_AI_PROMPT_LENGTH = 10000;
+const LOG_TRUNCATE_LENGTH = 100;
+
 /**
  * Sanitizes user input for AI prompts to prevent injection
  */
@@ -38,7 +42,7 @@ function sanitizeAIPrompt(input: string): string {
     // Remove control characters except newlines and tabs
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
     // Limit length to prevent token overflow
-    .substring(0, 10000);
+    .substring(0, MAX_AI_PROMPT_LENGTH);
 }
 
 import { taskManager } from "../tasks.ts";
@@ -72,12 +76,11 @@ export const generateMedia: BottRequestHandler<
   ) {
     const { type, prompt: rawPrompt } = requestEvent.details.options;
 
-    // Security: Sanitize the AI prompt to prevent injection attacks
     const prompt = sanitizeAIPrompt(rawPrompt);
 
     log.debug("generateMedia() called with options:", {
       type,
-      prompt: prompt.substring(0, 100) + (prompt.length > 100 ? "..." : ""), // Log truncated version
+      prompt: prompt.substring(0, LOG_TRUNCATE_LENGTH) + (prompt.length > LOG_TRUNCATE_LENGTH ? "…" : ""),
     });
 
     if (!taskManager.has(type)) {
