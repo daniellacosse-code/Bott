@@ -21,6 +21,7 @@ import {
 import { createTask } from "@bott/task";
 import { startDiscordBot } from "@bott/discord";
 import { generateErrorMessage, generateEvents } from "@bott/gemini";
+import { log } from "@bott/logger";
 
 import { taskManager } from "./tasks.ts";
 import { getIdentity } from "./identity.ts";
@@ -47,13 +48,13 @@ startDiscordBot({
   requestHandlerCommands: [help],
   identityToken: Deno.env.get("DISCORD_TOKEN")!,
   mount() {
-    console.info(
-      `[INFO] Running bot "${this.user.name}" at user id "<@${this.user.id}>"`,
+    log.info(
+      `Running bot "${this.user.name}" at user id "<@${this.user.id}>"`,
     );
   },
   event(event) {
     if (deployNonce !== _getCurrentDeployNonce()) {
-      console.debug("[DEBUG] Deploy nonce mismatch, ignoring event.");
+      log.debug("Deploy nonce mismatch, ignoring event.");
       return;
     }
 
@@ -70,7 +71,7 @@ startDiscordBot({
     const result = addEventData(event);
 
     if ("error" in result) {
-      console.error("[ERROR] Failed to add event to database:", result);
+      log.error("Failed to add event to database:", result);
       return;
     }
 
@@ -171,7 +172,7 @@ startDiscordBot({
                   // Also store the "response" event.
                   addEventData(responseEvent);
                 } catch (error) {
-                  console.warn("[WARN] Failed to generate media:", error);
+                  log.warn("Failed to generate media:", error);
 
                   this.send(
                     await generateErrorMessage(

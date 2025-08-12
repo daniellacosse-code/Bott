@@ -24,6 +24,7 @@ import {
   generatePhotoData,
   generateSongData,
 } from "@bott/gemini";
+import { log } from "@bott/logger";
 
 /**
  * Sanitizes user input for AI prompts to prevent injection
@@ -74,7 +75,7 @@ export const generateMedia: BottRequestHandler<
     // Security: Sanitize the AI prompt to prevent injection attacks
     const prompt = sanitizeAIPrompt(rawPrompt);
 
-    console.debug("[DEBUG] generateMedia() called with options:", {
+    log.debug("generateMedia() called with options:", {
       type,
       prompt: prompt.substring(0, 100) + (prompt.length > 100 ? "..." : ""), // Log truncated version
     });

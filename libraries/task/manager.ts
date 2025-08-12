@@ -10,6 +10,7 @@
  */
 
 import type { Task } from "./create.ts";
+import { log } from "@bott/logger";
 
 type TaskBucketName = string;
 
@@ -86,8 +87,8 @@ export class TaskManager {
       const newTask = bucket.next;
 
       if (currentTask && bucket.remainingSwaps >= 1) {
-        console.debug(
-          "[DEBUG] Replacing current task:",
+        log.debug(
+          "Replacing current task:",
           bucket.name,
           `${currentTask.nonce} -> ${newTask.nonce}`,
         );
@@ -101,8 +102,8 @@ export class TaskManager {
         bucket.current = newTask;
         bucket.next = undefined;
 
-        console.debug(
-          "[DEBUG] Starting new task:",
+        log.debug(
+          "Starting new task:",
           `${bucket.name}:${newTask.nonce}`,
         );
 
@@ -111,8 +112,8 @@ export class TaskManager {
             await newTask(newTask.controller.signal);
             bucket.remainingSwaps = bucket.config.maximumSequentialSwaps;
             bucket.completions.push(new Date());
-            console.debug(
-              "[DEBUG] Task completed:",
+            log.debug(
+              "Task completed:",
               `${bucket.name}:${newTask.nonce}`,
             );
           } catch (error) {
@@ -120,13 +121,13 @@ export class TaskManager {
               (error as Error).name === "AbortError" ||
               (error as Error).message.includes("AbortError")
             ) {
-              console.warn(
-                "[WARN] Task aborted:",
+              log.warn(
+                "Task aborted:",
                 `${bucket.name}:${newTask.nonce}`,
               );
             } else {
-              console.warn(
-                "[WARN] Task failed:",
+              log.warn(
+                "Task failed:",
                 `${bucket.name}:${newTask.nonce}`,
                 error,
               );
@@ -164,7 +165,7 @@ export class TaskManager {
       }
     }
 
-    console.debug("[DEBUG] Task manager status:", {
+    log.debug("Task manager status:", {
       running: runningTasks,
       idle: idleTasks,
       totalCompletions: this.buckets.values().reduce((sum, bucket) => {
