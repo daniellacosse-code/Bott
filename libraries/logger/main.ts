@@ -9,58 +9,53 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-export enum LogLevel {
+enum LogLevel {
   DEBUG = 0,
   INFO = 1,
   WARN = 2,
   ERROR = 3,
 }
 
-const LOG_LEVEL_MAP: Record<string, LogLevel> = {
-  DEBUG: LogLevel.DEBUG,
-  INFO: LogLevel.INFO,
-  WARN: LogLevel.WARN,
-  ERROR: LogLevel.ERROR,
+const getCurrentLevel = (): LogLevel => {
+  const envLevel = Deno.env.get("LOG_LEVEL")?.toUpperCase();
+  switch (envLevel) {
+    case "DEBUG": return LogLevel.DEBUG;
+    case "INFO": return LogLevel.INFO;
+    case "WARN": return LogLevel.WARN;
+    case "ERROR": return LogLevel.ERROR;
+    default: return LogLevel.INFO; // Default to INFO level
+  }
 };
 
-class Logger {
-  private currentLevel: LogLevel;
+const currentLevel = getCurrentLevel();
 
-  constructor() {
-    const envLevel = Deno.env.get("LOG_LEVEL")?.toUpperCase();
-    this.currentLevel = envLevel && envLevel in LOG_LEVEL_MAP
-      ? LOG_LEVEL_MAP[envLevel]
-      : LogLevel.INFO; // Default to INFO level
-  }
+const shouldLog = (level: LogLevel): boolean => {
+  return level >= currentLevel;
+};
 
-  private shouldLog(level: LogLevel): boolean {
-    return level >= this.currentLevel;
-  }
-
+// Export a simple logger object
+export const log = {
   debug(...args: unknown[]): void {
-    if (this.shouldLog(LogLevel.DEBUG)) {
+    if (shouldLog(LogLevel.DEBUG)) {
       console.debug(...args);
     }
-  }
+  },
 
   info(...args: unknown[]): void {
-    if (this.shouldLog(LogLevel.INFO)) {
+    if (shouldLog(LogLevel.INFO)) {
       console.info(...args);
     }
-  }
+  },
 
   warn(...args: unknown[]): void {
-    if (this.shouldLog(LogLevel.WARN)) {
+    if (shouldLog(LogLevel.WARN)) {
       console.warn(...args);
     }
-  }
+  },
 
   error(...args: unknown[]): void {
-    if (this.shouldLog(LogLevel.ERROR)) {
+    if (shouldLog(LogLevel.ERROR)) {
       console.error(...args);
     }
-  }
-}
-
-// Export a singleton instance
-export const logger = new Logger();
+  },
+};

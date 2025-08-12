@@ -24,7 +24,7 @@ import {
   generatePhotoData,
   generateSongData,
 } from "@bott/gemini";
-import { logger } from "@bott/logger";
+import { log } from "@bott/logger";
 
 import { taskManager } from "../tasks.ts";
 import {
@@ -57,7 +57,7 @@ export const generateMedia: BottRequestHandler<
   ) {
     const { type, prompt } = requestEvent.details.options;
 
-    logger.debug("generateMedia() called with options:", {
+    log.debug("generateMedia() called with options:", {
       type,
       prompt,
     });

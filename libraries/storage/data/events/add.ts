@@ -16,7 +16,7 @@ import type {
   BottSpace,
   BottUser,
 } from "@bott/model";
-import { logger } from "@bott/logger";
+import { log } from "@bott/logger";
 
 import { sql } from "../sql.ts";
 import { commit, type TransactionResults } from "../commit.ts";
@@ -165,7 +165,7 @@ export const addEventData = async (
             parent: event,
           });
         } catch (e) {
-          logger.warn(`Failed to resolve file [${file.id}]: ${e}`);
+          log.warn(`Failed to resolve file [${file.id}]: ${e}`);
         }
       }
     }

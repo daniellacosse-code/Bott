@@ -17,7 +17,7 @@ import {
   type BottRequestHandler,
   BottRequestOptionType,
 } from "@bott/model";
-import { logger } from "@bott/logger";
+import { log } from "@bott/logger";
 
 import { Type as GeminiStructuredResponseType } from "npm:@google/genai";
 import type {
@@ -186,7 +186,7 @@ export async function* outputEventStream<O extends AnyShape>(
       const warningMessage = finalTrimmedBuffer.startsWith("{")
         ? "Stream ended with what appears to be an incomplete JSON object in buffer:"
         : "Stream ended with unprocessed trailing data in buffer:";
-      logger.warn(
+      log.warn(
         warningMessage,
         finalTrimmedBuffer.substring(0, 200) +
           (finalTrimmedBuffer.length > 200 ? "..." : ""),
@@ -259,7 +259,7 @@ export function _extractTopLevelObjectsFromString(
             try {
               extractedObjects.push(JSON.parse(objString));
             } catch (error) {
-              logger.error("Failed to parse JSON object:", error);
+              log.error("Failed to parse JSON object:", error);
             }
             current = current.substring(i + 1);
             const commaMatch = current.match(/^\s*,\s*/);
