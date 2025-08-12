@@ -9,7 +9,6 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { validateFilePath } from "../../security.ts";
 import { BottFileType } from "@bott/model";
 
 /*
@@ -38,10 +37,6 @@ const _ffmpeg = async (
   });
 
   try {
-    // Validate temp file paths are in safe location
-    validateFilePath(tempInputFilePath, tempDir);
-    validateFilePath(tempOutputFilePath, tempDir);
-
     await Deno.writeFile(tempInputFilePath, input);
 
     // Replace template placeholders with actual file paths
