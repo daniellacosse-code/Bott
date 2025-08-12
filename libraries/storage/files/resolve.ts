@@ -16,6 +16,7 @@ import {
   type BottFile,
   BottFileType,
 } from "@bott/model";
+import { log } from "@bott/logger";
 
 import { STORAGE_FILE_ROOT } from "../start.ts";
 import { prepareHtmlAsMarkdown } from "./prepare/html.ts";
@@ -66,8 +67,8 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
       );
     }
 
-    console.debug(
-      `[DEBUG] Fetching raw file from source URL: ${file.source}`,
+    log.debug(
+      `Fetching raw file from source URL: ${file.source}`,
     );
     const response = await fetch(file.source);
     const data = new Uint8Array(await response.arrayBuffer());
@@ -82,8 +83,8 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
   }
 
   if (!rawFilePath) {
-    console.debug(
-      `[DEBUG] Writing raw file to disk: ${file.id}, type: ${file.raw.type}`,
+    log.debug(
+      `Writing raw file to disk: ${file.id}, type: ${file.raw.type}`,
     );
 
     Deno.writeFileSync(
@@ -163,8 +164,8 @@ export const resolveFile = async (file: BottFile): Promise<BottFile> => {
   }
 
   if (!compressedFilePath) {
-    console.debug(
-      `[DEBUG] Writing compressed file to disk: ${file.id}, type: ${file.compressed.type}`,
+    log.debug(
+      `Writing compressed file to disk: ${file.id}, type: ${file.compressed.type}`,
     );
 
     Deno.writeFileSync(

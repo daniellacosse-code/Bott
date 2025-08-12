@@ -10,6 +10,7 @@
  */
 
 import type { AnyBottEvent, BottEventType, BottFile } from "@bott/model";
+import { log } from "@bott/logger";
 
 import { commit } from "../commit.ts";
 import { sql } from "../sql.ts";
@@ -69,7 +70,7 @@ export const getEvents = async (
             : undefined,
         });
       } catch (e) {
-        console.warn(`[WARN] Failed to resolve file [${rowData.f_id}]: ${e}`);
+        log.warn(`Failed to resolve file [${rowData.f_id}]: ${e}`);
       }
     }
 

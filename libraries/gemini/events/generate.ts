@@ -43,6 +43,7 @@ import {
   noveltyAssessment,
   requestRelatednessAssessment,
 } from "./instructions.ts";
+import { log } from "@bott/logger";
 import { getOutputEventSchema, outputEventStream } from "./output.ts";
 
 type GeminiResponseContext<O extends AnyShape> = {
@@ -179,8 +180,8 @@ export async function* generateEvents<O extends AnyShape>(
     return;
   }
 
-  console.debug(
-    `[DEBUG] Generating response to ${resourceAccumulator.unseenEvents} events, with ${resourceAccumulator.audioFiles} audio files and ${resourceAccumulator.videoFiles} video files...`,
+  log.debug(
+    `Generating response to ${resourceAccumulator.unseenEvents} events, with ${resourceAccumulator.audioFiles} audio files and ${resourceAccumulator.videoFiles} video files...`,
   );
 
   const responseGenerator = await gemini.models.generateContentStream({
@@ -238,15 +239,15 @@ export async function* generateEvents<O extends AnyShape>(
         );
 
         if (score < CONFIG_ASSESSMENT_SCORE_THRESHOLD) {
-          console.debug(
-            "[DEBUG] Message recieved poor assessment, skipping:",
+          log.debug(
+            "Message recieved poor assessment, skipping:",
             { content: event.details.content, scores },
           );
 
           continue;
         }
 
-        console.debug("[DEBUG] Message passed assessment:", {
+        log.debug("Message passed assessment:", {
           content: event.details.content,
           scores,
         });

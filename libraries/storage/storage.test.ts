@@ -12,6 +12,7 @@
 import { assertEquals, assertExists } from "jsr:@std/assert";
 
 import { BottEventType } from "@bott/model";
+import { log } from "@bott/logger";
 
 import { addEventData } from "./data/events/add.ts";
 import { getEvents } from "./data/events/get.ts";
@@ -61,15 +62,15 @@ Deno.test("Storage - addEventsData, getEvents", async () => {
     timestamp: new Date(),
   };
 
-  console.debug("[DEBUG] Adding events.");
+  log.debug("Adding events.");
 
   addEventData(nancyGreeting, bobReply, nancyReaction);
 
-  console.debug("[DEBUG] Getting events.");
+  log.debug("Getting events.");
 
   const [dbResult] = await getEvents(nancyReaction.id);
 
-  console.debug("[DEBUG] Final result:", dbResult);
+  log.debug("Final result:", dbResult);
 
   assertExists(dbResult.id);
   assertExists(dbResult.type);
