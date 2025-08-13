@@ -16,7 +16,7 @@ import { type AnyShape, BottEventType } from "@bott/model";
 import {
   _extractTopLevelObjectsFromString,
   type GeminiOutputEvent,
-  processMultiPhaseResponse,
+  processResponse,
 } from "./output.ts";
 
 // Helper to create a valid GeminiOutputEvent for tests
@@ -290,8 +290,8 @@ Deno.test("_extractTopLevelObjectsFromString - handles unicode escapes correctly
   assertEquals(remainder, "");
 });
 
-// New tests for multi-phase response processing
-Deno.test("processMultiPhaseResponse - valid response with scored events", () => {
+// New tests for response processing
+Deno.test("processResponse - valid response with scored events", () => {
   const mockResponse = {
     candidates: [{
       content: {
@@ -342,7 +342,7 @@ Deno.test("processMultiPhaseResponse - valid response with scored events", () =>
     codeExecutionResult: undefined,
   } as any; // Use 'as any' to bypass strict typing for test
 
-  const result = processMultiPhaseResponse(mockResponse);
+  const result = processResponse(mockResponse);
 
   assertEquals(result.scoredInputEvents.length, 1);
   assertEquals(result.filteredOutputEvents.length, 1);
@@ -350,7 +350,7 @@ Deno.test("processMultiPhaseResponse - valid response with scored events", () =>
   assertEquals(result.filteredOutputEvents[0].type, "reply");
 });
 
-Deno.test("processMultiPhaseResponse - empty response", () => {
+Deno.test("processResponse - empty response", () => {
   const mockResponse = {
     candidates: [{
       content: {
@@ -366,13 +366,13 @@ Deno.test("processMultiPhaseResponse - empty response", () => {
     codeExecutionResult: undefined,
   } as any;
 
-  const result = processMultiPhaseResponse(mockResponse);
+  const result = processResponse(mockResponse);
 
   assertEquals(result.scoredInputEvents, []);
   assertEquals(result.filteredOutputEvents, []);
 });
 
-Deno.test("processMultiPhaseResponse - no output events filtered", () => {
+Deno.test("processResponse - no output events filtered", () => {
   const mockResponse = {
     candidates: [{
       content: {
@@ -407,7 +407,7 @@ Deno.test("processMultiPhaseResponse - no output events filtered", () => {
     codeExecutionResult: undefined,
   } as any;
 
-  const result = processMultiPhaseResponse(mockResponse);
+  const result = processResponse(mockResponse);
 
   assertEquals(result.scoredInputEvents.length, 1);
   assertEquals(result.filteredOutputEvents.length, 0);

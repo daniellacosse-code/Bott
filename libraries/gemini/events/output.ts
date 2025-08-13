@@ -34,7 +34,7 @@ export type GeminiOutputEvent<O extends AnyShape> = Omit<
   "id" | "timestamp"
 >;
 
-export type GeminiMultiPhaseResponse<O extends AnyShape> = {
+export type GeminiResponse<O extends AnyShape> = {
   scoredInputEvents: AnyBottEvent[];
   filteredOutputEvents: GeminiOutputEvent<O>[];
 };
@@ -229,11 +229,11 @@ export const getOutputEventSchema = <O extends AnyShape>(
     "Multi-phase evaluation result with scored input events and filtered output events",
 });
 
-// processMultiPhaseResponse handles the complete structured response from Gemini
-// and extracts the multi-phase evaluation results.
-export function processMultiPhaseResponse<O extends AnyShape>(
+// processResponse handles the complete structured response from Gemini
+// and extracts the evaluation results.
+export function processResponse<O extends AnyShape>(
   geminiResponse: GenerateContentResponse,
-): GeminiMultiPhaseResponse<O> {
+): GeminiResponse<O> {
   const responseText = geminiResponse.candidates?.[0]?.content?.parts
     ?.filter((part: Part) => "text" in part && typeof part.text === "string")
     .map((part: Part) => (part as { text: string }).text)
@@ -248,7 +248,7 @@ export function processMultiPhaseResponse<O extends AnyShape>(
   }
 
   try {
-    const parsed = JSON.parse(responseText) as GeminiMultiPhaseResponse<O>;
+    const parsed = JSON.parse(responseText) as GeminiResponse<O>;
 
     // Trust Gemini's output structure, only validate basic presence
     return {
@@ -256,7 +256,7 @@ export function processMultiPhaseResponse<O extends AnyShape>(
       filteredOutputEvents: parsed.filteredOutputEvents || [],
     };
   } catch (error) {
-    log.error("Failed to parse multi-phase response:", {
+    log.error("Failed to parse response:", {
       error,
       responseText: responseText.substring(0, 200),
     });

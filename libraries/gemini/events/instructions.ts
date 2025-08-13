@@ -89,8 +89,7 @@ Based on the scores from Phase 1, determine if response is warranted. Consider:
 - High \`supportNeed\` scores (4-5) suggest user needs help
 
 When generating events:
-- Use content slugs like "HELPFUL_EXPLANATION" as placeholders - these are descriptive labels for you to fill with your own personality and appropriate content
-- The slugs guide the type of response needed but you should replace them with actual, natural content that fits your character
+- Write natural, personality-driven content appropriate for the situation  
 - Generate \`request\` events for enhanced functionality where appropriate
 - Focus on high-scoring events from Phase 1
 

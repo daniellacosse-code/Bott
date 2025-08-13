@@ -60,7 +60,8 @@ const getAddEventsSql = (...events: AnyBottEvent[]) => {
   return sql`
     insert into events (id, type, details, parent_id, channel_id, user_id, timestamp)
     values ${values} 
-    on conflict(id) do nothing
+    on conflict(id) do update set
+      details = excluded.details
   `;
 };
 

@@ -25,7 +25,7 @@ import {
   type BottRequestHandler,
   type BottUser,
 } from "@bott/model";
-import { getEvents, updateEventDetails } from "@bott/storage";
+import { addEventData, getEvents } from "@bott/storage";
 
 import gemini from "../client.ts";
 import {
@@ -39,7 +39,7 @@ import {
 } from "../constants.ts";
 import { getGenerateResponseInstructions } from "./instructions.ts";
 import { log } from "@bott/logger";
-import { getOutputEventSchema, processMultiPhaseResponse } from "./output.ts";
+import { getOutputEventSchema, processResponse } from "./output.ts";
 
 type GeminiResponseContext<O extends AnyShape> = {
   abortSignal: AbortSignal;
@@ -69,10 +69,8 @@ export async function* generateEvents<O extends AnyShape>(
   const modelUserId = context.user.id;
   const contents: Content[] = [];
   let pointer = inputEvents.length;
-  let goingOverSeenEvents = false;
 
-  // We only want the model to respond to the most recent user messages,
-  // since the model's last response:
+  // We only want the model to respond to events that haven't been scored yet:
   const resourceAccumulator = {
     estimatedTokens: 0,
     unseenEvents: 0,
@@ -93,8 +91,8 @@ export async function* generateEvents<O extends AnyShape>(
       continue;
     }
 
-    // Determine if this event was from the model itself:
-    if (event.user?.id === modelUserId) goingOverSeenEvents = true;
+    // Determine if this event has already been scored:
+    const hasScore = event.details.score !== undefined;
 
     // Remove unnecessary parent files from events:
     if (event.parent) {
@@ -153,10 +151,10 @@ export async function* generateEvents<O extends AnyShape>(
 
     const content = _transformBottEventToContent({
       ...event,
-      details: { ...event.details, seen: goingOverSeenEvents },
+      details: { ...event.details, seen: hasScore },
     } as BottEvent<object & { seen: boolean }>, modelUserId);
 
-    if (!goingOverSeenEvents) {
+    if (!hasScore) {
       resourceAccumulator.unseenEvents++;
     }
 
@@ -172,10 +170,8 @@ export async function* generateEvents<O extends AnyShape>(
   }
 
   log.debug(
-    `Generating multi-phase response to ${resourceAccumulator.unseenEvents} events, with ${resourceAccumulator.audioFiles} audio files and ${resourceAccumulator.videoFiles} video files...`,
+    `Generating response to ${resourceAccumulator.unseenEvents} events, with ${resourceAccumulator.audioFiles} audio files and ${resourceAccumulator.videoFiles} video files...`,
   );
-
-  // Use generateContent instead of generateContentStream for complete response
   const response = await gemini.models.generateContent({
     model,
     contents,
@@ -192,24 +188,26 @@ export async function* generateEvents<O extends AnyShape>(
     },
   });
 
-  const multiPhaseResult = processMultiPhaseResponse<O>(response);
+  const result = processResponse<O>(response);
 
   // Update scored input events in the database
-  for (const scoredEvent of multiPhaseResult.scoredInputEvents) {
+  if (result.scoredInputEvents.length > 0) {
     try {
-      await updateEventDetails(scoredEvent);
-      log.debug(`Updated event ${scoredEvent.id} with scores`);
+      await addEventData(...result.scoredInputEvents);
+      log.debug(
+        `Updated ${result.scoredInputEvents.length} events with scores`,
+      );
     } catch (error) {
-      log.error(`Failed to update event ${scoredEvent.id}: ${error}`);
+      log.error(`Failed to update events with scores: ${error}`);
     }
   }
 
   log.debug(
-    `Processed ${multiPhaseResult.scoredInputEvents.length} scored input events and ${multiPhaseResult.filteredOutputEvents.length} filtered output events`,
+    `Processed ${result.scoredInputEvents.length} scored input events and ${result.filteredOutputEvents.length} filtered output events`,
   );
 
   // Yield the filtered output events
-  for (const event of multiPhaseResult.filteredOutputEvents) {
+  for (const event of result.filteredOutputEvents) {
     const commonFields = {
       id: crypto.randomUUID(),
       timestamp: new Date(),
