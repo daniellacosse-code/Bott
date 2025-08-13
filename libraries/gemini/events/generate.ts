@@ -195,7 +195,7 @@ export async function* generateEvents<O extends AnyShape>(
   const multiPhaseResult = processMultiPhaseResponse<O>(response);
 
   // First, yield the scored input events for database update
-  // Note: In a real implementation, the scored input events would be processed 
+  // Note: In a real implementation, the scored input events would be processed
   // separately to update the database, but here we'll log them for now
   log.debug(
     `Received ${multiPhaseResult.scoredInputEvents.length} scored input events and ${multiPhaseResult.filteredOutputEvents.length} filtered output events`,

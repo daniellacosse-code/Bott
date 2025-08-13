@@ -16,39 +16,6 @@
 export type AnyShape = Record<string, unknown>;
 
 /**
- * Represents scores assigned to events during the multi-phase evaluation process.
- * Scores are typically on a 1-5 scale for incoming events, 1-100 scale for outgoing events.
- */
-export interface BottEventScores {
-  // Incoming event scores (1-5 scale)
-  /** How serious vs sarcastic the message is (1=very sarcastic, 5=very serious) */
-  seriousness?: number;
-  /** How important/urgent the message is (1=low priority, 5=high priority) */
-  importance?: number;
-  /** How directly the message is targeted at Bott (1=not directed, 5=directly addressed) */
-  directedAtBott?: number;
-  /** How much the message needs fact checking (1=no fact checking needed, 5=needs verification) */
-  factCheckingNeed?: number;
-  /** How much the user needs conversational support (1=no support needed, 5=needs help) */
-  supportNeed?: number;
-
-  // Outgoing event scores (1-100 scale)
-  /** How relevant the message is to the conversation (1-100) */
-  relevance?: number;
-  /** How redundant the message is vs what others have said (1=very redundant, 100=very novel) */
-  redundancy?: number;
-  /** How wordy/verbose the message is (1=very wordy, 100=very concise) */
-  wordiness?: number;
-  /** How necessary the message is to conversation flow (1-100) */
-  necessity?: number;
-
-  // Legacy scores (for backward compatibility during transition)
-  greeting?: number;
-  novelty?: number;
-  requestFulfillment?: number;
-}
-
-/**
  * Defines the structure for a "Space" in Bott.
  * A Space is a top-level container, similar to a server or guild in Discord.
  */

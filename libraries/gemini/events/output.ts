@@ -19,6 +19,7 @@ import {
   BottRequestOptionType,
 } from "@bott/model";
 import { log } from "@bott/logger";
+import type { BottEventScores } from "./types.ts";
 
 import { Type as GeminiStructuredResponseType } from "npm:@google/genai";
 import type {
@@ -45,7 +46,8 @@ export const getOutputEventSchema = <O extends AnyShape>(
   properties: {
     scoredInputEvents: {
       type: GeminiStructuredResponseType.ARRAY,
-      description: "Array of input events with scores added to details.scores for events that had seen:false and no existing scores",
+      description:
+        "Array of input events with scores added to details.scores for informational purposes",
       items: {
         type: GeminiStructuredResponseType.OBJECT,
         properties: {
@@ -60,11 +62,26 @@ export const getOutputEventSchema = <O extends AnyShape>(
                 type: GeminiStructuredResponseType.OBJECT,
                 description: "Scores for incoming events (1-5 scale)",
                 properties: {
-                  seriousness: { type: GeminiStructuredResponseType.NUMBER, description: "1=very sarcastic, 5=very serious" },
-                  importance: { type: GeminiStructuredResponseType.NUMBER, description: "1=low priority, 5=high priority" },
-                  directedAtBott: { type: GeminiStructuredResponseType.NUMBER, description: "1=not directed, 5=directly addressed" },
-                  factCheckingNeed: { type: GeminiStructuredResponseType.NUMBER, description: "1=no checking needed, 5=needs verification" },
-                  supportNeed: { type: GeminiStructuredResponseType.NUMBER, description: "1=no support needed, 5=needs help" },
+                  seriousness: {
+                    type: GeminiStructuredResponseType.NUMBER,
+                    description: "1=very sarcastic, 5=very serious",
+                  },
+                  importance: {
+                    type: GeminiStructuredResponseType.NUMBER,
+                    description: "1=low priority, 5=high priority",
+                  },
+                  directedAtBott: {
+                    type: GeminiStructuredResponseType.NUMBER,
+                    description: "1=not directed, 5=directly addressed",
+                  },
+                  factCheckingNeed: {
+                    type: GeminiStructuredResponseType.NUMBER,
+                    description: "1=no checking needed, 5=needs verification",
+                  },
+                  supportNeed: {
+                    type: GeminiStructuredResponseType.NUMBER,
+                    description: "1=no support needed, 5=needs help",
+                  },
                 },
               },
             },
@@ -96,7 +113,8 @@ export const getOutputEventSchema = <O extends AnyShape>(
     },
     filteredOutputEvents: {
       type: GeminiStructuredResponseType.ARRAY,
-      description: "Array of filtered outgoing events from Phase 5, empty array if no response warranted",
+      description:
+        "Array of filtered outgoing events from Phase 5, empty array if no response warranted",
       items: {
         type: GeminiStructuredResponseType.OBJECT,
         properties: {
@@ -108,23 +126,27 @@ export const getOutputEventSchema = <O extends AnyShape>(
               BottEventType.REACTION,
               BottEventType.REQUEST,
             ],
-            description: "The type of event to send: 'message', 'reply', 'reaction', or 'request'.",
+            description:
+              "The type of event to send: 'message', 'reply', 'reaction', or 'request'.",
           },
           details: {
             type: GeminiStructuredResponseType.OBJECT,
             properties: {
               content: {
                 type: GeminiStructuredResponseType.STRING,
-                description: "Content of the message or reaction. Use descriptive slugs in examples.",
+                description:
+                  "Content of the message or reaction. Use descriptive slugs in examples.",
               },
               name: {
                 type: GeminiStructuredResponseType.STRING,
                 enum: requestHandlers.map((handler) => handler.name),
-                description: "The name of the request to make. Required if event is of type 'request'.",
+                description:
+                  "The name of the request to make. Required if event is of type 'request'.",
               },
               options: {
                 type: GeminiStructuredResponseType.OBJECT,
-                description: "The options to pass to the request. Required if event is of type 'request'.",
+                description:
+                  "The options to pass to the request. Required if event is of type 'request'.",
                 properties: requestHandlers.reduce((acc, handler) => {
                   if (!handler.options) {
                     return acc;
@@ -148,7 +170,8 @@ export const getOutputEventSchema = <O extends AnyShape>(
 
                     acc[option.name] = {
                       type,
-                      description: `${option.description} Required for a "request" of name "${handler.name}"`,
+                      description:
+                        `${option.description} Required for a "request" of name "${handler.name}"`,
                       enum: option.allowedValues,
                     };
                   }
@@ -165,10 +188,22 @@ export const getOutputEventSchema = <O extends AnyShape>(
                 type: GeminiStructuredResponseType.OBJECT,
                 description: "Scores for outgoing events (1-100 scale)",
                 properties: {
-                  relevance: { type: GeminiStructuredResponseType.NUMBER, description: "1-100: How relevant to current conversation" },
-                  redundancy: { type: GeminiStructuredResponseType.NUMBER, description: "1=very redundant, 100=adds new value" },
-                  wordiness: { type: GeminiStructuredResponseType.NUMBER, description: "1=too verbose, 100=appropriately concise" },
-                  necessity: { type: GeminiStructuredResponseType.NUMBER, description: "1-100: How necessary for conversation flow" },
+                  relevance: {
+                    type: GeminiStructuredResponseType.NUMBER,
+                    description: "1-5: How relevant to current conversation",
+                  },
+                  redundancy: {
+                    type: GeminiStructuredResponseType.NUMBER,
+                    description: "1=very redundant, 5=adds new value",
+                  },
+                  wordiness: {
+                    type: GeminiStructuredResponseType.NUMBER,
+                    description: "1=too verbose, 5=appropriately concise",
+                  },
+                  necessity: {
+                    type: GeminiStructuredResponseType.NUMBER,
+                    description: "1-5: How necessary for conversation flow",
+                  },
                 },
               },
             },
@@ -178,7 +213,8 @@ export const getOutputEventSchema = <O extends AnyShape>(
             properties: {
               id: {
                 type: GeminiStructuredResponseType.STRING,
-                description: "The string ID of the message being replied or reacted to. Required if 'parent' object is present.",
+                description:
+                  "The string ID of the message being replied or reacted to. Required if 'parent' object is present.",
               },
             },
             required: ["id"],
@@ -189,7 +225,8 @@ export const getOutputEventSchema = <O extends AnyShape>(
     },
   },
   required: ["scoredInputEvents", "filteredOutputEvents"],
-  description: "Multi-phase evaluation result with scored input events and filtered output events",
+  description:
+    "Multi-phase evaluation result with scored input events and filtered output events",
 });
 
 // processMultiPhaseResponse handles the complete structured response from Gemini
@@ -212,26 +249,17 @@ export function processMultiPhaseResponse<O extends AnyShape>(
 
   try {
     const parsed = JSON.parse(responseText) as GeminiMultiPhaseResponse<O>;
-    
-    // Validate the response structure
-    if (!parsed.scoredInputEvents || !Array.isArray(parsed.scoredInputEvents)) {
-      log.warn("Invalid scoredInputEvents in response");
-      parsed.scoredInputEvents = [];
-    }
-    
-    if (!parsed.filteredOutputEvents || !Array.isArray(parsed.filteredOutputEvents)) {
-      log.warn("Invalid filteredOutputEvents in response");
-      parsed.filteredOutputEvents = [];
-    }
 
-    // Validate each output event
-    parsed.filteredOutputEvents = parsed.filteredOutputEvents.filter((event) => 
-      _isGeminiOutputEvent(event)
-    );
-
-    return parsed;
+    // Trust Gemini's output structure, only validate basic presence
+    return {
+      scoredInputEvents: parsed.scoredInputEvents || [],
+      filteredOutputEvents: parsed.filteredOutputEvents || [],
+    };
   } catch (error) {
-    log.error("Failed to parse multi-phase response:", { error, responseText: responseText.substring(0, 200) });
+    log.error("Failed to parse multi-phase response:", {
+      error,
+      responseText: responseText.substring(0, 200),
+    });
     return {
       scoredInputEvents: [],
       filteredOutputEvents: [],

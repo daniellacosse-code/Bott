@@ -309,12 +309,12 @@ Deno.test("processMultiPhaseResponse - valid response with scored events", () =>
                     importance: 3,
                     directedAtBott: 5,
                     factCheckingNeed: 1,
-                    supportNeed: 2
-                  }
+                    supportNeed: 2,
+                  },
                 },
                 timestamp: "2023-01-01T00:00:00Z",
-                user: { id: "user1", name: "TestUser" }
-              }
+                user: { id: "user1", name: "TestUser" },
+              },
             ],
             filteredOutputEvents: [
               {
@@ -325,15 +325,15 @@ Deno.test("processMultiPhaseResponse - valid response with scored events", () =>
                     relevance: 85,
                     redundancy: 75,
                     wordiness: 90,
-                    necessity: 80
-                  }
+                    necessity: 80,
+                  },
                 },
-                parent: { id: "input-1" }
-              }
-            ]
-          })
-        }]
-      }
+                parent: { id: "input-1" },
+              },
+            ],
+          }),
+        }],
+      },
     }],
     text: "",
     data: {},
@@ -343,7 +343,7 @@ Deno.test("processMultiPhaseResponse - valid response with scored events", () =>
   } as any; // Use 'as any' to bypass strict typing for test
 
   const result = processMultiPhaseResponse(mockResponse);
-  
+
   assertEquals(result.scoredInputEvents.length, 1);
   assertEquals(result.filteredOutputEvents.length, 1);
   assertEquals(result.scoredInputEvents[0].id, "input-1");
@@ -355,9 +355,9 @@ Deno.test("processMultiPhaseResponse - empty response", () => {
     candidates: [{
       content: {
         parts: [{
-          text: ""
-        }]
-      }
+          text: "",
+        }],
+      },
     }],
     text: "",
     data: {},
@@ -367,7 +367,7 @@ Deno.test("processMultiPhaseResponse - empty response", () => {
   } as any;
 
   const result = processMultiPhaseResponse(mockResponse);
-  
+
   assertEquals(result.scoredInputEvents, []);
   assertEquals(result.filteredOutputEvents, []);
 });
@@ -381,7 +381,7 @@ Deno.test("processMultiPhaseResponse - no output events filtered", () => {
             scoredInputEvents: [
               {
                 id: "input-1",
-                type: "message", 
+                type: "message",
                 details: {
                   content: "Low quality message",
                   seen: false,
@@ -390,15 +390,15 @@ Deno.test("processMultiPhaseResponse - no output events filtered", () => {
                     importance: 1,
                     directedAtBott: 1,
                     factCheckingNeed: 1,
-                    supportNeed: 1
-                  }
-                }
-              }
+                    supportNeed: 1,
+                  },
+                },
+              },
             ],
-            filteredOutputEvents: []
-          })
-        }]
-      }
+            filteredOutputEvents: [],
+          }),
+        }],
+      },
     }],
     text: "",
     data: {},
@@ -408,7 +408,7 @@ Deno.test("processMultiPhaseResponse - no output events filtered", () => {
   } as any;
 
   const result = processMultiPhaseResponse(mockResponse);
-  
+
   assertEquals(result.scoredInputEvents.length, 1);
   assertEquals(result.filteredOutputEvents.length, 0);
 });
