@@ -12,16 +12,6 @@
       "value": "LOCATION"
     }
   },
-  "requiredApis": [
-    {
-      "api": "aiplatform.googleapis.com",
-      "reason": "To use the Vertex AI models for generation."
-    },
-    {
-      "api": "storage.googleapis.com",
-      "reason": "To store and retrieve temporary files."
-    }
-  ],
   "options": {
     "port": 8080,
     "cpu": 1,
