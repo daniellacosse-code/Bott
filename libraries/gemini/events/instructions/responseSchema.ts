@@ -23,34 +23,58 @@ import {
   Type as GeminiStructuredResponseType,
 } from "npm:@google/genai";
 
-// TODO: robust event schema with property descriptions
-
 export const getResponseSchema = <O extends AnyShape>({
   inputTraits,
   outputTraits,
   requestHandlers,
 }: GeminiEventGenerationContext<O>) => ({
   type: GeminiStructuredResponseType.OBJECT,
+  description:
+    "The root object for the entire response, containing scored inputs, generated outputs, and overall output scores.",
   properties: {
-    scoredInputEvents: {
+    inputEventScores: {
       type: GeminiStructuredResponseType.ARRAY,
+      description:
+        "An array containing only the input events you scored, now with a 'scores' object added to each.",
       items: {
         type: GeminiStructuredResponseType.OBJECT,
         properties: {
-          id: { type: GeminiStructuredResponseType.STRING },
-          type: { type: GeminiStructuredResponseType.STRING },
+          id: {
+            type: GeminiStructuredResponseType.STRING,
+            description: "The unique identifier of the input event.",
+          },
+          type: {
+            type: GeminiStructuredResponseType.STRING,
+            description: "The type of the event (e.g., `message`).",
+          },
+          user: {
+            type: GeminiStructuredResponseType.OBJECT,
+            description: "The user who created the event.",
+            properties: {
+              id: { type: GeminiStructuredResponseType.STRING },
+              name: { type: GeminiStructuredResponseType.STRING },
+            },
+          },
           details: {
             type: GeminiStructuredResponseType.OBJECT,
+            description:
+              "Contains the event content and the scores you've assigned.",
             properties: {
-              content: { type: GeminiStructuredResponseType.STRING },
+              content: {
+                type: GeminiStructuredResponseType.STRING,
+                description: "The textual content of the message.",
+              },
               scores: generateTraitScoringSchema(inputTraits),
             },
           },
         },
+        required: ["id", "type", "details"],
       },
     },
     outputEvents: {
       type: GeminiStructuredResponseType.ARRAY,
+      description:
+        "The final array of events you have generated and approved for response to the input.",
       items: {
         type: GeminiStructuredResponseType.OBJECT,
         properties: {
@@ -62,9 +86,11 @@ export const getResponseSchema = <O extends AnyShape>({
               BottEventType.REACTION,
               BottEventType.REQUEST,
             ],
+            description: "The type of event to generate.",
           },
           details: {
             type: GeminiStructuredResponseType.OBJECT,
+            description: "The specific details for the generated event.",
             oneOf: [
               {
                 properties: {
@@ -80,9 +106,12 @@ export const getResponseSchema = <O extends AnyShape>({
           },
           parent: {
             type: GeminiStructuredResponseType.OBJECT,
+            description:
+              "A reference to the parent event this output is replying or reacting to. Required for `reply` and `reaction` event types.",
             properties: {
               id: {
                 type: GeminiStructuredResponseType.STRING,
+                description: "The unique ID of the parent event.",
               },
             },
             required: ["id"],
@@ -93,7 +122,7 @@ export const getResponseSchema = <O extends AnyShape>({
     },
     outputScores: generateTraitScoringSchema(outputTraits),
   },
-  required: ["inputEventScores", "outputEvents", "outputScores"],
+  required: ["inputEventScores", "outputEvents"],
 });
 
 const generateTraitScoringSchema = (traits: Record<string, BottTrait>) => {
@@ -103,6 +132,8 @@ const generateTraitScoringSchema = (traits: Record<string, BottTrait>) => {
 
   return {
     type: GeminiStructuredResponseType.OBJECT,
+    description:
+      "A collection of scores for various traits, evaluating a message or response.",
     properties: Object.values(traits).reduce(
       (properties, { name, description: baseDescription, examples }) => {
         let description = baseDescription
@@ -160,6 +191,7 @@ const generateRequestHandlerSchema = <O extends AnyShape>(
     const oneOf = [];
 
     for (const { options } of Object.values(handlers)) {
+      // Some handlers might not have options.
       if (!options) {
         continue;
       }
@@ -206,9 +238,10 @@ const generateRequestHandlerSchema = <O extends AnyShape>(
       name: {
         type: GeminiStructuredResponseType.STRING,
         enum: Object.keys(handlers),
+        description: "The name of the request function to call.",
       },
       options,
-      required: ["name"],
     },
+    required: ["name"],
   };
 };
