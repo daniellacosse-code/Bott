@@ -198,14 +198,14 @@ const generateTraitMarkdown = (traits: Record<string, BottTrait>) => {
   const result = [];
 
   for (
-    const [name, { examples: exampleRecord, description }] of Object.entries(
+    const [name, { examples: exampleRecord, definition }] of Object.entries(
       traits,
     )
   ) {
     let header = `**\`${name}\`**`;
 
-    if (description) {
-      header += `: ${description}`;
+    if (definition) {
+      header += `: ${definition}`;
     }
 
     const examples = Object.entries(exampleRecord).flatMap(

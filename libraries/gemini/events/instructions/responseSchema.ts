@@ -135,9 +135,9 @@ const generateTraitScoringSchema = (traits: Record<string, BottTrait>) => {
     description:
       "A collection of scores for various traits, evaluating a message or response.",
     properties: Object.values(traits).reduce(
-      (properties, { name, description: baseDescription, examples }) => {
-        let description = baseDescription
-          ? baseDescription
+      (properties, { name, definition, examples }) => {
+        let description = definition
+          ? definition
           : `How much this message pertains to "${name}".`;
 
         description += `\n\nExample Scores:\n${

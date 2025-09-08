@@ -107,7 +107,7 @@ type NonEmptyArray<T> = [T, ...Array<T>];
  */
 export interface BottTrait {
   name: string;
-  description?: string;
+  definition?: string;
   criteria?: string[];
   examples: {
     1: NonEmptyArray<string>;
