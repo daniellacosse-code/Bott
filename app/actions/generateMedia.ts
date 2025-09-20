@@ -13,9 +13,9 @@ import {
   type BottAction,
   type BottActionCallEvent,
   BottActionOptionType,
+  type BottActionResultEvent,
   BottEventType,
   type BottFileData,
-  type BottResponseEvent,
 } from "@bott/model";
 import { createTask } from "@bott/task";
 import {
@@ -120,7 +120,7 @@ export const generateMedia: BottAction<
       });
     }
 
-    return new Promise<BottResponseEvent>(
+    return new Promise<BottActionResultEvent>(
       (resolve, reject) => {
         taskManager.push(
           type,
@@ -162,7 +162,7 @@ export const generateMedia: BottAction<
 
             resolve({
               id: crypto.randomUUID(),
-              type: BottEventType.RESPONSE as const,
+              type: BottEventType.ACTION_RESULT as const,
               details: {
                 content: "",
               },

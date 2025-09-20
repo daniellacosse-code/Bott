@@ -48,7 +48,7 @@ const REQUIRED_INTENTS = [
 type DiscordBotOptions<
   O extends Record<string, unknown> = Record<string, unknown>,
 > = {
-  requestHandlerCommands?: BottAction<O, AnyShape>[];
+  actions?: BottAction<O, AnyShape>[];
   event?: (this: DiscordBotContext, event: BottEvent) => void;
   identityToken: string;
   mount?: (this: DiscordBotContext) => void;
@@ -58,7 +58,7 @@ export async function startDiscordBot<
   O extends Record<string, unknown> = Record<string, unknown>,
 >({
   identityToken: token,
-  requestHandlerCommands: commands,
+  actions: commands,
   event: handleEvent,
   mount: handleMount,
 }: DiscordBotOptions<O>) {

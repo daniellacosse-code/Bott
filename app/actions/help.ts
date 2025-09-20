@@ -16,7 +16,7 @@ export const help: BottAction<AnyShape, AnyShape> = Object.assign(
   function help() {
     return {
       id: crypto.randomUUID(),
-      type: BottEventType.RESPONSE as const,
+      type: BottEventType.ACTION_RESULT as const,
       // user: this.user,
       details: {
         embeds: [createInfoEmbed("Help Menu", {
