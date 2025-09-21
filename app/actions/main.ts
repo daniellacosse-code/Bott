@@ -9,11 +9,5 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BottEventRule, BottEventRuleType } from "@bott/model";
-
-export const exampleRule: BottEventRule = {
-  name: "exampleRule",
-  type: BottEventRuleType.FILTER_INPUT,
-  definition: "TODO",
-  requiredClassifiers: {},
-};
+export * from "./help.ts";
+export * from "./generateMedia.ts";

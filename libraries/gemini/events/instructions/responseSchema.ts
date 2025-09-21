@@ -13,21 +13,26 @@ import {
   type AnyShape,
   type BottAction,
   BottActionOptionType,
+  type BottChannel,
+  type BottEventClassifier,
   BottEventType,
-  type BottTrait,
+  type BottGlobalSettings,
+  type BottUser,
 } from "@bott/model";
-import type { GeminiEventGenerationContext } from "./types.ts";
 
 import {
   type Schema as GeminiStructuredResponseSchema,
   Type as GeminiStructuredResponseType,
 } from "npm:@google/genai";
 
-export const getResponseSchema = <O extends AnyShape>({
-  inputTraits,
-  outputTraits,
-  requestHandlers,
-}: GeminiEventGenerationContext<O>) => ({
+export const getResponseSchema = <O extends AnyShape>(
+  context: {
+    user: BottUser;
+    channel: BottChannel;
+    actions: Record<string, BottAction<O, AnyShape>>;
+    settings: BottGlobalSettings;
+  },
+) => ({
   type: GeminiStructuredResponseType.OBJECT,
   description:
     "The root object for the entire response, containing scored inputs, generated outputs, and overall output scores.",
@@ -64,7 +69,7 @@ export const getResponseSchema = <O extends AnyShape>({
                 type: GeminiStructuredResponseType.STRING,
                 description: "The textual content of the message.",
               },
-              scores: generateTraitScoringSchema(inputTraits),
+              scores: generateEventClassifierSchema({/* TODO */}),
             },
           },
         },
@@ -97,11 +102,11 @@ export const getResponseSchema = <O extends AnyShape>({
                   content: {
                     type: GeminiStructuredResponseType.STRING,
                   },
-                  scores: generateTraitScoringSchema(outputTraits),
+                  scores: generateEventClassifierSchema({/* TODO */}),
                 },
                 required: ["content", "scores"],
               },
-              generateRequestHandlerSchema<O>(requestHandlers),
+              generateActionSchema<O>(context.actions),
             ],
           },
           parent: {
@@ -120,13 +125,15 @@ export const getResponseSchema = <O extends AnyShape>({
         required: ["type", "details"],
       },
     },
-    outputScores: generateTraitScoringSchema(outputTraits),
+    outputScores: generateEventClassifierSchema({/* TODO */}),
   },
   required: ["inputEventScores", "outputEvents"],
 });
 
-const generateTraitScoringSchema = (traits: Record<string, BottTrait>) => {
-  if (Object.keys(traits).length === 0) {
+const generateEventClassifierSchema = (
+  classifiers: Record<string, BottEventClassifier>,
+) => {
+  if (Object.keys(classifiers).length === 0) {
     return;
   }
 
@@ -134,7 +141,7 @@ const generateTraitScoringSchema = (traits: Record<string, BottTrait>) => {
     type: GeminiStructuredResponseType.OBJECT,
     description:
       "A collection of scores for various traits, evaluating a message or response.",
-    properties: Object.values(traits).reduce(
+    properties: Object.values(classifiers).reduce(
       (properties, { name, definition, examples }) => {
         let description = definition
           ? definition
@@ -170,11 +177,11 @@ const generateTraitScoringSchema = (traits: Record<string, BottTrait>) => {
       },
       {} as Record<string, GeminiStructuredResponseSchema>,
     ),
-    required: Object.keys(traits),
+    required: Object.keys(classifiers),
   };
 };
 
-const generateRequestHandlerSchema = <O extends AnyShape>(
+const generateActionSchema = <O extends AnyShape>(
   handlers: Record<string, BottAction<O, AnyShape>>,
 ) => {
   if (Object.keys(handlers).length === 0) {

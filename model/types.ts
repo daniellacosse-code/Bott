@@ -108,10 +108,10 @@ export enum BottEventType {
   REPLY = "reply",
   /** A reaction (e.g., emoji) to a previous message. */
   REACTION = "reaction",
-  /** An event representing a request for Bott to perform an action (e.g., a command). */
-  ACTION_CALL = "request",
-  /** An event representing Bott's response to a request. */
-  ACTION_RESULT = "response",
+  /** An event representing a call for Bott to perform an action. */
+  ACTION_CALL = "actionCall",
+  /** An event representing the result of an action. */
+  ACTION_RESULT = "actionResult",
 }
 
 /**
@@ -164,10 +164,10 @@ export interface BottEventClassifier {
 
 export enum BottEventRuleType {
   /** A rule for removing an input event from consideration. */
-  FILTER_INPUT = "filter_input",
+  FILTER_INPUT = "filterInput",
 
   /** A rule for removing an output event from being sent. */
-  FILTER_OUTPUT = "filter_output",
+  FILTER_OUTPUT = "filterOutput",
 }
 
 /**
@@ -175,9 +175,10 @@ export enum BottEventRuleType {
  * Rules are conditions or actions that Bott must take based on classifier results.
  */
 export interface BottEventRule {
+  name: string;
   type: BottEventRuleType;
   definition: string;
-  requiredClassifiers?: Set<BottEventClassifier>;
+  requiredClassifiers?: Record<string, BottEventClassifier>;
 }
 
 /**
@@ -247,6 +248,6 @@ export type BottActionResultEvent<D extends AnyShape = { content: string }> =
  */
 export interface BottGlobalSettings {
   identity: string;
-  rules: Set<BottEventRule>;
-  classifiers: Set<BottEventClassifier>;
+  rules: Record<string, BottEventRule>;
+  classifiers: Record<string, BottEventClassifier>;
 }

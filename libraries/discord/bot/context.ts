@@ -26,6 +26,7 @@ import {
 
 import { resolveBottEventFromMessage } from "../message/event.ts";
 
+// TODO(#63): Generalize the action context and hoist it
 export type DiscordBotContext = {
   user: BottUser;
   send: (

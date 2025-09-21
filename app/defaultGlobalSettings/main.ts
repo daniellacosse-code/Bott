@@ -21,9 +21,9 @@ export const getDefaultGlobalSettings = (
   context: { user: BottUser },
 ): BottGlobalSettings => ({
   identity: getDefaultIdentity(context),
-  classifiers: new Set([
-    directedAt(context.user),
-    ...Object.values(classifiers),
-  ]),
-  rules: new Set(Object.values(rules)),
+  classifiers: {
+    ...classifiers,
+    [`directedAt${context.user.name}`]: directedAt(context.user),
+  },
+  rules,
 });

@@ -48,7 +48,7 @@ const REQUIRED_INTENTS = [
 type DiscordBotOptions<
   O extends Record<string, unknown> = Record<string, unknown>,
 > = {
-  actions?: BottAction<O, AnyShape>[];
+  actions?: Record<string, BottAction<O, AnyShape>>;
   event?: (this: DiscordBotContext, event: BottEvent) => void;
   identityToken: string;
   mount?: (this: DiscordBotContext) => void;
@@ -181,7 +181,7 @@ export async function startDiscordBot<
       return;
     }
 
-    const command = commands.find(({ name }) =>
+    const command = Object.values(commands).find(({ name }) =>
       interaction.commandName === name
     );
 
@@ -191,9 +191,9 @@ export async function startDiscordBot<
 
     await interaction.deferReply();
 
-    let responseEvent: BottActionResultEvent;
+    let resultEvent: BottActionResultEvent;
     try {
-      responseEvent = await resolveCommandResponseEvent<O>(
+      resultEvent = await resolveCommandResponseEvent<O>(
         command,
         {
           request: await resolveCommandRequestEvent<O>(interaction),
@@ -207,12 +207,12 @@ export async function startDiscordBot<
       });
     }
 
-    interaction.followUp(responseEvent.details);
+    interaction.followUp(resultEvent.details);
   });
 
   // Sync commands with discord origin via their custom http client 🙄:
   const body = [];
-  for (const command of commands) {
+  for (const command of Object.values(commands)) {
     body.push(getCommandJson<O>(command));
   }
 

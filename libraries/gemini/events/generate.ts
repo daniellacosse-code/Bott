@@ -15,12 +15,15 @@ import { encodeBase64 } from "jsr:@std/encoding/base64";
 
 import {
   type AnyShape,
+  type BottAction,
   type BottActionCallEvent,
+  type BottChannel,
   type BottEvent,
   BottEventType,
   type BottFile,
   BottFileType,
   type BottGlobalSettings,
+  type BottUser,
 } from "@bott/model";
 import { log } from "@bott/logger";
 import { addEventData, getEvents } from "@bott/storage";
@@ -60,19 +63,20 @@ type GeminiEventTraitScore = {
 };
 
 export async function* generateEvents<O extends AnyShape>(
-  inputEvents: BottEvent<
-    { content: string; scores?: Record<string, number> }
-  >[],
+  inputEvents: BottEvent<AnyShape>[],
   {
     model = CONFIG_EVENTS_MODEL,
     abortSignal,
-    settings,
     context,
   }: {
     model?: string;
     abortSignal: AbortSignal;
-    settings: BottGlobalSettings;
-    context; // TODO
+    context: {
+      user: BottUser;
+      channel: BottChannel;
+      actions: Record<string, BottAction<O, AnyShape>>;
+      settings: BottGlobalSettings;
+    };
   },
 ): AsyncGenerator<
   | BottEvent<{ content: string; scores?: Record<string, number> }>
@@ -187,7 +191,7 @@ export async function* generateEvents<O extends AnyShape>(
       candidateCount: 1,
       systemInstruction: {
         parts: [
-          { text: context.identityPrompt },
+          { text: context.settings.identity },
           {
             text: systemPrompt,
           },
@@ -355,7 +359,7 @@ const _sanitizeEvents = <T>(
 };
 
 const _transformBottEventToContent = (
-  event: BottEvent<{ content: string; scores?: Record<string, number> }>,
+  event: BottEvent<AnyShape>,
   modelUserId: string,
 ): Content => {
   // Explicitly construct the object to be stringified to avoid circular references,

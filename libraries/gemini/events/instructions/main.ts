@@ -9,14 +9,24 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { GeminiEventGenerationContext } from "./types.ts";
-import type { AnyShape } from "@bott/model";
+import type {
+  AnyShape,
+  BottAction,
+  BottChannel,
+  BottGlobalSettings,
+  BottUser,
+} from "@bott/model";
 
 import { getSystemPrompt } from "./systemPrompt.ts";
 import { getResponseSchema } from "./responseSchema.ts";
 
 export const getInstructions = <O extends AnyShape>(
-  context: GeminiEventGenerationContext<O>,
+  context: {
+    user: BottUser;
+    channel: BottChannel;
+    actions: Record<string, BottAction<O, AnyShape>>;
+    settings: BottGlobalSettings;
+  },
 ) => ({
   systemPrompt: getSystemPrompt(context),
   responseSchema: getResponseSchema(context),

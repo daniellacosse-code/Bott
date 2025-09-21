@@ -15,6 +15,7 @@ import {
   type BottChannel,
   type BottEvent,
   BottEventType,
+  BottGlobalSettings,
   type BottUser,
 } from "@bott/model";
 
@@ -26,7 +27,11 @@ export async function generateErrorMessage<O extends AnyShape>(
   // deno-lint-ignore no-explicit-any
   error: any,
   requestEvent: BottActionCallEvent<O>,
-  context: { user: BottUser; channel: BottChannel; identity: string },
+  context: {
+    user: BottUser;
+    channel: BottChannel;
+    settings: BottGlobalSettings;
+  },
 ): Promise<BottEvent> {
   const model = CONFIG_ERROR_MODEL;
 
@@ -52,7 +57,7 @@ export async function generateErrorMessage<O extends AnyShape>(
     config: {
       candidateCount: 1,
       systemInstruction: {
-        parts: [{ text: context.identity + instructions }],
+        parts: [{ text: context.settings.identity }, { text: instructions }],
       },
     },
   });

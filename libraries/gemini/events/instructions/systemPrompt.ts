@@ -9,15 +9,25 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { AnyShape, BottAction, BottTrait } from "@bott/model";
-import type { GeminiEventGenerationContext } from "./types.ts";
+import {
+  type AnyShape,
+  type BottAction,
+  type BottChannel,
+  type BottEventClassifier,
+  type BottEventRule,
+  BottEventRuleType,
+  type BottGlobalSettings,
+  type BottUser,
+} from "@bott/model";
 
-export const getSystemPrompt = <O extends AnyShape>({
-  user,
-  inputTraits,
-  outputTraits,
-  requestHandlers,
-}: GeminiEventGenerationContext<O>) => `
+export const getSystemPrompt = <O extends AnyShape>(
+  context: {
+    user: BottUser;
+    actions: Record<string, BottAction<O, AnyShape>>;
+    channel: BottChannel;
+    settings: BottGlobalSettings;
+  },
+) => `
 # Task: Multi-Phase Chat Interaction Processing
 
 You will analyze incoming messages and generate responses using the following 5-phase process:
@@ -43,9 +53,27 @@ You will analyze incoming messages and generate responses using the following 5-
 
 For each event in the input array that does **not** already have a \`details.scores\` object, evaluate and add one. This prevents re-processing of messages you've already seen.
 
-### Scoring Traits
+### Scoring Classifiers
 
-${generateTraitMarkdown(inputTraits)}
+${
+  generateEventClassifierMarkdown(
+    Object.entries(context.settings.rules).reduce(
+      (acc, [, rule]) => {
+        if (
+          rule.type === BottEventRuleType.FILTER_INPUT &&
+          rule.requiredClassifiers &&
+          Object.keys(rule.requiredClassifiers).every((key) =>
+            key in context.settings.classifiers
+          )
+        ) {
+          acc = { ...acc, ...rule.requiredClassifiers };
+        }
+        return acc;
+      },
+      {} as Record<string, BottEventClassifier>,
+    ),
+  )
+}
 
 ---
 
@@ -53,18 +81,36 @@ ${generateTraitMarkdown(inputTraits)}
 
 Based on your analysis in Phase 1 and your core \`Identity\` and \`Engagement Rules\`, generate a list of potential outgoing events. This is your brainstorming phase.
 
-${generateTraitCriteriaMarkdown(inputTraits)}
+${
+  generateRuleMarkdown(
+    Object.entries(context.settings.rules).reduce(
+      (acc, [, rule]) => {
+        if (
+          rule.type === BottEventRuleType.FILTER_INPUT &&
+          Object.keys(rule.requiredClassifiers ?? {}).every((key) =>
+            key in context.settings.classifiers
+          )
+        ) {
+          acc[rule.name] = rule;
+        }
+
+        return acc;
+      },
+      {} as Record<string, BottEventRule>,
+    ),
+  )
+}
 
 ### Available Event Types
 
 1.  **\`message\`**: A new, standalone message to the channel.
 2.  **\`reply\`**: A direct reply to a specific parent message (will be threaded).
 3.  **\`reaction\`**: An emoji reaction to a specific parent message. Prefer these for simple acknowledgments to reduce channel noise.
-4.  **\`request\`**: An instruction to the system to call a function. These are asynchronous. It's good practice to send a \`reply\` or \`message\` alongside a \`request\` to inform the user that you've started a longer-running task.
+4.  **\`actionCall\`**: An instruction to the system to execute an action. These are asynchronous. It's good practice to send a \`reply\` or \`message\` alongside an \`action_call\` to inform the user that you've started a longer-running task.
 
-### Available Request Functions
+### Available Actions
 
-${generateRequestHandlerMarkdown(requestHandlers)}
+${generateActionMarkdown(context.actions)}
 
 ---
 
@@ -82,9 +128,27 @@ For any \`message\` or \`reply\` events you generated that are too long, split t
 
 This is a critical self-evaluation step. Be objective and critically score **each individual event** you've prepared for output from Phase 3. Also, provide an overall score for the entire response package.
 
-### Scoring Traits
+### Scoring Classifiers
 
-${generateTraitMarkdown(outputTraits)}
+${
+  generateEventClassifierMarkdown(
+    Object.entries(context.settings.rules).reduce(
+      (acc, [, rule]) => {
+        if (
+          rule.type === BottEventRuleType.FILTER_OUTPUT &&
+          rule.requiredClassifiers &&
+          Object.keys(rule.requiredClassifiers).every((key) =>
+            key in context.settings.classifiers
+          )
+        ) {
+          acc = { ...acc, ...rule.requiredClassifiers };
+        }
+        return acc;
+      },
+      {} as Record<string, BottEventClassifier>,
+    ),
+  )
+}
 
 ---
 
@@ -92,7 +156,25 @@ ${generateTraitMarkdown(outputTraits)}
 
 Apply the following rules **strictly and in order** to the list of scored events from Phase 4. This is the final quality gate.
 
-${generateTraitCriteriaMarkdown(outputTraits)}
+${
+  generateRuleMarkdown(
+    Object.entries(context.settings.rules).reduce(
+      (acc, [, rule]) => {
+        if (
+          rule.type === BottEventRuleType.FILTER_OUTPUT &&
+          Object.keys(rule.requiredClassifiers ?? {}).every((key) =>
+            key in context.settings.classifiers
+          )
+        ) {
+          acc[rule.name] = rule;
+        }
+
+        return acc;
+      },
+      {} as Record<string, BottEventRule>,
+    ),
+  )
+}
 
 The result of this phase is the final value for the \`output\` key in your response.
 
@@ -111,7 +193,7 @@ The result of this phase is the final value for the \`output\` key in your respo
         "name": <user_name_1>
       },
       "details": {
-        "content": "Hey ${user.name}, can you find me a cool picture of a futuristic city at night?",
+        "content": "Hey ${context.user.name}, can you find me a cool picture of a futuristic city at night?",
         "scores": {
           "seriousness": <scoreObject>,
           "importance": <scoreObject>,
@@ -194,12 +276,14 @@ The result of this phase is the final value for the \`output\` key in your respo
 \`\`\`
 `;
 
-const generateTraitMarkdown = (traits: Record<string, BottTrait>) => {
+const generateEventClassifierMarkdown = (
+  classifiers: Record<string, BottEventClassifier>,
+) => {
   const result = [];
 
   for (
     const [name, { examples: exampleRecord, definition }] of Object.entries(
-      traits,
+      classifiers,
     )
   ) {
     let header = `**\`${name}\`**`;
@@ -219,16 +303,20 @@ const generateTraitMarkdown = (traits: Record<string, BottTrait>) => {
   return result.join("\n");
 };
 
-const generateTraitCriteriaMarkdown = (traits: Record<string, BottTrait>) => {
+const generateRuleMarkdown = (
+  rules: Record<string, BottEventRule>,
+) => {
   return [
-    ...new Set(Object.values(traits).flatMap((trait) => trait.criteria ?? [])),
+    ...new Set(
+      Object.values(rules).flatMap((rule) => rule.definition ?? []),
+    ),
   ]
     .sort()
-    .map((criteria) => `* ${criteria}`)
+    .map((definition) => `* ${definition}`)
     .join("\n");
 };
 
-const generateRequestHandlerMarkdown = <O extends AnyShape>(
+const generateActionMarkdown = <O extends AnyShape>(
   handlers: Record<string, BottAction<O, AnyShape>>,
 ) => {
   const result = [];

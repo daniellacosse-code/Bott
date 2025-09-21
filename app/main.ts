@@ -24,24 +24,13 @@ import { generateErrorMessage, generateEvents } from "@bott/gemini";
 import { log } from "@bott/logger";
 import { taskManager } from "./tasks.ts";
 
-import { getDefaultIdentity } from "./defaultGlobalSettings/identity.ts";
-import { help } from "./actions/help.ts";
+import * as actions from "./actions/main.ts";
 import {
   generateMedia,
   GenerateMediaOptions,
 } from "./actions/generateMedia.ts";
 import { STORAGE_DEPLOY_NONCE_PATH, STORAGE_ROOT } from "./env.ts";
-import {
-  directedAt,
-  factCheckingNeed,
-  importance,
-  necessity,
-  redundancy,
-  relevance,
-  seriousness,
-  supportNeed,
-  wordiness,
-} from "./defaultGlobalSettings/classifiers.ts";
+import { getDefaultGlobalSettings } from "./defaultGlobalSettings/main.ts";
 
 const WORDS_PER_MINUTE = 200;
 const MS_IN_MINUTE = 60 * 1000;
@@ -56,7 +45,7 @@ const deployNonce = crypto.randomUUID();
 Deno.writeTextFileSync(STORAGE_DEPLOY_NONCE_PATH, deployNonce);
 
 startDiscordBot({
-  actions: [help, generateMedia],
+  actions,
   identityToken: Deno.env.get("DISCORD_TOKEN")!,
   mount() {
     log.info(
@@ -116,26 +105,16 @@ startDiscordBot({
         }
 
         const thisChannel = event.channel!;
+
+        const settings = getDefaultGlobalSettings({
+          user: this.user,
+        });
+
         const context = {
-          identityPrompt: getDefaultIdentity({
-            user: this.user,
-          }),
           user: this.user,
           channel: thisChannel,
-          requestHandlers: { generateMedia },
-          inputTraits: {
-            seriousness,
-            importance,
-            directedAtBott: directedAt(this.user),
-            factCheckingNeed,
-            supportNeed,
-          },
-          outputTraits: {
-            relevance,
-            redundancy,
-            wordiness,
-            necessity,
-          },
+          actions,
+          settings,
         };
 
         // 1. Get list of bot events (responses) from Gemini:
