@@ -39,13 +39,13 @@ const mockSettings: BottGlobalSettings = {
   rules: {
     filterSpam: {
       name: "filterSpam",
-      type: BottEventRuleType.FILTER_INPUT,
+      type: BottEventRuleType.FOCUS_INPUT,
       definition: "isSpam > 3",
       requiredClassifiers: { isSpam: mockClassifier1 },
     },
     anotherFilter: {
       name: "anotherFilter",
-      type: BottEventRuleType.FILTER_INPUT,
+      type: BottEventRuleType.FOCUS_INPUT,
       definition: "isUrgent > 4",
       requiredClassifiers: { isUrgent: mockClassifier2 },
     },
@@ -57,7 +57,7 @@ const mockSettings: BottGlobalSettings = {
     },
     missingClassifierRule: {
       name: "missingClassifierRule",
-      type: BottEventRuleType.FILTER_INPUT,
+      type: BottEventRuleType.FOCUS_INPUT,
       definition: "isMissing > 1",
       requiredClassifiers: {
         isMissing: {
@@ -76,7 +76,7 @@ Deno.test("reduceClassifiersForRuleType", async (t) => {
     () => {
       const result = reduceClassifiersForRuleType(
         mockSettings,
-        BottEventRuleType.FILTER_INPUT,
+        BottEventRuleType.FOCUS_INPUT,
       );
 
       assertEquals(Object.keys(result).length, 2);
@@ -105,7 +105,7 @@ Deno.test("reduceClassifiersForRuleType", async (t) => {
     () => {
       const result = reduceClassifiersForRuleType(
         mockSettings,
-        BottEventRuleType.FILTER_INPUT,
+        BottEventRuleType.FOCUS_INPUT,
       );
 
       // The 'missingClassifierRule' should be ignored
@@ -119,7 +119,7 @@ Deno.test("reduceRulesForType", async (t) => {
   await t.step("should return a map of rules for a given rule type", () => {
     const result = reduceRulesForType(
       mockSettings,
-      BottEventRuleType.FILTER_INPUT,
+      BottEventRuleType.FOCUS_INPUT,
     );
 
     assertEquals(Object.keys(result).length, 2);
@@ -133,7 +133,7 @@ Deno.test("reduceRulesForType", async (t) => {
     () => {
       const result = reduceRulesForType(
         mockSettings,
-        BottEventRuleType.FILTER_INPUT,
+        BottEventRuleType.FOCUS_INPUT,
       );
 
       assertEquals(Object.keys(result).length, 2);

@@ -11,62 +11,96 @@
 
 import type { BottEventClassifier, BottUser } from "@bott/model";
 
-// TODO: refine
-
-export const seriousness: BottEventClassifier = {
-  name: "seriousness",
-  definition:
-    "How serious or formal the message is. A high score indicates a professional or urgent tone, while a low score suggests a casual or joking manner.",
-  examples: {
-    1: ["<A joking or sarcastic comment>", "'lol nice'"],
-    5: ["<A very serious comment>", "<A detailed bug report>"],
-  },
-};
-
-export const importance: BottEventClassifier = {
-  name: "importance",
-  definition:
-    "The urgency and impact of the message. A high score means it requires immediate attention, while a low score indicates it's trivial or can be handled later.",
-  examples: {
-    1: ["<A trivial 'good morning' message>"],
-    5: [
-      "<An urgent report like 'the system is down and I can't work'>",
-    ],
-  },
-};
-
 export const directedAt = (user: BottUser): BottEventClassifier => ({
   name: `directedAt${user.name}`,
   definition:
-    `Whether the message is directly addressed to me (${user.name}). A high score indicates a direct command or question.`,
+    `Whether the message is directly addressed to "${user.name}". A high score indicates a direct request or question.`,
   examples: {
-    1: ["<A message between two other users>"],
+    1: ["Hey other user, how are you this evening?"],
+    3: [
+      `I wonder if ${user.name} has anything to say about this?`,
+      `lol ${user.name} would love this`,
+    ],
     5: [
-      `<A direct command starting with '${user.name}, can you...'>`,
+      `Hey ${user.name.toLocaleLowerCase()}, do a dance for me.`,
+      `@${user.name}, can you write me a story?`,
     ],
   },
 });
 
-export const factCheckingNeed: BottEventClassifier = {
-  name: "factCheckingNeed",
+export const importance: BottEventClassifier = {
+  name: "importance",
   definition:
-    "Whether the message contains claims that should be verified. A high score indicates the presence of specific, verifiable facts.",
+    "How significant the message's content is to the group or ongoing conversation. A low score is for trivial chatter, a high score is for something that affects the whole group.",
   examples: {
-    1: ["<A subjective opinion like 'I love this new design!'>"],
+    1: [
+      "lol",
+      "I'm gonna go grab a snack.",
+    ],
+    3: [
+      "Does anyone have a good recipe for chili?",
+      "I'm thinking of starting a new book club channel.",
+    ],
     5: [
-      "<A verifiable claim like 'The docs say the limit is 100/hr, but I'm cut off at 50'>",
+      "Hey @everyone, we're planning a game night for this Friday!",
+      "Important: We're updating the community rules, please read the announcement",
     ],
   },
 };
 
-export const supportNeed: BottEventClassifier = {
-  name: "supportNeed",
+export const urgency: BottEventClassifier = {
+  name: "urgency",
   definition:
-    "Whether the user is asking for help or assistance. A high score indicates a direct request for support.",
+    "How time-sensitive the message is. A low score is for idle chat, while a high score indicates a need for an immediate response or action.",
   examples: {
-    1: ["<An informational message sharing a link>"],
+    1: [
+      "I was thinking we could watch a movie sometime next week.",
+      "That game looks so cool, we should play it eventually.",
+    ],
+    3: [
+      "Anyone free to play a match in the next hour?",
+      "The poll for the movie night closes tonight!",
+    ],
     5: [
-      "<A direct request for help, like posting an error and asking 'what does this mean?'>",
+      "Is anyone here? I'm having a real-life emergency. @everyone",
+      "I need some assistance immediately.",
+    ],
+  },
+};
+
+export const objectivity: BottEventClassifier = {
+  name: "objectivity",
+  definition:
+    "How objective or subjective the message is. A low score indicates a personal feeling or opinion, while a high score indicates a statement presented as a verifiable fact.",
+  examples: {
+    1: [
+      "I love this new design!",
+      "That movie was so boring.",
+    ],
+    5: [
+      "I believe women have an average IQ of 110, while men have higher variance.",
+      "The Earth revolves around the Sun.",
+    ],
+  },
+};
+
+export const sincerity: BottEventClassifier = {
+  name: "sincerity",
+  definition:
+    "How sincere or genuine the message is. A low score suggests a sarcastic, ironic, or joking tone, while a high score indicates a sincere or heartfelt tone.",
+  examples: {
+    1: [
+      "That's a real masterpiece",
+      "Yes, because I believe murder is okay 🙄",
+      "LMAO",
+      "Oh, I'm *so* sorry for your loss... of the game.",
+    ],
+    3: [
+      "Wow, you finally showed up! We missed you.",
+    ],
+    5: [
+      "Thank you so much for your help, I really appreciate it.",
+      "I am really sorry about that.",
     ],
   },
 };
@@ -74,39 +108,33 @@ export const supportNeed: BottEventClassifier = {
 export const relevance: BottEventClassifier = {
   name: "relevance",
   definition:
-    "How well the response relates to the user's message and the recent conversation.",
+    "How well the message relates to the recent conversation. A low score is for a complete non-sequitur, while a high score directly continues the current topic.",
   examples: {
-    1: ["<An off-topic or irrelevant response>"],
-    5: ["<A response that directly addresses the user's message>"],
+    1: [
+      "Conversation is about favorite movies. User posts: 'My dog is cute.'",
+    ],
+    3: [
+      "Conversation is about 'The Matrix'. User posts: 'Speaking of sci-fi, has anyone seen 'Blade Runner'?'",
+    ],
+    5: [
+      "Conversation is about 'The Matrix'. User posts: 'I think the spoon scene is the most iconic part.'",
+    ],
   },
 };
 
-export const redundancy: BottEventClassifier = {
-  name: "redundancy",
+export const novelty: BottEventClassifier = {
+  name: "novelty",
   definition:
-    "Does this add new information or perspective compared to the conversation so far AND compared to the other events in this response?",
+    "The degree to which this message adds new information or a new perspective. A low score indicates redundancy, while a high score introduces a new idea or fact.",
   examples: {
-    1: ["<A response that repeats information already stated>"],
-    5: ["<A response that provides new information or a fresh perspective>"],
-  },
-};
-
-export const wordiness: BottEventClassifier = {
-  name: "wordiness",
-  definition:
-    "How effectively the message communicates its point without unnecessary words.",
-  examples: {
-    1: ["<A verbose or rambling message>"],
-    5: ["<A concise and clear message>"],
-  },
-};
-
-export const necessity: BottEventClassifier = {
-  name: "necessity",
-  definition:
-    "How critical is this specific event? Is it filler, or does it serve a clear purpose (e.g., answering a question, acknowledging a request, providing a required update)?",
-  examples: {
-    1: ["<An unnecessary or filler message>"],
-    5: ["<An essential message that answers a question or fulfills a request>"],
+    1: [
+      "User A: 'I love pizza.' User B: 'Yeah, pizza is great.'",
+    ],
+    3: [
+      "User A: 'I love pizza.' User B: 'Me too, especially with pineapple.'",
+    ],
+    5: [
+      "User A: 'I love pizza.' User B: 'Did you know the first pizzeria in the US opened in New York in 1905?'",
+    ],
   },
 };

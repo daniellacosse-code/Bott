@@ -73,7 +73,7 @@ export const getResponseSchema = <O extends AnyShape>(
               },
               scores: getEventClassifierSchema(reduceClassifiersForRuleType(
                 context.settings,
-                BottEventRuleType.FILTER_INPUT,
+                BottEventRuleType.FOCUS_INPUT,
               )),
             },
           },

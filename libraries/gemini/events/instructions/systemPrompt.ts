@@ -60,7 +60,7 @@ ${
   getEventClassifierMarkdown(
     reduceClassifiersForRuleType(
       context.settings,
-      BottEventRuleType.FILTER_INPUT,
+      BottEventRuleType.FOCUS_INPUT,
     ),
   )
 }
@@ -73,7 +73,7 @@ Based on your analysis in Phase 1 and your core \`Identity\` and \`Engagement Ru
 
 ${
   getRuleMarkdown(
-    reduceRulesForType(context.settings, BottEventRuleType.FILTER_INPUT),
+    reduceRulesForType(context.settings, BottEventRuleType.FOCUS_INPUT),
   )
 }
 
