@@ -220,7 +220,7 @@ export async function* generateEvents<O extends AnyShape>(
     try {
       await addEventData(...sanitizedInputEvents);
       log.debug(
-        `Added scores to ${sanitizedInputEvents.length} events.`,
+        `Added scores to ${sanitizedInputEvents.length} event(s).`,
       );
     } catch (error) {
       log.error(`Failed to update events with scores: ${error}`);
@@ -265,7 +265,13 @@ export async function* generateEvents<O extends AnyShape>(
 const _truncateMessage = (message: string, maxWordCount = 12) => {
   const words = message.trim().split(/\s+/);
 
-  return words.slice(0, maxWordCount).join(" ") + "…";
+  const result = words.slice(0, maxWordCount).join(" ");
+
+  if (words.length <= maxWordCount) {
+    return result;
+  }
+
+  return result + "…";
 };
 
 const _logDebugGeminiResult = (result: GeminiEventGenerationResult) => {
@@ -351,6 +357,9 @@ const _sanitizeEvents = <T>(
     for (const trait in event.details.scores) {
       newEvent.details.scores[trait] = event.details.scores[trait].score;
     }
+
+    // TODO: join with previous event
+    newEvent.timestamp ??= new Date();
 
     result.push(newEvent);
   }

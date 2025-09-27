@@ -25,5 +25,8 @@ export const getDefaultGlobalSettings = (
     ...classifiers,
     [`directedAt${context.user.name}`]: directedAt(context.user),
   },
-  rules,
+  rules: {
+    ...rules,
+    whenAddressed: rules.whenAddressed(context.user),
+  },
 });

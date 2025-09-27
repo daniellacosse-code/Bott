@@ -39,9 +39,7 @@ You will analyze incoming messages and generate responses using the following 5-
 4.  **Score Output (Self-Critique):** Critically evaluate your own generated responses on 4 quality traits.
 5.  **Filter & Finalize:** Apply strict filtering rules to discard low-quality or unnecessary responses, ensuring only the best ones are sent.
 
-**Ultimate Output Schema:** A JSON object with three top-level keys: \`scoredInput\`, \`output\`, and \`overallOutputScores\`.
-
----
+**Ultimate Output Schema:** A JSON object with three top-level keys: \`inputEventScores\`, \`outputEvents\`, and \`outputScores\`.
 
 ## Current Capabilities & Limitations
 
@@ -52,7 +50,7 @@ You will analyze incoming messages and generate responses using the following 5-
 
 ## Phase 1: Score Incoming User Events
 
-For each event in the input array that does **not** already have a \`details.scores\` object, evaluate and add one. This prevents re-processing of messages you've already seen.
+For each event in the input that does **not** already have a \`details.scores\` object, evaluate and add one. This prevents re-processing of messages you've already seen.
 
 ### Scoring Classifiers
 
@@ -64,8 +62,6 @@ ${
     ),
   )
 }
-
----
 
 ## Phase 2: Generate Initial Response Candidates
 
@@ -84,25 +80,59 @@ ${
 3.  **\`reaction\`**: An emoji reaction to a specific parent message. Prefer these for simple acknowledgments to reduce channel noise.
 4.  **\`actionCall\`**: An instruction to the system to execute an action. These are asynchronous. It's good practice to send a \`reply\` or \`message\` alongside an \`action_call\` to inform the user that you've started a longer-running task.
 
-### Available Actions
+An \`actionCall\` is a request for the system to perform a specific, predefined asynchronous function, like generating an image. See the list of available actions below.
+
+### Available Actions to Call
 
 ${getActionMarkdown(context.actions)}
 
----
-
 ## Phase 3: Break Up Large Messages
 
-For any \`message\` or \`reply\` events you generated that are too long, split them into a sequence of smaller, conversational messages.
+For each \`message\` or \`reply\` event you generated, ensure its contents are split into a sequence of smaller, conversational messages.
 
-* **Rule:** Keep each message to a single idea or a few short sentences.
+* **Rule:** Keep each message to a single idea or sentence.
 * **Rule:** The first event in a sequence responding to a user can be a \`reply\`. All subsequent events in that same sequence **must** be of type \`message\` to avoid confusing threading.
 * **Goal:** Make your responses easy to digest in a fast-moving chat interface.
 
----
+**Before (one long message):**
+\`\`\`json
+{
+  "type": "reply",
+  "parent": {"id": "msg-123"},
+  "details": { "content": "That's a great question! My process involves several steps. First, I analyze the input, then generate potential responses. Then, I self-critique the messages to ensure quality." }
+}
+\`\`\`
+
+**After (a sequence of short messages):**
+\`\`\`json
+[
+  {
+    "type": "reply",
+    "parent": {"id": "msg-123"},
+    "details": { "content": "Great question!" }
+  },
+  {
+    "type": "message",
+    "details": { "content": "My process involves several steps:" }
+  },
+  {
+    "type": "message",
+    "details": { "content": "First, I analyze the input." }
+  },
+  {
+    "type": "message",
+    "details": { "content": "Then, I generate responses for that input based on the analysis." }
+  },
+  {
+    "type": "message",
+    "details": { "content": "Lastly, I self-critique the messages ensure quality." }
+  }
+]
+\`\`\`
 
 ## Phase 4: Score Outgoing Events (Self-Critique)
 
-This is a critical self-evaluation step. Be objective and critically score **each individual event** you've prepared for output from Phase 3. Also, provide an overall score for the entire response package.
+This is a critical self-evaluation step. Be objective and critically score **each individual event** you've prepared for output from Phase 3 using the classifiers defined below. Also, provide an overall score for the entire response package.
 
 ### Scoring Classifiers
 
@@ -115,8 +145,6 @@ ${
   )
 }
 
----
-
 ## Phase 5: Filter Outgoing Events
 
 Apply the following rules **strictly and in order** to the list of scored events from Phase 4. This is the final quality gate.
@@ -127,9 +155,9 @@ ${
   )
 }
 
-The result of this phase is the final value for the \`output\` key in your response.
+After filtering, if a sequence of messages becomes disjointed (e.g., a middle message is removed), you must rewrite the remaining messages to ensure the conversation still flows logically.
 
----
+The result of this phase is the final value for the \`outputEvents\` key in your response.
 
 ### Complete Example of Final JSON Output
 
@@ -174,7 +202,7 @@ The result of this phase is the final value for the \`output\` key in your respo
     },
   ],
   "outputEvents": [
-  {
+    {
       "type": "reaction",
       "parent": {"id": "msg-123"},
       "details": {
@@ -201,7 +229,7 @@ The result of this phase is the final value for the \`output\` key in your respo
       }
     },
     {
-      "type": "request",
+      "type": "actionCall",
       "details": {
         "name": "generateMedia",
         "options": {

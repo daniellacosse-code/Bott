@@ -107,11 +107,6 @@ export async function startDiscordBot<
       message as Message<true>,
     )) as BottEvent;
 
-    log.debug(
-      "Message event:",
-      { id: event.id, preview: event.details?.content.slice(0, 100) },
-    );
-
     if (handleEvent) {
       callWithContext(handleEvent, {
         client,
@@ -156,11 +151,6 @@ export async function startDiscordBot<
         reaction.message as Message<true>,
       );
     }
-
-    log.debug("Reaction event:", {
-      id: event.id,
-      details: event.details,
-    });
 
     if (handleEvent) {
       callWithContext(handleEvent, {

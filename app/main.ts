@@ -45,7 +45,8 @@ const deployNonce = crypto.randomUUID();
 Deno.writeTextFileSync(STORAGE_DEPLOY_NONCE_PATH, deployNonce);
 
 startDiscordBot({
-  actions,
+  // TODO(#63): Unify action infrastructure
+  actions: { help: actions.help },
   identityToken: Deno.env.get("DISCORD_TOKEN")!,
   mount() {
     log.info(

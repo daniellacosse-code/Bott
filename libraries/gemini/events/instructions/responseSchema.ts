@@ -34,7 +34,7 @@ export const getResponseSchema = <O extends AnyShape>(
     actions: Record<string, BottAction<O, AnyShape>>;
     settings: BottGlobalSettings;
   },
-) => ({
+): GeminiStructuredResponseSchema => ({
   type: GeminiStructuredResponseType.OBJECT,
   description:
     "The root object for the entire response, containing scored inputs, generated outputs, and overall output scores.",
@@ -86,27 +86,25 @@ export const getResponseSchema = <O extends AnyShape>(
       description:
         "The final array of events you have generated and approved for response to the input.",
       items: {
-        type: GeminiStructuredResponseType.OBJECT,
-        properties: {
-          type: {
-            type: GeminiStructuredResponseType.STRING,
-            enum: [
-              BottEventType.MESSAGE,
-              BottEventType.REPLY,
-              BottEventType.REACTION,
-              BottEventType.ACTION_CALL,
-            ],
-            description: "The type of event to generate.",
-          },
-          details: {
+        anyOf: [
+          {
             type: GeminiStructuredResponseType.OBJECT,
-            description: "The specific details for the generated event.",
-            oneOf: [
-              {
+            description: "Schema for a message, reply, or reaction event.",
+            properties: {
+              type: {
+                type: GeminiStructuredResponseType.STRING,
+                enum: [
+                  BottEventType.MESSAGE,
+                  BottEventType.REPLY,
+                  BottEventType.REACTION,
+                ],
+                description: "The type of event to generate.",
+              },
+              details: {
+                type: GeminiStructuredResponseType.OBJECT,
+                description: "The specific details for the generated event.",
                 properties: {
-                  content: {
-                    type: GeminiStructuredResponseType.STRING,
-                  },
+                  content: { type: GeminiStructuredResponseType.STRING },
                   scores: getEventClassifierSchema(
                     reduceClassifiersForRuleType(
                       context.settings,
@@ -116,23 +114,23 @@ export const getResponseSchema = <O extends AnyShape>(
                 },
                 required: ["content", "scores"],
               },
-              getActionSchema<O>(context.actions),
-            ],
-          },
-          parent: {
-            type: GeminiStructuredResponseType.OBJECT,
-            description:
-              "A reference to the parent event this output is replying or reacting to. Required for `reply` and `reaction` event types.",
-            properties: {
-              id: {
-                type: GeminiStructuredResponseType.STRING,
-                description: "The unique ID of the parent event.",
+              parent: {
+                type: GeminiStructuredResponseType.OBJECT,
+                description:
+                  "A reference to the parent event this output is replying or reacting to. Required for `reply` and `reaction` event types.",
+                properties: {
+                  id: {
+                    type: GeminiStructuredResponseType.STRING,
+                    description: "The unique ID of the parent event.",
+                  },
+                },
+                required: ["id"],
               },
             },
-            required: ["id"],
+            required: ["type", "details"],
           },
-        },
-        required: ["type", "details"],
+          ...getActionSchema(context.actions, context.settings),
+        ],
       },
     },
     outputScores: getEventClassifierSchema(
@@ -147,9 +145,9 @@ export const getResponseSchema = <O extends AnyShape>(
 
 export const getEventClassifierSchema = (
   classifiers: Record<string, BottEventClassifier>,
-) => {
+): GeminiStructuredResponseSchema => {
   if (Object.keys(classifiers).length === 0) {
-    return;
+    return {};
   }
 
   return {
@@ -176,7 +174,7 @@ export const getEventClassifierSchema = (
             description,
             properties: {
               score: {
-                type: GeminiStructuredResponseType.NUMBER,
+                type: GeminiStructuredResponseType.STRING,
                 description: "The numeric score from 1 to 5.",
                 enum: ["1", "2", "3", "4", "5"],
               },
@@ -198,72 +196,78 @@ export const getEventClassifierSchema = (
 
 export const getActionSchema = <O extends AnyShape>(
   handlers: Record<string, BottAction<O, AnyShape>>,
-) => {
+  settings: BottGlobalSettings,
+): GeminiStructuredResponseSchema[] => {
   if (Object.keys(handlers).length === 0) {
-    return;
+    return [];
   }
 
-  let options;
+  const schemas = [];
+  const outputClassifiers = reduceClassifiersForRuleType(
+    settings,
+    BottEventRuleType.FILTER_OUTPUT,
+  );
 
-  if (
-    Object.values(handlers).some((handler: BottAction<O, AnyShape>) =>
-      "options" in handler
-    )
-  ) {
-    const oneOf = [];
+  for (const name in handlers) {
+    const handler = handlers[name];
+    // Some handlers might not have options.
 
-    for (const { options } of Object.values(handlers)) {
-      // Some handlers might not have options.
-      if (!options) {
-        continue;
-      }
-
-      oneOf.push({
-        properties: options.reduce((properties, option) => {
-          let type: GeminiStructuredResponseType;
-
-          switch (option.type) {
-            case BottActionOptionType.INTEGER:
-              type = GeminiStructuredResponseType.NUMBER;
-              break;
-            case BottActionOptionType.BOOLEAN:
-              type = GeminiStructuredResponseType.BOOLEAN;
-              break;
-            case BottActionOptionType.STRING:
-            default:
-              type = GeminiStructuredResponseType.STRING;
-              break;
-          }
-
-          properties[option.name] = {
-            type,
-            enum: option.allowedValues,
-            description: option.description,
-          };
-
-          return properties;
-        }, {} as Record<string, GeminiStructuredResponseSchema>),
-        required: options.filter((option) => option.required).map(
-          (option) => option.name,
-        ),
-      });
-    }
-
-    options = {
+    schemas.push({
       type: GeminiStructuredResponseType.OBJECT,
-      oneOf,
-    };
+      description: `Schema for the '${name}' action call event.`,
+      properties: {
+        type: {
+          type: GeminiStructuredResponseType.STRING,
+          enum: [BottEventType.ACTION_CALL],
+        },
+        details: {
+          type: GeminiStructuredResponseType.OBJECT,
+          properties: {
+            name: {
+              type: GeminiStructuredResponseType.STRING,
+              enum: [name],
+            },
+            options: {
+              type: GeminiStructuredResponseType.OBJECT,
+              properties: (handler.options ?? []).reduce(
+                (properties, option) => {
+                  let type: GeminiStructuredResponseType;
+
+                  switch (option.type) {
+                    case BottActionOptionType.INTEGER:
+                      type = GeminiStructuredResponseType.NUMBER;
+                      break;
+                    case BottActionOptionType.BOOLEAN:
+                      type = GeminiStructuredResponseType.BOOLEAN;
+                      break;
+                    case BottActionOptionType.STRING:
+                    default:
+                      type = GeminiStructuredResponseType.STRING;
+                      break;
+                  }
+
+                  properties[option.name] = {
+                    type,
+                    enum: option.allowedValues,
+                    description: option.description,
+                  };
+
+                  return properties;
+                },
+                {} as Record<string, GeminiStructuredResponseSchema>,
+              ),
+              required: (handler.options ?? []).filter((option) =>
+                option.required
+              ).map((option) => option.name),
+            },
+            scores: getEventClassifierSchema(outputClassifiers),
+          },
+          required: ["name", "scores"],
+        },
+      },
+      required: ["type", "details"],
+    });
   }
 
-  return {
-    properties: {
-      name: {
-        type: GeminiStructuredResponseType.STRING,
-        enum: Object.keys(handlers),
-        description: "The name of the request function to call.",
-      },
-      options,
-    },
-    required: ["name"],
-  };
+  return schemas;
 };

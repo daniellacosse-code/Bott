@@ -50,7 +50,7 @@ Deno.test("getEventClassifierSchema", async (t) => {
     assertEquals(isSpamProp.required, ["score"]);
 
     const scoreProp = isSpamProp.properties!.score;
-    assertEquals(scoreProp.type, GeminiStructuredResponseType.NUMBER);
+    assertEquals(scoreProp.type, GeminiStructuredResponseType.STRING);
     assertEquals(scoreProp.enum, ["1", "2", "3", "4", "5"]);
   });
 
@@ -111,10 +111,10 @@ Deno.test("getActionSchema", async (t) => {
 
       const optionsSchema = schema.properties.options;
       assertEquals(optionsSchema?.type, GeminiStructuredResponseType.OBJECT);
-      assertExists(optionsSchema?.oneOf);
-      assertEquals(optionsSchema.oneOf?.length, 1);
+      assertExists(optionsSchema?.anyOf);
+      assertEquals(optionsSchema.anyOf?.length, 1);
 
-      const handlerOptions = optionsSchema.oneOf![0];
+      const handlerOptions = optionsSchema.anyOf![0];
       assertEquals(handlerOptions.required, ["type"]);
       assertExists(handlerOptions.properties?.type);
       assertExists(handlerOptions.properties?.prompt);

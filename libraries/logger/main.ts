@@ -29,31 +29,31 @@ type Logger = {
 export const log: Logger = {
   debug(...args: unknown[]): void {
     if (allowedTopics.has("debug")) {
-      console.debug(...args);
+      console.debug("[DEBUG]", ...args);
     }
   },
 
   info(...args: unknown[]): void {
     if (allowedTopics.has("info")) {
-      console.info(...args);
+      console.info("[INFO]", ...args);
     }
   },
 
   warn(...args: unknown[]): void {
     if (allowedTopics.has("warn")) {
-      console.warn(...args);
+      console.warn("[WARN]", ...args);
     }
   },
 
   error(...args: unknown[]): void {
     if (allowedTopics.has("error")) {
-      console.error(...args);
+      console.error("[ERROR]", ...args);
     }
   },
 
   perf(...args: unknown[]): void {
     if (allowedTopics.has("perf")) {
-      console.log(...args);
+      console.log("[PERF]", ...args);
     }
   },
 };
