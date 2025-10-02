@@ -80,7 +80,8 @@ GCP project, deploying the service, and configuring the necessary permissions.
 
 #### 1. Set Up Your Google Cloud Project
 
-Before deploying, you need to create a GCP project if you don't already have one and enable the required APIs:
+Before deploying, you need to create a GCP project if you don't already have one
+and enable the required APIs:
 
 1. **Create a Google Cloud Project**:
    - Go to the [Google Cloud Console](https://console.cloud.google.com/)
@@ -89,9 +90,12 @@ Before deploying, you need to create a GCP project if you don't already have one
    - Click "Create"
 
 2. **Enable the Required APIs** using these direct links:
-   - [Enable Vertex AI API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com) - for interacting with Gemini.
-   - [Enable Cloud Storage API](https://console.cloud.google.com/flows/enableapi?apiid=storage.googleapis.com) - for storing the data and files that Bott relies on.
-   - [Enable Cloud Run API](https://console.cloud.google.com/flows/enableapi?apiid=run.googleapis.com) - for deploying the app.
+   - [Enable Vertex AI API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com) -
+     for interacting with Gemini.
+   - [Enable Cloud Storage API](https://console.cloud.google.com/flows/enableapi?apiid=storage.googleapis.com) -
+     for storing the data and files that Bott relies on.
+   - [Enable Cloud Run API](https://console.cloud.google.com/flows/enableapi?apiid=run.googleapis.com) -
+     for deploying the app.
 
 #### 2. Deploy the Service
 
