@@ -76,30 +76,74 @@ Bott is configured via a series of environment variables.
 | `LOG_TOPICS`                        | Controls which log topics to display. Comma-separated list of topics: debug, info, warn, error, perf.                     | info,warn,error                   |
 | `PORT`                              | The port of the health check server required for GCP Cloud Run.                                                           | 8080                              |
 
-### Deploying Bott
+### Deploying Bott [PENDING TEST]
 
-(TODO: need to enable the correct APIs)
+Deploying Bott to Google Cloud Run involves three main steps: setting up your
+GCP project, deploying the service, and configuring the necessary permissions.
 
-Deploying Bott to Google Cloud Run involves two main steps: deploying the
-service itself, then configuring the necessary permissions.
+#### 1. Set Up Your Google Cloud Project
 
-#### 1. Deploy the Service
+Before deploying, you need to create a GCP project if you don't already have one
+and enable the required APIs:
+
+1. **Create a Google Cloud Project**:
+   - Go to the [Google Cloud Console](https://console.cloud.google.com/)
+   - Open the Project picker and select "New Project"
+   - Choose a project name and note the **Project ID** (you'll need this later)
+   - Click "Create"
+
+2. **Enable the Required APIs** using these direct links:
+   - [Enable Vertex AI API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com) -
+     for interacting with Gemini.
+   - [Enable Cloud Storage API](https://console.cloud.google.com/flows/enableapi?apiid=storage.googleapis.com) -
+     for storing the data and files that Bott relies on.
+   - [Enable Cloud Run API](https://console.cloud.google.com/flows/enableapi?apiid=run.googleapis.com) -
+     for deploying the app.
+
+#### 2. Deploy the Service
 
 Click this button to deploy the Bott service:
 
 [![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?git_repo=https://github.com/daniellacosse-code/Bott.git)
 
-#### 2. Configure Permissions _(TODO: confirm this)_
+During deployment, you'll be prompted to configure the environment variables:
+
+**Required Variables:**
+
+- `DISCORD_TOKEN` - Your Discord bot token from the
+  [Discord Developer Portal](https://discord.com/developers/applications)
+- `GOOGLE_PROJECT_ID` - Your GCP Project ID from step 1
+- `GOOGLE_PROJECT_LOCATION` - Your preferred region (e.g., `us-central1`)
+
+**Optional Variables (with sensible defaults):**
+
+- All `CONFIG_*` variables are optional and have reasonable defaults
+- You can customize AI models, rate limits, and other settings as needed
+- See the [configuration table](#configuring-bott) above for all available
+  options
+
+#### 3. Configure Permissions
+
+After deployment, configure the service account permissions:
 
 1. Navigate to the
    **[IAM & Admin](https://console.cloud.google.com/iam-admin/iam)** page in
    your Google Cloud project.
-2. Find the service account that was created for your new Cloud Run service.
+2. Find the service account that was created for your new Cloud Run service (it
+   will have a name like `PROJECT-ID@PROJECT-ID.iam.gserviceaccount.com`).
 3. Click the **pencil icon** to edit its permissions.
-4. Click **+ ADD ANOTHER ROLE** and add the following two roles:
-   - `Vertex AI User` (allows the bot to access Gemini models)
-   - `Storage Object Admin` (allows the bot to read/write temporary files)
+4. Click **+ ADD ANOTHER ROLE** and add the following roles:
+   - `Vertex AI User` - Allows the bot to access Gemini models
+   - `Storage Object Admin` - Allows the bot to read/write temporary files
 5. Click **SAVE**.
+
+#### 4. Verify Deployment
+
+1. Go to the [Cloud Run console](https://console.cloud.google.com/run) to see
+   your deployed service
+2. Click on the service name to view details
+3. Check the "Logs" tab to ensure the service started successfully
+4. The service should show as "Receiving traffic" with a green checkmark
 
 Bott should now be running correctly. You may need to trigger a new revision
 deployment from the Cloud Run console for the permission changes to take effect
