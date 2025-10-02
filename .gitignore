@@ -3,4 +3,6 @@
 
 .signatures/
 fs_root/
-deno.zip # for copilot
+
+# for agents
+deno.zip 
