@@ -6,11 +6,11 @@
       "required": true
     },
     "GOOGLE_PROJECT_ID": {
-      "description": "Your Google Cloud Project ID where Vertex AI and Cloud Storage are enabled.",
+      "description": "Your Google Cloud Project ID we're deploying to - make sure to have the Vertex AI and Cloud Storage APIs enabled.",
       "required": true
     },
     "GOOGLE_PROJECT_LOCATION": {
-      "description": "The GCP region where your Vertex AI resources are located (e.g., us-central1).",
+      "description": "The GCP region where your Vertex AI resources are located (probably us-central1).",
       "required": true
     },
     "CONFIG_ASSESSMENT_MODEL": {
