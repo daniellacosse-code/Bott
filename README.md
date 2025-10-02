@@ -80,32 +80,18 @@ GCP project, deploying the service, and configuring the necessary permissions.
 
 #### 1. Set Up Your Google Cloud Project
 
-Before deploying, you need to create a GCP project and enable the required APIs:
+Before deploying, you need to create a GCP project if you don't already have one and enable the required APIs:
 
 1. **Create a Google Cloud Project**:
    - Go to the [Google Cloud Console](https://console.cloud.google.com/)
-   - Click "Select a project" → "New Project"
+   - Open the Project picker and select "New Project"
    - Choose a project name and note the **Project ID** (you'll need this later)
    - Click "Create"
 
-2. **Enable Required APIs**: Navigate to the
-   [APIs & Services](https://console.cloud.google.com/apis/dashboard) page and
-   enable:
-   - **Vertex AI API** - Required for Gemini AI models
-   - **Cloud Storage API** - Required for temporary file storage
-   - **Cloud Run API** - Required for deployment
-
-   You can enable these APIs by searching for them in the API Library or using
-   these direct links:
-   - [Enable Vertex AI API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com)
-   - [Enable Cloud Storage API](https://console.cloud.google.com/flows/enableapi?apiid=storage-api.googleapis.com)
-   - [Enable Cloud Run API](https://console.cloud.google.com/flows/enableapi?apiid=run.googleapis.com)
-
-3. **Choose a Region**:
-   - Select a region for your Vertex AI resources (e.g., `us-central1`,
-     `us-east4`, `europe-west4`)
-   - Note this region as you'll need it for the `GOOGLE_PROJECT_LOCATION`
-     environment variable
+2. **Enable the Required APIs** using these direct links:
+   - [Enable Vertex AI API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com) - for interacting with Gemini.
+   - [Enable Cloud Storage API](https://console.cloud.google.com/flows/enableapi?apiid=storage.googleapis.com) - for storing the data and files that Bott relies on.
+   - [Enable Cloud Run API](https://console.cloud.google.com/flows/enableapi?apiid=run.googleapis.com) - for deploying the app.
 
 #### 2. Deploy the Service
 
@@ -120,7 +106,7 @@ During deployment, you'll be prompted to configure the environment variables:
 - `DISCORD_TOKEN` - Your Discord bot token from the
   [Discord Developer Portal](https://discord.com/developers/applications)
 - `GOOGLE_PROJECT_ID` - Your GCP Project ID from step 1
-- `GOOGLE_PROJECT_LOCATION` - Your chosen region (e.g., `us-central1`)
+- `GOOGLE_PROJECT_LOCATION` - Your preferred region (e.g., `us-central1`)
 
 **Optional Variables (with sensible defaults):**
 
