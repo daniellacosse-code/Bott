@@ -36,6 +36,7 @@ import type { DiscordBotContext } from "./context.ts";
 import { resolveCommandResponseEvent } from "./command/response.ts";
 import { callWithContext } from "./context.ts";
 import { log } from "@bott/logger";
+import { resolveDisplayName } from "../user/resolve.ts";
 
 const REQUIRED_INTENTS = [
   GatewayIntentBits.GuildMembers,
@@ -145,19 +146,9 @@ export async function startDiscordBot<
 
     const reactor = reaction.users.cache.first();
     if (reactor) {
-      // Try to get display name from guild member
-      let displayName = reactor.username;
-      try {
-        const member = await currentChannel.guild.members.fetch(reactor.id);
-        displayName = member.displayName;
-      } catch {
-        // Use username as fallback
-      }
-
       event.user = {
         id: reactor.id,
-        name: reactor.username,
-        displayName,
+        name: await resolveDisplayName(reactor, currentChannel.guild),
       };
     }
 

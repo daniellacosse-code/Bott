@@ -47,17 +47,6 @@ export function resolveCommandRequestEvent<
     };
   }
 
-  // Try to get display name from guild member
-  let displayName = interaction.user.username;
-  if (interaction.guild) {
-    try {
-      const member = await interaction.guild.members.fetch(interaction.user.id);
-      displayName = member.displayName;
-    } catch {
-      // Use username as fallback
-    }
-  }
-
   const event = {
     id: crypto.randomUUID(),
     type: BottEventType.REQUEST as const,
@@ -68,11 +57,15 @@ export function resolveCommandRequestEvent<
         interaction.options.data,
       ) as O,
     },
-    user: {
-      id: interaction.user.id,
-      name: interaction.user.username,
-      displayName,
-    },
+    user: interaction.guild
+      ? {
+        id: interaction.user.id,
+        name: await resolveDisplayName(interaction.user, interaction.guild),
+      }
+      : {
+        id: interaction.user.id,
+        name: interaction.user.username,
+      },
     channel,
     timestamp: new Date(),
   };

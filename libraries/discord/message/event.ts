@@ -21,7 +21,8 @@ import { addEventData, getEvents } from "@bott/storage";
 import { log } from "@bott/logger";
 
 import { getMarkdownLinks } from "./markdown.ts";
-import { extractMentionedUsers, formatIncomingContent } from "./format.ts";
+import { formatIncomingContent } from "./format.ts";
+import { resolveDisplayName } from "../user/resolve.ts";
 
 export const resolveBottEventFromMessage = async (
   message: Message<true>,
@@ -53,19 +54,9 @@ export const resolveBottEventFromMessage = async (
   };
 
   if (message.author) {
-    // Try to get display name from guild member (nickname or username)
-    let displayName = message.author.username;
-    try {
-      const member = await message.guild.members.fetch(message.author.id);
-      displayName = member.displayName;
-    } catch {
-      // Use username as fallback
-    }
-
     event.user = {
       id: message.author.id,
-      name: message.author.username,
-      displayName,
+      name: await resolveDisplayName(message.author, message.guild),
     };
   }
 
@@ -91,23 +82,14 @@ export const resolveBottEventFromMessage = async (
 
   // Collect all mentioned users from message mentions
   const mentionedUsersMap = new Map(
-    message.mentions.users.map((user) => {
-      // Try to get display name from guild member
-      let displayName = user.username;
-      try {
-        const member = message.guild.members.cache.get(user.id);
-        if (member) {
-          displayName = member.displayName;
-        }
-      } catch {
-        // Use username as fallback
-      }
-      return [user.id, {
-        id: user.id,
-        name: user.username,
-        displayName,
-      }];
-    }),
+    await Promise.all(
+      message.mentions.users.map(async (user) => {
+        return [user.id, {
+          id: user.id,
+          name: await resolveDisplayName(user, message.guild),
+        }] as const;
+      }),
+    ),
   );
 
   // Format user mentions for LLM processing using the collected users

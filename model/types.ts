@@ -50,8 +50,6 @@ export interface BottChannel {
 export interface BottUser {
   id: string;
   name: string;
-  /** Display name shown in chat (e.g., server nickname or formatted username) */
-  displayName?: string;
 }
 
 /**

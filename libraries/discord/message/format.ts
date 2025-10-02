@@ -11,23 +11,26 @@
 
 import type { AnyBottEvent, BottUser } from "@bott/model";
 import type { GuildTextBasedChannel } from "npm:discord.js";
+import { getUsersByIds } from "@bott/storage";
 
 /**
  * Formats outgoing message content by converting Bott's internal format
  * to platform-specific format (e.g., Discord mentions).
  *
  * Currently handles:
- * - User mentions: @DisplayName → <@USER_ID>
+ * - User mentions: @Name → <@USER_ID>
  *
  * @param content - The message content in Bott's internal format
  * @param channel - The Discord channel to send the message in
+ * @param userMap - Optional map of names to user IDs from database
  * @returns The content formatted for Discord
  */
 export const formatOutgoingContent = async (
   content: string,
   channel: GuildTextBasedChannel,
+  userMap?: Map<string, BottUser>,
 ): Promise<string> => {
-  return await formatOutgoingMentions(content, channel);
+  return await formatOutgoingMentions(content, channel, userMap);
 };
 
 /**
@@ -35,10 +38,10 @@ export const formatOutgoingContent = async (
  * to Bott's internal format (e.g., Discord mentions to display names).
  *
  * Currently handles:
- * - User mentions: <@USER_ID> → @DisplayName
+ * - User mentions: <@USER_ID> → @Name
  *
  * @param content - The message content in platform-specific format
- * @param users - Map of user IDs to user objects with display names
+ * @param users - Map of user IDs to user objects
  * @returns The content formatted for Bott's internal use
  */
 export const formatIncomingContent = (
@@ -52,7 +55,7 @@ export const formatIncomingContent = (
 };
 
 /**
- * Converts platform-specific user mentions to readable format using display names.
+ * Converts platform-specific user mentions to readable format.
  *
  * Examples:
  * - <@123456789> → @MoofyBoy
@@ -73,7 +76,7 @@ const formatIncomingMentions = (
   return content.replace(mentionPattern, (match, userId) => {
     const user = userMap.get(userId);
     if (user) {
-      return `@${user.displayName ?? user.name}`;
+      return `@${user.name}`;
     }
     // If user not found, keep original format
     return match;
@@ -89,11 +92,13 @@ const formatIncomingMentions = (
  *
  * @param content - The message content with readable mentions
  * @param channel - The Discord channel to resolve users in
+ * @param userMap - Optional map of names to users from database
  * @returns The content with platform-specific mentions
  */
 const formatOutgoingMentions = async (
   content: string,
   channel: GuildTextBasedChannel,
+  userMap?: Map<string, BottUser>,
 ): Promise<string> => {
   // Special mentions are already in the correct format
   // @everyone and @here work as-is in Discord
@@ -108,45 +113,61 @@ const formatOutgoingMentions = async (
   }
 
   const guild = channel.guild;
-  const displayNameToId: Map<string, string> = new Map();
+  const nameToId: Map<string, string> = new Map();
 
-  // Build a map of display names to user IDs
+  // Build a map of names to user IDs
   for (const match of matches) {
-    const displayName = match[1];
+    const name = match[1];
 
     // Skip special mentions
-    if (displayName === "everyone" || displayName === "here") {
+    if (name === "everyone" || name === "here") {
       continue;
     }
 
-    if (displayNameToId.has(displayName)) {
+    if (nameToId.has(name)) {
       continue;
     }
 
+    // First try to use provided userMap from database
+    if (userMap) {
+      for (const [userId, user] of userMap.entries()) {
+        if (
+          user.name === name || user.name.toLowerCase() === name.toLowerCase()
+        ) {
+          nameToId.set(name, userId);
+          break;
+        }
+      }
+
+      if (nameToId.has(name)) {
+        continue;
+      }
+    }
+
+    // Fall back to Discord API search
     try {
-      // Search for a member with this display name (nickname) or username
       const members = await guild.members.fetch({
-        query: displayName,
+        query: name,
         limit: 10,
       });
 
       // Try to find exact match first
       let foundMember = members.find(
-        (m) => m.displayName === displayName || m.user.username === displayName,
+        (m) => m.displayName === name || m.user.username === name,
       );
 
       // If no exact match, try case-insensitive
       if (!foundMember) {
-        const lowerDisplayName = displayName.toLowerCase();
+        const lowerName = name.toLowerCase();
         foundMember = members.find(
           (m) =>
-            m.displayName.toLowerCase() === lowerDisplayName ||
-            m.user.username.toLowerCase() === lowerDisplayName,
+            m.displayName.toLowerCase() === lowerName ||
+            m.user.username.toLowerCase() === lowerName,
         );
       }
 
       if (foundMember) {
-        displayNameToId.set(displayName, foundMember.id);
+        nameToId.set(name, foundMember.id);
       }
     } catch (_error) {
       // If we can't fetch members, skip this mention
@@ -156,39 +177,11 @@ const formatOutgoingMentions = async (
 
   // Replace formatted mentions with Discord mentions
   let formattedContent = content;
-  for (const [displayName, userId] of displayNameToId.entries()) {
+  for (const [name, userId] of nameToId.entries()) {
     // Use word boundaries to avoid partial replacements
-    const mentionRegex = new RegExp(`@${displayName}\\b`, "g");
+    const mentionRegex = new RegExp(`@${name}\\b`, "g");
     formattedContent = formattedContent.replace(mentionRegex, `<@${userId}>`);
   }
 
   return formattedContent;
-};
-
-/**
- * Extracts all mentioned users from an event and its parent chain.
- *
- * @param event - The event to extract users from
- * @returns Array of unique users mentioned in the event chain
- */
-export const extractMentionedUsers = (
-  event: AnyBottEvent,
-): BottUser[] => {
-  const users = new Map<string, BottUser>();
-
-  // Add user from current event
-  if (event.user) {
-    users.set(event.user.id, event.user);
-  }
-
-  // Add users from parent chain
-  let current = event.parent;
-  while (current) {
-    if (current.user) {
-      users.set(current.user.id, current.user);
-    }
-    current = current.parent;
-  }
-
-  return Array.from(users.values());
 };

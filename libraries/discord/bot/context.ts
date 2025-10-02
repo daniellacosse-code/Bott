@@ -55,7 +55,6 @@ export const callWithContext = <
       user: {
         id: client.user!.id,
         name: client.user!.username,
-        displayName: client.user!.username,
       },
       startTyping: () => {
         return channel?.sendTyping();

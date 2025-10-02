@@ -12,4 +12,5 @@
 export { startStorage } from "./start.ts";
 export { addEventData } from "./data/events/add.ts";
 export { getEventIdsForChannel, getEvents } from "./data/events/get.ts";
+export { getUsersByIds } from "./data/users/get.ts";
 export { throwIfUnsafeFileSize, throwIfUnsafeUrl } from "./validation.ts";
