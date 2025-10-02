@@ -26,6 +26,7 @@ import {
 
 import { resolveBottEventFromMessage } from "../message/event.ts";
 import { formatOutgoingContent } from "../message/format.ts";
+import { getUsersBySpaceId } from "@bott/storage";
 
 export type DiscordBotContext = {
   user: BottUser;
@@ -77,9 +78,17 @@ export const callWithContext = <
         }
 
         // Format outgoing content for Discord
-        const content = channel
-          ? await formatOutgoingContent(event.details.content, channel)
-          : event.details.content;
+        let content = event.details.content;
+        if (channel) {
+          // Get all users in the space from database
+          const spaceId = channel.guild.id;
+          const userMap = getUsersBySpaceId(spaceId);
+          content = formatOutgoingContent(
+            event.details.content,
+            channel,
+            userMap,
+          );
+        }
 
         let messageResult;
         switch (event.type) {

@@ -11,7 +11,6 @@
 
 import type { AnyBottEvent, BottUser } from "@bott/model";
 import type { GuildTextBasedChannel } from "npm:discord.js";
-import { getUsersByIds } from "@bott/storage";
 
 /**
  * Formats outgoing message content by converting Bott's internal format
@@ -22,15 +21,15 @@ import { getUsersByIds } from "@bott/storage";
  *
  * @param content - The message content in Bott's internal format
  * @param channel - The Discord channel to send the message in
- * @param userMap - Optional map of names to user IDs from database
+ * @param userMap - Map of names to users from database (required)
  * @returns The content formatted for Discord
  */
-export const formatOutgoingContent = async (
+export const formatOutgoingContent = (
   content: string,
   channel: GuildTextBasedChannel,
-  userMap?: Map<string, BottUser>,
-): Promise<string> => {
-  return await formatOutgoingMentions(content, channel, userMap);
+  userMap: Map<string, BottUser>,
+): string => {
+  return formatOutgoingMentions(content, channel, userMap);
 };
 
 /**
@@ -92,14 +91,14 @@ const formatIncomingMentions = (
  *
  * @param content - The message content with readable mentions
  * @param channel - The Discord channel to resolve users in
- * @param userMap - Optional map of names to users from database
+ * @param userMap - Map of names to users from database (required)
  * @returns The content with platform-specific mentions
  */
-const formatOutgoingMentions = async (
+const formatOutgoingMentions = (
   content: string,
   channel: GuildTextBasedChannel,
-  userMap?: Map<string, BottUser>,
-): Promise<string> => {
+  userMap: Map<string, BottUser>,
+): string => {
   // Special mentions are already in the correct format
   // @everyone and @here work as-is in Discord
 
@@ -112,10 +111,9 @@ const formatOutgoingMentions = async (
     return content;
   }
 
-  const guild = channel.guild;
   const nameToId: Map<string, string> = new Map();
 
-  // Build a map of names to user IDs
+  // Build a map of names to user IDs from database
   for (const match of matches) {
     const name = match[1];
 
@@ -128,50 +126,19 @@ const formatOutgoingMentions = async (
       continue;
     }
 
-    // First try to use provided userMap from database
-    if (userMap) {
-      for (const [userId, user] of userMap.entries()) {
-        if (
-          user.name === name || user.name.toLowerCase() === name.toLowerCase()
-        ) {
-          nameToId.set(name, userId);
-          break;
-        }
-      }
-
-      if (nameToId.has(name)) {
-        continue;
-      }
+    // Look up user in provided userMap from database
+    const user = userMap.get(name);
+    if (user) {
+      nameToId.set(name, user.id);
+      continue;
     }
 
-    // Fall back to Discord API search
-    try {
-      const members = await guild.members.fetch({
-        query: name,
-        limit: 10,
-      });
-
-      // Try to find exact match first
-      let foundMember = members.find(
-        (m) => m.displayName === name || m.user.username === name,
-      );
-
-      // If no exact match, try case-insensitive
-      if (!foundMember) {
-        const lowerName = name.toLowerCase();
-        foundMember = members.find(
-          (m) =>
-            m.displayName.toLowerCase() === lowerName ||
-            m.user.username.toLowerCase() === lowerName,
-        );
+    // Try case-insensitive lookup
+    for (const [userName, userObj] of userMap.entries()) {
+      if (userName.toLowerCase() === name.toLowerCase()) {
+        nameToId.set(name, userObj.id);
+        break;
       }
-
-      if (foundMember) {
-        nameToId.set(name, foundMember.id);
-      }
-    } catch (_error) {
-      // If we can't fetch members, skip this mention
-      continue;
     }
   }
 

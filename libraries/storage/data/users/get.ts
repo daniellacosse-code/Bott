@@ -44,3 +44,40 @@ export const getUsersByIds = (
 
   return userMap;
 };
+
+/**
+ * Gets all users in a space from the database.
+ * Queries through events and channels to find users who have interacted in the space.
+ *
+ * @param spaceId - The space ID to get users for
+ * @returns Map of user name to BottUser
+ */
+export const getUsersBySpaceId = (
+  spaceId: string,
+): Map<string, BottUser> => {
+  const results = commit(
+    sql`
+      select distinct u.id, u.name
+      from users u
+      inner join events e on u.id = e.user_id
+      inner join channels c on e.channel_id = c.id
+      where c.space_id = ${spaceId}
+    `,
+  );
+
+  const userMap = new Map<string, BottUser>();
+  if ("error" in results) {
+    return userMap;
+  }
+
+  for (const row of results.reads) {
+    const user = {
+      id: row.id as string,
+      name: row.name as string,
+    };
+    // Map by name for easier mention lookups
+    userMap.set(user.name, user);
+  }
+
+  return userMap;
+};
