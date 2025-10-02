@@ -25,6 +25,7 @@ import {
 } from "@bott/model";
 
 import { resolveBottEventFromMessage } from "../message/event.ts";
+import { formatOutgoingMentions } from "../message/mentions.ts";
 
 export type DiscordBotContext = {
   user: BottUser;
@@ -75,11 +76,16 @@ export const callWithContext = <
           );
         }
 
+        // Format outgoing mentions for Discord
+        const content = channel
+          ? await formatOutgoingMentions(event.details.content, channel)
+          : event.details.content;
+
         let messageResult;
         switch (event.type) {
           case BottEventType.MESSAGE:
             messageResult = await channel?.send({
-              content: event.details.content,
+              content,
               files,
             });
             break;
@@ -88,7 +94,7 @@ export const callWithContext = <
               String(event.parent!.id),
             );
             messageResult = await sourceMessage?.reply({
-              content: event.details.content,
+              content,
               files,
             });
             break;

@@ -21,6 +21,7 @@ import { addEventData, getEvents } from "@bott/storage";
 import { log } from "@bott/logger";
 
 import { getMarkdownLinks } from "./markdown.ts";
+import { formatIncomingMentions } from "./mentions.ts";
 
 export const resolveBottEventFromMessage = async (
   message: Message<true>,
@@ -31,12 +32,16 @@ export const resolveBottEventFromMessage = async (
     return possibleEvent;
   }
 
+  // Format user mentions for LLM processing
+  const rawContent = (message.content || message.embeds.at(0)?.description) ??
+    "";
+  const formattedContent = await formatIncomingMentions(rawContent, message);
+
   const event: BottEvent = {
     id: message.id,
     type: BottEventType.MESSAGE,
     details: {
-      content: (message.content || message.embeds.at(0)?.description) ??
-        "",
+      content: formattedContent,
     },
     timestamp: new Date(message.createdTimestamp),
     channel: {
