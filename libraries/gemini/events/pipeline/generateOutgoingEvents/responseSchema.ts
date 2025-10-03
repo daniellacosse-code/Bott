@@ -25,7 +25,7 @@ import {
   type Schema as GeminiStructuredResponseSchema,
   Type as GeminiStructuredResponseType,
 } from "npm:@google/genai";
-import { reduceClassifiersForRuleType } from "./reduce.ts";
+import { reduceClassifiersForRuleType } from "../../utilities/reduce.ts";
 
 export const getResponseSchema = <O extends AnyShape>(
   context: {
@@ -35,112 +35,56 @@ export const getResponseSchema = <O extends AnyShape>(
     settings: BottGlobalSettings;
   },
 ): GeminiStructuredResponseSchema => ({
-  type: GeminiStructuredResponseType.OBJECT,
+  type: GeminiStructuredResponseType.ARRAY,
   description:
-    "The root object for the entire response, containing scored inputs, generated outputs, and overall output scores.",
-  properties: {
-    inputEventScores: {
-      type: GeminiStructuredResponseType.ARRAY,
-      description:
-        "An array containing only the input events you scored, now with a 'scores' object added to each.",
-      items: {
+    "The final array of events you have generated and approved for response to the input.",
+  items: {
+    anyOf: [
+      {
         type: GeminiStructuredResponseType.OBJECT,
+        description: "Schema for a message, reply, or reaction event.",
         properties: {
-          id: {
-            type: GeminiStructuredResponseType.STRING,
-            description: "The unique identifier of the input event.",
-          },
           type: {
             type: GeminiStructuredResponseType.STRING,
-            description: "The type of the event (e.g., `message`).",
-          },
-          user: {
-            type: GeminiStructuredResponseType.OBJECT,
-            description: "The user who created the event.",
-            properties: {
-              id: { type: GeminiStructuredResponseType.STRING },
-              name: { type: GeminiStructuredResponseType.STRING },
-            },
+            enum: [
+              BottEventType.MESSAGE,
+              BottEventType.REPLY,
+              BottEventType.REACTION,
+            ],
+            description: "The type of event to generate.",
           },
           details: {
             type: GeminiStructuredResponseType.OBJECT,
-            description:
-              "Contains the event content and the scores you've assigned.",
+            description: "The specific details for the generated event.",
             properties: {
-              content: {
-                type: GeminiStructuredResponseType.STRING,
-                description: "The textual content of the message.",
-              },
-              scores: getEventClassifierSchema(reduceClassifiersForRuleType(
-                context.settings,
-                BottEventRuleType.FOCUS_INPUT,
-              )),
+              content: { type: GeminiStructuredResponseType.STRING },
+              scores: getEventClassifierSchema(
+                reduceClassifiersForRuleType(
+                  context.settings,
+                  BottEventRuleType.FILTER_OUTPUT,
+                ),
+              ),
             },
+            required: ["content", "scores"],
+          },
+          parent: {
+            type: GeminiStructuredResponseType.OBJECT,
+            description:
+              "A reference to the parent event this output is replying or reacting to. Required for `reply` and `reaction` event types.",
+            properties: {
+              id: {
+                type: GeminiStructuredResponseType.STRING,
+                description: "The unique ID of the parent event.",
+              },
+            },
+            required: ["id"],
           },
         },
-        required: ["id", "type", "details"],
+        required: ["type", "details"],
       },
-    },
-    outputEvents: {
-      type: GeminiStructuredResponseType.ARRAY,
-      description:
-        "The final array of events you have generated and approved for response to the input.",
-      items: {
-        anyOf: [
-          {
-            type: GeminiStructuredResponseType.OBJECT,
-            description: "Schema for a message, reply, or reaction event.",
-            properties: {
-              type: {
-                type: GeminiStructuredResponseType.STRING,
-                enum: [
-                  BottEventType.MESSAGE,
-                  BottEventType.REPLY,
-                  BottEventType.REACTION,
-                ],
-                description: "The type of event to generate.",
-              },
-              details: {
-                type: GeminiStructuredResponseType.OBJECT,
-                description: "The specific details for the generated event.",
-                properties: {
-                  content: { type: GeminiStructuredResponseType.STRING },
-                  scores: getEventClassifierSchema(
-                    reduceClassifiersForRuleType(
-                      context.settings,
-                      BottEventRuleType.FILTER_OUTPUT,
-                    ),
-                  ),
-                },
-                required: ["content", "scores"],
-              },
-              parent: {
-                type: GeminiStructuredResponseType.OBJECT,
-                description:
-                  "A reference to the parent event this output is replying or reacting to. Required for `reply` and `reaction` event types.",
-                properties: {
-                  id: {
-                    type: GeminiStructuredResponseType.STRING,
-                    description: "The unique ID of the parent event.",
-                  },
-                },
-                required: ["id"],
-              },
-            },
-            required: ["type", "details"],
-          },
-          ...getActionSchema(context.actions, context.settings),
-        ],
-      },
-    },
-    outputScores: getEventClassifierSchema(
-      reduceClassifiersForRuleType(
-        context.settings,
-        BottEventRuleType.FILTER_OUTPUT,
-      ),
-    ),
+      ...getActionSchema(context.actions, context.settings),
+    ],
   },
-  required: ["inputEventScores", "outputEvents"],
 });
 
 export const getEventClassifierSchema = (

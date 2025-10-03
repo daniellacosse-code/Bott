@@ -9,10 +9,6 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { Content, Part } from "npm:@google/genai";
-
-import { encodeBase64 } from "jsr:@std/encoding/base64";
-
 import {
   type AnyShape,
   type BottAction,
@@ -20,23 +16,19 @@ import {
   type BottChannel,
   type BottEvent,
   BottEventType,
-  type BottFile,
-  BottFileType,
   type BottGlobalSettings,
   type BottUser,
 } from "@bott/model";
 import { log } from "@bott/logger";
 import { addEventData, getEvents } from "@bott/storage";
 
-import gemini from "../client.ts";
 import {
-  CONFIG_EVENTS_MODEL,
-  INPUT_EVENT_LIMIT,
-  INPUT_FILE_AUDIO_COUNT_LIMIT,
-  INPUT_FILE_TOKEN_LIMIT,
-  INPUT_FILE_VIDEO_COUNT_LIMIT,
-} from "../constants.ts";
-import { getInstructions } from "./instructions/main.ts";
+  curateIncomingEvents,
+  curateOutgoingEvents,
+  generateOutgoingEvents,
+  scoreOutgoingEvents,
+  segmentOutgoingEvents,
+} from "./pipeline/main.ts";
 
 type GeminiEventGenerationResult = {
   inputEventScores: BottEvent<
@@ -65,7 +57,6 @@ type GeminiEventTraitScore = {
 export async function* generateEvents<O extends AnyShape>(
   inputEvents: BottEvent<AnyShape>[],
   {
-    model = CONFIG_EVENTS_MODEL,
     abortSignal,
     context,
   }: {
@@ -82,152 +73,26 @@ export async function* generateEvents<O extends AnyShape>(
   | BottEvent<{ content: string; scores?: Record<string, number> }>
   | BottActionCallEvent<O>
 > {
-  const modelUserId = context.user.id;
-  const contents: Content[] = [];
-  let pointer = inputEvents.length;
+  const curatedEvents = await curateIncomingEvents(inputEvents, context);
 
-  // We only want the model to respond to events that haven't been scored yet:
-  const resourceAccumulator = {
-    estimatedTokens: 0,
-    unseenEvents: 0,
-    audioFiles: 0,
-    videoFiles: 0,
-  };
-  while (pointer--) {
-    const event = {
-      ...inputEvents[pointer],
-      details: { ...inputEvents[pointer].details },
-    };
-
-    if (
-      event.type === BottEventType.ACTION_CALL ||
-      event.type === BottEventType.ACTION_RESULT
-    ) {
-      // Skip these events for now.
-      continue;
-    }
-
-    // Remove unnecessary parent files from events:
-    if (event.parent) {
-      delete event.parent.files;
-    }
-
-    // Prune old, stale files that bloat the context window:
-    if (event.files?.length) {
-      const filesToKeep = [];
-      for (const file of event.files) {
-        let shouldPrune = false;
-
-        if (!file.compressed) {
-          continue;
-        }
-
-        if (
-          resourceAccumulator.estimatedTokens +
-              file.compressed.data.byteLength >
-            INPUT_FILE_TOKEN_LIMIT
-        ) {
-          shouldPrune = true;
-        } else if (
-          file.compressed.type === BottFileType.OPUS &&
-          resourceAccumulator.audioFiles >= INPUT_FILE_AUDIO_COUNT_LIMIT
-        ) {
-          shouldPrune = true;
-        } else if (
-          file.compressed.type === BottFileType.MP4 &&
-          resourceAccumulator.videoFiles >= INPUT_FILE_VIDEO_COUNT_LIMIT
-        ) {
-          shouldPrune = true;
-        }
-
-        if (shouldPrune) {
-          continue;
-        }
-
-        filesToKeep.push(file);
-
-        if (file.compressed.type === BottFileType.OPUS) {
-          resourceAccumulator.audioFiles++;
-        } else if (file.compressed.type === BottFileType.MP4) {
-          resourceAccumulator.videoFiles++;
-        }
-
-        resourceAccumulator.estimatedTokens += file.compressed.data.byteLength;
-      }
-
-      if (filesToKeep.length) {
-        event.files = filesToKeep as BottFile[];
-      } else {
-        delete event.files;
-      }
-    }
-
-    if (!event.details.scores) {
-      resourceAccumulator.unseenEvents++;
-    }
-
-    contents.unshift(_transformBottEventToContent(event, modelUserId));
-
-    if (contents.length >= INPUT_EVENT_LIMIT) {
-      break;
-    }
-  }
-
-  if (contents.length === 0) {
-    log.debug("No events to process");
+  if (!curatedEvents.length) {
     return;
   }
 
-  const { systemPrompt, responseSchema } = getInstructions(context);
+  try {
+    await addEventData(...curatedEvents);
+  } catch () {
 
-  log.debug(
-    `Generating response to ${resourceAccumulator.unseenEvents} events, with ${resourceAccumulator.audioFiles} audio files and ${resourceAccumulator.videoFiles} video files...`,
-  );
-  const response = await gemini.models.generateContent({
-    model,
-    contents,
-    config: {
-      abortSignal,
-      candidateCount: 1,
-      systemInstruction: {
-        parts: [
-          { text: context.settings.identity },
-          {
-            text: systemPrompt,
-          },
-        ],
-      },
-      responseMimeType: "application/json",
-      responseSchema,
-    },
-  });
-
-  const result: GeminiEventGenerationResult = JSON.parse(
-    response.candidates?.[0]?.content?.parts
-      ?.filter((part: Part) => "text" in part && typeof part.text === "string")
-      .map((part: Part) => (part as { text: string }).text)
-      .join("") ?? "",
-  );
-
-  _logDebugGeminiResult(result);
-
-  const sanitizedInputEvents = _sanitizeEvents(result.inputEventScores);
-  const sanitizedOutputEvents = _sanitizeEvents<
-    { content: string } | { name: string; options: AnyShape }
-  >(result.outputEvents);
-
-  if (sanitizedInputEvents.length > 0) {
-    try {
-      await addEventData(...sanitizedInputEvents);
-      log.debug(
-        `Added scores to ${sanitizedInputEvents.length} event(s).`,
-      );
-    } catch (error) {
-      log.error(`Failed to update events with scores: ${error}`);
-    }
   }
 
-  for (const event of sanitizedOutputEvents) {
+  const initialOutput = await generateOutgoingEvents(curatedEvents, context);
+  const segementedOutput = await segmentOutgoingEvents(initialOutput, context);
+  const scoredOutput = await scoreOutgoingEvents(segementedOutput, context);
+  const finalOutput = await curateOutgoingEvents(scoredOutput, context);
+
+  _debugLogFinalOutput(finalOutput);
+
+  for (const event of finalOutput) {
     const commonFields = {
       id: crypto.randomUUID(),
       type: event.type,
@@ -262,19 +127,7 @@ export async function* generateEvents<O extends AnyShape>(
   return;
 }
 
-const _truncateMessage = (message: string, maxWordCount = 12) => {
-  const words = message.trim().split(/\s+/);
-
-  const result = words.slice(0, maxWordCount).join(" ");
-
-  if (words.length <= maxWordCount) {
-    return result;
-  }
-
-  return result + "…";
-};
-
-const _logDebugGeminiResult = (result: GeminiEventGenerationResult) => {
+const _debugLogFinalOutput = (result: GeminiEventGenerationResult) => {
   let logMessage = "Gemini processing result:\n";
 
   for (const event of result.inputEventScores) {
@@ -340,96 +193,14 @@ const _logDebugGeminiResult = (result: GeminiEventGenerationResult) => {
   log.debug(logMessage.trim());
 };
 
-const _sanitizeEvents = <T>(
-  events: BottEvent<T & { scores: Record<string, GeminiEventTraitScore> }>[],
-): BottEvent<T & { scores: Record<string, number> }>[] => {
-  const result: BottEvent<T & { scores: Record<string, number> }>[] = [];
+const _truncateMessage = (message: string, maxWordCount = 12) => {
+  const words = message.trim().split(/\s+/);
 
-  for (const event of events) {
-    const newEvent = {
-      ...event,
-      details: {
-        ...event.details,
-        scores: {} as Record<string, number>,
-      },
-    };
+  const result = words.slice(0, maxWordCount).join(" ");
 
-    for (const trait in event.details.scores) {
-      newEvent.details.scores[trait] = event.details.scores[trait].score;
-    }
-
-    // TODO: join with previous event
-    newEvent.timestamp ??= new Date();
-
-    result.push(newEvent);
+  if (words.length <= maxWordCount) {
+    return result;
   }
 
-  return result;
-};
-
-const _transformBottEventToContent = (
-  event: BottEvent<AnyShape>,
-  modelUserId: string,
-): Content => {
-  // Explicitly construct the object to be stringified to avoid circular references,
-  // (Especially from event.files[...].parent pointing back to the event itself.)
-  const eventToSerialize: Record<string, unknown> = {
-    id: event.id,
-    type: event.type,
-    details: event.details, // Assuming details are already JSON-serializable
-    timestamp: event.timestamp,
-    user: event.user ? { id: event.user.id, name: event.user.name } : undefined,
-    channel: event.channel
-      ? {
-        id: event.channel.id,
-        name: event.channel.name,
-        description: event.channel.description,
-        space: event.channel.space
-          ? {
-            id: event.channel.space.id,
-            name: event.channel.space.name,
-            description: event.channel.space.description,
-          }
-          : undefined,
-      }
-      : undefined,
-  };
-
-  if (event.parent) {
-    const { ...parentToSerialize } = event.parent;
-
-    if (parentToSerialize.files) {
-      delete parentToSerialize.files;
-    }
-
-    if (parentToSerialize.parent) {
-      // This level of nesting in this context is unnecessary.
-      delete parentToSerialize.parent;
-    }
-
-    eventToSerialize.parent = parentToSerialize;
-  }
-
-  const parts: Part[] = [{ text: JSON.stringify(eventToSerialize) }];
-  const content: Content = {
-    role: (event.user && event.user.id === modelUserId) ? "model" : "user",
-    parts,
-  };
-
-  if (event.files) {
-    for (const file of event.files) {
-      if (!file.compressed) {
-        continue;
-      }
-
-      parts.push({
-        inlineData: {
-          mimeType: file.compressed.type,
-          data: encodeBase64(file.compressed.data!),
-        },
-      });
-    }
-  }
-
-  return content;
+  return result + "…";
 };

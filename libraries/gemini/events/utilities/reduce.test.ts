@@ -15,7 +15,7 @@ import {
   type BottEventClassifier,
   BottEventRuleType,
   type BottGlobalSettings,
-} from "../../../../model/types.ts";
+} from "@bott/model";
 import { reduceClassifiersForRuleType, reduceRulesForType } from "./reduce.ts";
 
 const mockClassifier1: BottEventClassifier = {
