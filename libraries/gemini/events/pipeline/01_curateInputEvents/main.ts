@@ -1,10 +1,25 @@
+/**
+ * @license
+ * This file is part of Bott.
+ *
+ * This project is dual-licensed:
+ * - Non-commercial use: AGPLv3 (see LICENSE file for full text).
+ * - Commercial use: Proprietary License (contact D@nielLaCos.se for details).
+ *
+ * Copyright (C) 2025 DanielLaCos.se
+ */
+
+import type { EventPipelineProcessor } from "../types.ts";
+
 // phase one - curate incoming events
 //   for each
 //     prune?
 //     score?
 //       if scored, focus?
 
-export function curateInputEvents(inputEvents, context) {
+export const curateInputEvents: EventPipelineProcessor = async (context) => {
+  return context;
+
   // const modelUserId = context.user.id;
   // const contents: Content[] = [];
   // let pointer = inputEvents.length;
@@ -100,7 +115,7 @@ export function curateInputEvents(inputEvents, context) {
   //   log.debug("No events to process");
   //   return;
   // }
-}
+};
 
 // const _transformBottEventToContent = (
 //   event: BottEvent<AnyShape>,
