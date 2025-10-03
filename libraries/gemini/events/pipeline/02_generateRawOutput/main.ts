@@ -41,3 +41,70 @@ export const generateRawOutput: EventPipelineProcessor = async function (
   //     .join("") ?? "",
   // );
 };
+
+// const _transformBottEventToContent = (
+//   event: BottEvent<AnyShape>,
+//   modelUserId: string,
+// ): Content => {
+//   // Explicitly construct the object to be stringified to avoid circular references,
+//   // (Especially from event.files[...].parent pointing back to the event itself.)
+//   const eventToSerialize: Record<string, unknown> = {
+//     id: event.id,
+//     type: event.type,
+//     details: event.details, // Assuming details are already JSON-serializable
+//     timestamp: event.timestamp,
+//     user: event.user ? { id: event.user.id, name: event.user.name } : undefined,
+//     channel: event.channel
+//       ? {
+//         id: event.channel.id,
+//         name: event.channel.name,
+//         description: event.channel.description,
+//         space: event.channel.space
+//           ? {
+//             id: event.channel.space.id,
+//             name: event.channel.space.name,
+//             description: event.channel.space.description,
+//           }
+//           : undefined,
+//       }
+//       : undefined,
+//   };
+
+//   if (event.parent) {
+//     const { ...parentToSerialize } = event.parent;
+
+//     if (parentToSerialize.files) {
+//       delete parentToSerialize.files;
+//     }
+
+//     if (parentToSerialize.parent) {
+//       // This level of nesting in this context is unnecessary.
+//       delete parentToSerialize.parent;
+//     }
+
+//     eventToSerialize.parent = parentToSerialize;
+//   }
+
+//   const parts: Part[] = [{ text: JSON.stringify(eventToSerialize) }];
+//   const content: Content = {
+//     role: (event.user && event.user.id === modelUserId) ? "model" : "user",
+//     parts,
+//   };
+
+//   if (event.files) {
+//     for (const file of event.files) {
+//       if (!file.compressed) {
+//         continue;
+//       }
+
+//       parts.push({
+//         inlineData: {
+//           mimeType: file.compressed.type,
+//           data: encodeBase64(file.compressed.data!),
+//         },
+//       });
+//     }
+//   }
+
+//   return content;
+// };
