@@ -56,18 +56,12 @@ type GeminiEventTraitScore = {
 
 export async function* generateEvents<O extends AnyShape>(
   inputEvents: BottEvent<AnyShape>[],
-  {
-    abortSignal,
-    context,
-  }: {
-    model?: string;
+  context: {
     abortSignal: AbortSignal;
-    context: {
-      user: BottUser;
-      channel: BottChannel;
-      actions: Record<string, BottAction<O, AnyShape>>;
-      settings: BottGlobalSettings;
-    };
+    user: BottUser;
+    channel: BottChannel;
+    actions: Record<string, BottAction<O, AnyShape>>;
+    settings: BottGlobalSettings;
   },
 ): AsyncGenerator<
   | BottEvent<{ content: string; scores?: Record<string, number> }>
@@ -81,8 +75,8 @@ export async function* generateEvents<O extends AnyShape>(
 
   try {
     await addEventData(...curatedEvents);
-  } catch () {
-
+  } catch {
+    // TODO
   }
 
   const initialOutput = await generateOutgoingEvents(curatedEvents, context);

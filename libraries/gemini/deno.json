@@ -6,5 +6,8 @@
       "deno.ns",
       "dom"
     ]
+  },
+  "tasks": {
+    "eventPipelineTestBench": "deno -A ./events/pipeline/testBench.ts"
   }
 }

@@ -25,7 +25,7 @@ import {
   type Schema as GeminiStructuredResponseSchema,
   Type as GeminiStructuredResponseType,
 } from "npm:@google/genai";
-import { reduceClassifiersForRuleType } from "../../utilities/reduce.ts";
+import { reduceClassifiersForRuleType } from "../../utilities/reduceRules.ts";
 
 export const getResponseSchema = <O extends AnyShape>(
   context: {

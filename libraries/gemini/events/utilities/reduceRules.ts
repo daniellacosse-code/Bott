@@ -16,6 +16,24 @@ import type {
   BottGlobalSettings,
 } from "@bott/model";
 
+export const reduceRulesForType = (
+  settings: BottGlobalSettings,
+  ruleType: BottEventRuleType,
+): Record<string, BottEventRule> =>
+  Object.entries(settings.rules).reduce(
+    (acc, [, rule]) => {
+      if (
+        rule.type === ruleType &&
+        rule.requiredClassifiers?.every((key) => key in settings.classifiers)
+      ) {
+        acc[rule.name] = rule;
+      }
+
+      return acc;
+    },
+    {} as Record<string, BottEventRule>,
+  );
+
 export const reduceClassifiersForRuleType = (
   settings: BottGlobalSettings,
   ruleType: BottEventRuleType,
@@ -34,22 +52,4 @@ export const reduceClassifiersForRuleType = (
       return acc;
     },
     {} as Record<string, BottEventClassifier>,
-  );
-
-export const reduceRulesForType = (
-  settings: BottGlobalSettings,
-  ruleType: BottEventRuleType,
-): Record<string, BottEventRule> =>
-  Object.entries(settings.rules).reduce(
-    (acc, [, rule]) => {
-      if (
-        rule.type === ruleType &&
-        rule.requiredClassifiers?.every((key) => key in settings.classifiers)
-      ) {
-        acc[rule.name] = rule;
-      }
-
-      return acc;
-    },
-    {} as Record<string, BottEventRule>,
   );

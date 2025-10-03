@@ -1,10 +1,10 @@
 // phase one - curate incoming events
-// for each
-// prune?
-// score?
-// if scored, focus?
+//   for each
+//     prune?
+//     score?
+//       if scored, focus?
 
-export function curateIncomingEvents() {
+export function curateInputEvents(inputEvents, context) {
   // const modelUserId = context.user.id;
   // const contents: Content[] = [];
   // let pointer = inputEvents.length;

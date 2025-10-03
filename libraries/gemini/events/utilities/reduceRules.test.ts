@@ -16,7 +16,10 @@ import {
   BottEventRuleType,
   type BottGlobalSettings,
 } from "@bott/model";
-import { reduceClassifiersForRuleType, reduceRulesForType } from "./reduce.ts";
+import {
+  reduceClassifiersForRuleType,
+  reduceRulesForType,
+} from "./reduceRules.ts";
 
 const mockClassifier1: BottEventClassifier = {
   name: "isSpam",
