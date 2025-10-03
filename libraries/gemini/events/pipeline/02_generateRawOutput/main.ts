@@ -11,7 +11,7 @@
 
 import type { Part } from "npm:@google/genai";
 
-import { getSystemPrompt } from "./systemPrompt.ts";
+import { getSystemPrompt } from "./systemPrompt.hbs";
 import { getResponseSchema } from "./responseSchema.ts";
 import { CONFIG_EVENTS_MODEL } from "../../../constants.ts";
 

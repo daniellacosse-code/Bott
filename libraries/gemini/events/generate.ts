@@ -12,7 +12,6 @@
 import type {
   AnyShape,
   BottAction,
-  BottActionCallEvent,
   BottChannel,
   BottEvent,
   BottGlobalSettings,
@@ -23,19 +22,16 @@ import { addEventData } from "@bott/storage";
 
 import pipeline, { type EventPipelineContext } from "./pipeline/main.ts";
 
-export async function* generateEvents<O extends AnyShape>(
+export async function* generateEvents(
   inputEvents: BottEvent<AnyShape>[],
   context: {
     abortSignal: AbortSignal;
     user: BottUser;
     channel: BottChannel;
-    actions: Record<string, BottAction<O, AnyShape>>;
+    actions: Record<string, BottAction<AnyShape, AnyShape>>;
     settings: BottGlobalSettings;
   },
-): AsyncGenerator<
-  | BottEvent<{ content: string; scores?: Record<string, number> }>
-  | BottActionCallEvent<O>
-> {
+): AsyncGenerator<BottEvent<AnyShape>> {
   let pipelineContext: EventPipelineContext = {
     data: {
       input: inputEvents,
@@ -58,8 +54,7 @@ export async function* generateEvents<O extends AnyShape>(
   }
 
   for (const event of pipelineContext.data.output) {
-    // TODO
-    yield event as any;
+    yield event;
   }
 
   return;
@@ -134,14 +129,14 @@ const _debugLogPipelineData = (result: any) => {
   // log.debug(logMessage.trim());
 };
 
-const _truncateMessage = (message: string, maxWordCount = 12) => {
-  const words = message.trim().split(/\s+/);
+// const _truncateMessage = (message: string, maxWordCount = 12) => {
+//   const words = message.trim().split(/\s+/);
 
-  const result = words.slice(0, maxWordCount).join(" ");
+//   const result = words.slice(0, maxWordCount).join(" ");
 
-  if (words.length <= maxWordCount) {
-    return result;
-  }
+//   if (words.length <= maxWordCount) {
+//     return result;
+//   }
 
-  return result + "…";
-};
+//   return result + "…";
+// };

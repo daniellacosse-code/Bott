@@ -1,3 +1,14 @@
+/**
+ * @license
+ * This file is part of Bott.
+ *
+ * This project is dual-licensed:
+ * - Non-commercial use: AGPLv3 (see LICENSE file for full text).
+ * - Commercial use: Proprietary License (contact D@nielLaCos.se for details).
+ *
+ * Copyright (C) 2025 DanielLaCos.se
+ */
+
 import type {
   AnyShape,
   BottAction,
@@ -7,7 +18,7 @@ import type {
   BottUser,
 } from "@bott/model";
 
-export interface EventPipelineContext<O extends AnyShape = AnyShape> {
+export interface EventPipelineContext {
   data: {
     input: BottEvent<AnyShape>[];
     output: BottEvent<AnyShape>[];
@@ -15,7 +26,7 @@ export interface EventPipelineContext<O extends AnyShape = AnyShape> {
   abortSignal: AbortSignal;
   user: BottUser;
   channel: BottChannel;
-  actions: Record<string, BottAction<O, AnyShape>>;
+  actions: Record<string, BottAction<AnyShape, AnyShape>>;
   settings: BottGlobalSettings;
 }
 
