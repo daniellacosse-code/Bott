@@ -179,6 +179,7 @@ export interface BottEventRule {
   type: BottEventRuleType;
   definition: string;
   requiredClassifiers?: string[];
+  validator: (event: BottEvent<AnyShape>) => boolean;
 }
 
 /**

@@ -35,27 +35,3 @@ export type EventPipelineProcessor = (
 ) => Promise<EventPipelineContext>;
 
 export type EventPipeline = EventPipelineProcessor[];
-
-export type GeminiEventGenerationResult = {
-  inputEventScores: BottEvent<
-    { content: string; scores: Record<string, GeminiEventTraitScore> }
-  >[];
-  outputEvents: (
-    | BottEvent<
-      { content: string; scores: Record<string, GeminiEventTraitScore> }
-    >
-    | BottEvent<
-      {
-        name: string;
-        options: AnyShape;
-        scores: Record<string, GeminiEventTraitScore>;
-      }
-    >
-  )[];
-  outputScores?: Record<string, GeminiEventTraitScore>;
-};
-
-export type GeminiEventTraitScore = {
-  score: number;
-  rationale?: string;
-};

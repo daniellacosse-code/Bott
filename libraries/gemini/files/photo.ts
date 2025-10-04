@@ -13,7 +13,7 @@ import { PersonGeneration, SafetyFilterLevel } from "npm:@google/genai";
 import { decodeBase64 } from "jsr:@std/encoding";
 
 import { BottFileType } from "@bott/model";
-import { CONFIG_PHOTO_MODEL } from "../constants.ts";
+import { PHOTO_MODEL } from "../constants.ts";
 
 import _gemini from "../client.ts";
 import type { BottFileDataGenerator } from "./types.ts";
@@ -21,7 +21,7 @@ import type { BottFileDataGenerator } from "./types.ts";
 export const generatePhotoData: BottFileDataGenerator = async (
   prompt: string,
   {
-    model = CONFIG_PHOTO_MODEL,
+    model = PHOTO_MODEL,
     abortSignal,
     gemini = _gemini,
   },

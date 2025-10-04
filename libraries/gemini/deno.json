@@ -8,6 +8,6 @@
     ]
   },
   "tasks": {
-    "eventPipelineTestBench": "deno -A ./events/pipeline/testBench.ts"
+    "eventPipelineTest": "deno -A ./events/pipeline/e2e.ts"
   }
 }

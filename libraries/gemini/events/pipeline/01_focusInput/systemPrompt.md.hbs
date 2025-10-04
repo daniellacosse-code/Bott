@@ -1,0 +1,20 @@
+# Task
+
+{{! TODO: Flesh out this task description }}
+
+Evaluate the most recent event object according to the following classifiers:
+
+## Classifiers
+
+{{ #each focusClassifiers }}
+  ### {{ this.name }}
+  {{ this.definition }}
+
+  {{ #each this.examples }}
+    * **Examples of a score of {{ @key }}**:
+
+    {{ #each this }}
+      * {{ this }}
+    {{ /each }}
+  {{ /each }}
+{{ /each }}

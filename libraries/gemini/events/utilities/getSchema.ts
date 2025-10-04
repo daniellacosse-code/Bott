@@ -14,8 +14,6 @@ import {
   type BottAction,
   BottActionOptionType,
   type BottChannel,
-  type BottEventClassifier,
-  BottEventRuleType,
   BottEventType,
   type BottGlobalSettings,
   type BottUser,
@@ -25,9 +23,8 @@ import {
   type Schema as GeminiStructuredResponseSchema,
   Type as GeminiStructuredResponseType,
 } from "npm:@google/genai";
-import { reduceClassifiersForRuleType } from "../../utilities/reduceRules.ts";
 
-export const getResponseSchema = <O extends AnyShape>(
+export const getEventSchema = <O extends AnyShape>(
   context: {
     user: BottUser;
     channel: BottChannel;
@@ -58,12 +55,6 @@ export const getResponseSchema = <O extends AnyShape>(
             description: "The specific details for the generated event.",
             properties: {
               content: { type: GeminiStructuredResponseType.STRING },
-              scores: getEventClassifierSchema(
-                reduceClassifiersForRuleType(
-                  context.settings,
-                  BottEventRuleType.FILTER_OUTPUT,
-                ),
-              ),
             },
             required: ["content", "scores"],
           },
@@ -82,75 +73,19 @@ export const getResponseSchema = <O extends AnyShape>(
         },
         required: ["type", "details"],
       },
-      ...getActionSchema(context.actions, context.settings),
+      ...getActionSchema(context.actions),
     ],
   },
 });
 
-export const getEventClassifierSchema = (
-  classifiers: Record<string, BottEventClassifier>,
-): GeminiStructuredResponseSchema => {
-  if (Object.keys(classifiers).length === 0) {
-    return {};
-  }
-
-  return {
-    type: GeminiStructuredResponseType.OBJECT,
-    description:
-      "A collection of scores for various traits, evaluating a message or response.",
-    properties: Object.values(classifiers).reduce(
-      (properties, { name, definition, examples }) => {
-        let description = definition
-          ? definition
-          : `How much this message pertains to "${name}".`;
-
-        description += `\n\nExample Scores:\n${
-          Object.entries(examples).flatMap(
-            ([value, examples]) =>
-              examples.map((example) => `${example} => Score: ${value}`),
-          )
-        }`;
-
-        return {
-          ...properties,
-          [name]: {
-            type: GeminiStructuredResponseType.OBJECT,
-            description,
-            properties: {
-              score: {
-                type: GeminiStructuredResponseType.STRING,
-                description: "The numeric score from 1 to 5.",
-                enum: ["1", "2", "3", "4", "5"],
-              },
-              rationale: {
-                type: GeminiStructuredResponseType.STRING,
-                description:
-                  "A brief, one-sentence justification for the assigned score.",
-              },
-            },
-            required: ["score"],
-          },
-        };
-      },
-      {} as Record<string, GeminiStructuredResponseSchema>,
-    ),
-    required: Object.keys(classifiers),
-  };
-};
-
 export const getActionSchema = <O extends AnyShape>(
   handlers: Record<string, BottAction<O, AnyShape>>,
-  settings: BottGlobalSettings,
 ): GeminiStructuredResponseSchema[] => {
   if (Object.keys(handlers).length === 0) {
     return [];
   }
 
   const schemas = [];
-  const outputClassifiers = reduceClassifiersForRuleType(
-    settings,
-    BottEventRuleType.FILTER_OUTPUT,
-  );
 
   for (const name in handlers) {
     const handler = handlers[name];
@@ -204,9 +139,8 @@ export const getActionSchema = <O extends AnyShape>(
                 option.required
               ).map((option) => option.name),
             },
-            scores: getEventClassifierSchema(outputClassifiers),
           },
-          required: ["name", "scores"],
+          required: ["name"],
         },
       },
       required: ["type", "details"],

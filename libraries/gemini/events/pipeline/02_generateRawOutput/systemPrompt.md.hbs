@@ -1,23 +1,44 @@
-// Based on your analysis in Phase 1 and your core \`Identity\` and \`Engagement Rules\`, generate a list of potential outgoing events. This is your brainstorming phase.
+# Task
 
-// ${
-//   getRuleMarkdown(
-//     reduceRulesForType(context.settings, BottEventRuleType.FOCUS_INPUT),
-//   )
-// }
+{{! TODO: Flesh out this task description }}
 
-// ### Available Event Types
+## Available Event Types
 
-// 1.  **\`message\`**: A new, standalone message to the channel.
-// 2.  **\`reply\`**: A direct reply to a specific parent message (will be threaded).
-// 3.  **\`reaction\`**: An emoji reaction to a specific parent message. Prefer these for simple acknowledgments to reduce channel noise.
-// 4.  **\`actionCall\`**: An instruction to the system to execute an action. These are asynchronous. It's good practice to send a \`reply\` or \`message\` alongside an \`action_call\` to inform the user that you've started a longer-running task.
+1.  **`message`**: A new, standalone message to the channel.
+2.  **`reply`**: A direct reply to a specific parent message.
+3.  **`reaction`**: An emoji reaction to a specific parent message. Prefer these for acknowledgments to reduce channel noise.
+4.  **`actionCall`**: An instruction to the system to execute an asynchronous action. It's good practice to send a `reply` or `message` alongside an `actionCall` to inform the user that you've started a longer-running task.
 
-// An \`actionCall\` is a request for the system to perform a specific, predefined asynchronous function, like generating an image. See the list of available actions below.
+### Available Actions
 
-// ### Available Actions to Call
+{{ #each context.actions }}
 
-// ${getActionMarkdown(context.actions)}
+  #### {{ this.name }}
+  {{ this.description }}
+  | Option | Description | Type | Allowed Values | Required |
+  | ------ | ----------- | ---- | -------------- | -------- |
+  {{ #each this.options }}
 
-// \`\`\`
-// `;
+    | `{{~ this.name ~}}`
+    | {{~ #if (isEmpty this.description) ~}}
+        - 
+      {{~ else ~}}
+        {{ this.description }}
+      {{~ /if ~}}
+    | `{{ this.type }}`
+    | {{~ #if (isEmpty this.allowedValues) ~}}
+        *
+      {{~ else ~}}
+        {{~ #each this.allowedValues ~}}
+          `{{ this }}`
+          {{~ #unless @last ~}}, {{~ /unless ~}}
+        {{~ /each ~}}
+      {{~ /if ~}}
+    | {{~ #if this.required ~}}
+        Yes
+      {{~ else ~}}
+        No
+      {{~ /if ~}}
+    |
+  {{ /each }}
+{{ /each }}

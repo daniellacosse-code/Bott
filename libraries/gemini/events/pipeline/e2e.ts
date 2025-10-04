@@ -9,27 +9,25 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+// TODO: flesh out
+
 import { faker } from "npm:@faker-js/faker";
 import {
   type AnyShape,
   type BottChannel,
   type BottEvent,
   type BottEventClassifier,
-  BottEventRuleType,
+  // BottEventRuleType,
   BottEventType,
   type BottUser,
 } from "@bott/model";
 
 import type { EventPipelineContext, EventPipelineProcessor } from "./types.ts";
 
-// Import the processors you might want to test
-import { curateInputEvents } from "./01_curateInputEvents/main.ts";
-// import { generateRawOutput } from "./02_generateRawOutput/main.ts";
-// import { segmentRawOutput } from "./03_segmentRawOutput/main.ts";
-// import { classifyOutputEvents } from "./04_classifyOutputEvents/main.ts";
-// import { finalizeOutputEvents } from "./05_finalizeOutputEvents/main.ts";
+// Import the processor you want to test
+import { focusInput } from "./01_focusInput/main.ts";
 
-const processorToTest: EventPipelineProcessor = curateInputEvents;
+const processorToTest: EventPipelineProcessor = focusInput;
 
 const result = await processorToTest(createMockContext());
 
@@ -84,14 +82,7 @@ function createMockContext(): EventPipelineContext {
     settings: {
       identity: "I am a test bot.",
       classifiers: { [classifier.name]: classifier },
-      rules: {
-        testRule: {
-          name: "testRule",
-          type: BottEventRuleType.FILTER_OUTPUT,
-          definition: "isInteresting > 3",
-          requiredClassifiers: [classifier.name],
-        },
-      },
+      rules: {},
     },
   };
 }

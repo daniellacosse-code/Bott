@@ -1,0 +1,21 @@
+# Task
+
+{{! TODO: Flesh out this task description }}
+
+Be objective and critically score this event using the classifiers defined below.
+
+## Classifiers
+
+{{ #each filterClassifiers }}
+  ### {{ this.name }}
+  {{ this.definition }}
+
+  {{ #each this.examples }}
+    * **Examples of a score of {{ @key }}**:
+
+    {{ #each this }}
+      * {{ this }}
+    {{ /each }}
+  {{ /each }}
+{{ /each }}
+

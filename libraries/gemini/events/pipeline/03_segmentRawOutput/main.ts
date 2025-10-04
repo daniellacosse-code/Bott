@@ -9,39 +9,20 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import type { AnyShape, BottEvent } from "@bott/model";
+
 import type { EventPipelineProcessor } from "../types.ts";
+import { getEventSchema } from "../../utilities/getSchema.ts";
+import { queryGemini } from "../../utilities/queryGemini.ts";
+import systemPrompt from "./systemPrompt.md";
 
 export const segmentRawOutput: EventPipelineProcessor = async (context) => {
+  context.data.output = await queryGemini<BottEvent<AnyShape>[]>(
+    context.data.output,
+    systemPrompt,
+    getEventSchema(context),
+    context,
+  );
+
   return context;
 };
-
-//   const commonFields = {
-//         id: crypto.randomUUID(),
-//         type: event.type,
-//         timestamp: new Date(),
-//         user: context.user,
-//         channel: context.channel,
-//         // Gemini does not return the full parent event
-//         parent: event.parent ? (await getEvents(event.parent.id))[0] : undefined,
-//       };
-
-//       if (event.type === BottEventType.ACTION_CALL) {
-//         yield {
-//           ...commonFields,
-//           type: BottEventType.ACTION_CALL,
-//           details: event.details as {
-//             name: string;
-//             options: O;
-//             scores: Record<string, number>;
-//           },
-//         };
-//       } else {
-//         yield {
-//           ...commonFields,
-//           details: event.details as {
-//             content: string;
-//             scores: Record<string, number>;
-//           },
-//         };
-//       }
-// }

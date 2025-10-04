@@ -9,6 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { BottFileType } from "@bott/model";
 import type {
   AnyShape,
   BottAction,
@@ -17,10 +18,19 @@ import type {
   BottGlobalSettings,
   BottUser,
 } from "@bott/model";
-import { log } from "@bott/logger";
 import { addEventData } from "@bott/storage";
 
 import pipeline, { type EventPipelineContext } from "./pipeline/main.ts";
+
+import { getEvents } from "@bott/storage";
+
+import {
+  INPUT_EVENT_COUNT_LIMIT,
+  INPUT_EVENT_TIME_LIMIT_MS,
+  INPUT_FILE_AUDIO_COUNT_LIMIT,
+  INPUT_FILE_TOKEN_LIMIT,
+  INPUT_FILE_VIDEO_COUNT_LIMIT,
+} from "../constants.ts";
 
 export async function* generateEvents(
   inputEvents: BottEvent<AnyShape>[],
@@ -32,19 +42,77 @@ export async function* generateEvents(
     settings: BottGlobalSettings;
   },
 ): AsyncGenerator<BottEvent<AnyShape>> {
+  const prunedInput: BottEvent<AnyShape>[] = [];
+  const now = Date.now();
+  const timeCutoff = now - INPUT_EVENT_TIME_LIMIT_MS;
+
+  const resourceAccumulator = {
+    tokens: 0,
+    audioFiles: 0,
+    videoFiles: 0,
+  };
+
+  // Iterate backwards to prioritize the most recent events
+  for (let i = inputEvents.length - 1; i >= 0; i--) {
+    if (prunedInput.length >= INPUT_EVENT_COUNT_LIMIT) {
+      break;
+    }
+
+    const event = structuredClone(inputEvents[i]);
+
+    if (event.timestamp.getTime() < timeCutoff) {
+      break;
+    }
+
+    if (event.files) {
+      const filesToKeep = [];
+      for (const file of event.files) {
+        if (!file.compressed) continue;
+
+        const newTotalTokens = resourceAccumulator.tokens +
+          file.compressed.data.byteLength;
+        if (newTotalTokens > INPUT_FILE_TOKEN_LIMIT) continue;
+
+        const isAudio = file.compressed.type === BottFileType.MP3 ||
+          file.compressed.type === BottFileType.OPUS ||
+          file.compressed.type === BottFileType.WAV;
+        if (
+          isAudio &&
+          resourceAccumulator.audioFiles >= INPUT_FILE_AUDIO_COUNT_LIMIT
+        ) continue;
+
+        const isVideo = file.compressed.type === BottFileType.MP4;
+        if (
+          isVideo &&
+          resourceAccumulator.videoFiles >= INPUT_FILE_VIDEO_COUNT_LIMIT
+        ) continue;
+
+        filesToKeep.push(file);
+        resourceAccumulator.tokens = newTotalTokens;
+        if (isAudio) resourceAccumulator.audioFiles++;
+        if (isVideo) resourceAccumulator.videoFiles++;
+      }
+      event.files = filesToKeep.length > 0 ? filesToKeep : undefined;
+    }
+
+    prunedInput.unshift(event);
+  }
+
   let pipelineContext: EventPipelineContext = {
     data: {
-      input: inputEvents,
+      input: prunedInput,
       output: [],
     },
     ...context,
   };
 
   for (const processor of pipeline) {
-    pipelineContext = await processor(pipelineContext);
+    try {
+      pipelineContext = await processor(pipelineContext);
+    } catch {
+      // TODO
+    }
   }
-
-  _debugLogPipelineData(pipelineContext.data);
 
   try {
     // Update the newly scored events
@@ -54,89 +122,16 @@ export async function* generateEvents(
   }
 
   for (const event of pipelineContext.data.output) {
-    yield event;
+    yield {
+      ...event,
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      user: context.user,
+      channel: context.channel,
+      // Gemini does not return the full parent event
+      parent: event.parent ? (await getEvents(event.parent.id))[0] : undefined,
+    };
   }
 
   return;
 }
-
-// TODO
-const _debugLogPipelineData = (result: any) => {
-  log.debug(JSON.stringify(result, null, 2));
-
-  // let logMessage = "Gemini processing result:\n";
-
-  // for (const event of result.inputEventScores) {
-  //   if (!event.details) {
-  //     continue;
-  //   }
-
-  //   logMessage += `[INPUT] Scored event #${event.id}: "${
-  //     _truncateMessage(event.details.content)
-  //   }"\n`;
-
-  //   for (const trait in event.details.scores) {
-  //     logMessage += `  => [${trait}: ${event.details.scores[trait].score}] ${
-  //       event.details.scores[trait].rationale ?? ""
-  //     }\n`;
-  //   }
-  // }
-
-  // for (const event of result.outputEvents) {
-  //   if (!event.details) {
-  //     continue;
-  //   }
-
-  //   if (event.type === BottEventType.ACTION_CALL) {
-  //     const details = event.details as {
-  //       name: string;
-  //       options: AnyShape;
-  //       scores: Record<string, GeminiEventTraitScore>;
-  //     };
-  //     logMessage += `[OUTPUT] Generated request \`${details.name}\`\n`;
-  //     for (const option in details.options) {
-  //       logMessage += `  => ${option}: ${details.options[option]}\n`;
-  //     }
-  //   } else {
-  //     const details = event.details as {
-  //       content: string;
-  //       scores: Record<string, GeminiEventTraitScore>;
-  //     };
-  //     const parentInfo = event.parent
-  //       ? ` (in reply to #${event.parent.id})`
-  //       : "";
-  //     logMessage += `[OUTPUT] Generated ${event.type}${parentInfo}: "${
-  //       _truncateMessage(details.content)
-  //     }"\n`;
-  //   }
-
-  //   for (const trait in event.details.scores) {
-  //     logMessage += `  => [${trait}: ${event.details.scores[trait].score}] ${
-  //       event.details.scores[trait].rationale ?? ""
-  //     }\n`;
-  //   }
-  // }
-
-  // if (result.outputScores) {
-  //   logMessage += "[OVERALL SCORES]\n";
-  //   for (const trait in result.outputScores) {
-  //     logMessage += `  => [${trait}: ${result.outputScores[trait].score}] ${
-  //       result.outputScores[trait].rationale ?? ""
-  //     }\n`;
-  //   }
-  // }
-
-  // log.debug(logMessage.trim());
-};
-
-// const _truncateMessage = (message: string, maxWordCount = 12) => {
-//   const words = message.trim().split(/\s+/);
-
-//   const result = words.slice(0, maxWordCount).join(" ");
-
-//   if (words.length <= maxWordCount) {
-//     return result;
-//   }
-
-//   return result + "…";
-// };

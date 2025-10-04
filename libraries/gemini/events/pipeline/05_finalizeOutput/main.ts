@@ -9,24 +9,16 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { Handlebars } from "https://deno.land/x/handlebars/mod.ts";
-
-import type { EventPipelineProcessor } from "../types.ts";
-import systemPromptTemplate from "./systemPrompt.md.hbs";
-import { getEventSchema } from "../../utilities/getSchema.ts";
-import { queryGemini } from "../../utilities/queryGemini.ts";
 import type { AnyShape, BottEvent } from "@bott/model";
 
-export const generateRawOutput: EventPipelineProcessor = async function (
-  context,
-) {
-  const systemPrompt = await new Handlebars().renderView(
-    systemPromptTemplate,
-    { context },
-  );
+import systemPrompt from "./systemPrompt.md";
+import { getEventSchema } from "../../utilities/getSchema.ts";
+import { queryGemini } from "../../utilities/queryGemini.ts";
+import type { EventPipelineProcessor } from "../types.ts";
 
+export const finalizeOutput: EventPipelineProcessor = async (context) => {
   context.data.output = await queryGemini<BottEvent<AnyShape>[]>(
-    context.data.input,
+    context.data.output,
     systemPrompt,
     getEventSchema(context),
     context,
