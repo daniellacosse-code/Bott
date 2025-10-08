@@ -1,6 +1,49 @@
 # Task
 
+{{! TODO: Update this task description }}
+
 For each \`message\` or \`reply\` event generated, ensure its contents are split into a sequence of smaller, conversational messages.
+
+## Available Event Types
+
+1.  **`message`**: A new, standalone message to the channel.
+2.  **`reply`**: A direct reply to a specific parent message.
+3.  **`reaction`**: An emoji reaction to a specific parent message. Prefer these for acknowledgments to reduce channel noise.
+4.  **`actionCall`**: An instruction to the system to execute an asynchronous action. It's good practice to send a `reply` or `message` alongside an `actionCall` to inform the user that you've started a longer-running task.
+
+### Available Actions
+
+{{ #each context.actions }}
+
+  #### {{ this.name }}
+  {{ this.description }}
+  | Option | Description | Type | Allowed Values | Required |
+  | ------ | ----------- | ---- | -------------- | -------- |
+  {{ #each this.options }}
+
+    | `{{~ this.name ~}}`
+    | {{~ #if (isEmpty this.description) ~}}
+        - 
+      {{~ else ~}}
+        {{ this.description }}
+      {{~ /if ~}}
+    | `{{ this.type }}`
+    | {{~ #if (isEmpty this.allowedValues) ~}}
+        *
+      {{~ else ~}}
+        {{~ #each this.allowedValues ~}}
+          `{{ this }}`
+          {{~ #unless @last ~}}, {{~ /unless ~}}
+        {{~ /each ~}}
+      {{~ /if ~}}
+    | {{~ #if this.required ~}}
+        Yes
+      {{~ else ~}}
+        No
+      {{~ /if ~}}
+    |
+  {{ /each }}
+{{ /each }}
 
 * **Rule:** Keep each message to a single idea or sentence.
 * **Rule:** The first event in a sequence responding to a user can be a \`reply\`. All subsequent events in that same sequence **must** be of type \`message\` to avoid confusing threading.

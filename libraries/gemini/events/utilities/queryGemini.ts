@@ -1,11 +1,21 @@
-import gemini from "../../client.ts";
+/**
+ * @license
+ * This file is part of Bott.
+ *
+ * This project is dual-licensed:
+ * - Non-commercial use: AGPLv3 (see LICENSE file for full text).
+ * - Commercial use: Proprietary License (contact D@nielLaCos.se for details).
+ *
+ * Copyright (C) 2025 DanielLaCos.se
+ */
 
 import { encodeBase64 } from "jsr:@std/encoding/base64";
 
 import type { EventPipelineContext } from "../pipeline/types.ts";
 
+import gemini from "../../client.ts";
 import { EVENT_MODEL } from "../../constants.ts";
-import type { Schema } from "npm:@google/genai";
+import type { GenerateContentConfig, Schema } from "npm:@google/genai";
 import type { BottEvent } from "@bott/model";
 
 import type { Content, Part } from "npm:@google/genai";
@@ -14,29 +24,40 @@ import type { AnyShape } from "@bott/model";
 export const queryGemini = async <O>(
   events: BottEvent<AnyShape>[],
   systemPrompt: string,
-  responseSchema: Schema,
+  responseSchema: Schema | null,
   context: EventPipelineContext,
   model = EVENT_MODEL,
 ): Promise<O> => {
+  const config: GenerateContentConfig = {
+    abortSignal: context.abortSignal,
+    candidateCount: 1,
+    systemInstruction: {
+      parts: [
+        { text: context.settings.identity },
+        {
+          text: systemPrompt,
+        },
+      ],
+    },
+    tools: [
+      { googleSearch: {} },
+    ],
+  };
+
+  if (responseSchema) {
+    config.responseSchema = responseSchema;
+    config.responseMimeType = "application/json";
+
+    // Can't use tools and structured response in the same request.
+    delete config.tools;
+  }
+
   const response = await gemini.models.generateContent({
     model,
     contents: events.map((event) =>
       _transformBottEventToContent(event, context.user.id)
     ),
-    config: {
-      abortSignal: context.abortSignal,
-      candidateCount: 1,
-      systemInstruction: {
-        parts: [
-          { text: context.settings.identity },
-          {
-            text: systemPrompt,
-          },
-        ],
-      },
-      responseMimeType: "application/json",
-      responseSchema,
-    },
+    config,
   });
 
   return JSON.parse(

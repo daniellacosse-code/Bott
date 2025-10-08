@@ -10,10 +10,9 @@
  */
 
 import { focusInput } from "./01_focusInput/main.ts";
-import { generateRawOutput } from "./02_generateRawOutput/main.ts";
-import { segmentRawOutput } from "./03_segmentRawOutput/main.ts";
-import { classifyOutput } from "./04_classifyOutput/main.ts";
-import { finalizeOutput } from "./05_finalizeOutput/main.ts";
+import { generateOutput } from "./02_generateOutput/main.ts";
+import { classifyOutput } from "./03_classifyOutput/main.ts";
+import { finalizeOutput } from "./04_finalizeOutput/main.ts";
 
 import type { EventPipeline } from "./types.ts";
 
@@ -21,8 +20,7 @@ export * from "./types.ts";
 
 export default [
   focusInput,
-  generateRawOutput,
-  segmentRawOutput,
+  generateOutput,
   classifyOutput,
   finalizeOutput,
 ] as EventPipeline;
