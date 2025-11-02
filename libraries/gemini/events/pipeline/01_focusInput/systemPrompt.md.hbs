@@ -1,20 +1,64 @@
 # Task
 
-{{! TODO: Flesh out this task description }}
+Take the role of a moderator in an online chat room. Your task is to score, as objectively as possible, the latest message event object provided in accordance with the following `Classifier Definitions`, on a scale from "1" to "5". **Be sure to take the provided chat history into context.**
 
-Evaluate the most recent event object according to the following classifiers:
+## Classifier Definitions
 
-## Classifiers
+{{#each focusClassifiers}}
+### {{ this.name }}
 
-{{ #each focusClassifiers }}
-  ### {{ this.name }}
-  {{ this.definition }}
+**Definition:** {{ this.definition }}
 
-  {{ #each this.examples }}
-    * **Examples of a score of {{ @key }}**:
+{{#each this.examples}}
+* **Examples of a score of "{{ @key }}"**:
+{{#each this}}
+  * {{ this }}
+{{/each}}
+{{/each}}
+{{/each}}
 
-    {{ #each this }}
-      * {{ this }}
-    {{ /each }}
-  {{ /each }}
-{{ /each }}
+## Event Structure and Input
+
+You will be provided with a `BottEvent` object. Here is the basic structure of an event:
+
+```json
+{
+  "id": "event_id",
+  "type": "event_type",
+  "details": { ... },
+  "timestamp": "ISO_date_string",
+  "user": { "id": "user_id", "name": "user_name" }
+}
+```
+
+The portion of the message object you're evaluating directly is located at `details.content`.
+
+### Example Input
+
+Here is an example of an incoming event to be scored.
+
+```json
+{
+  "user": {
+    "id": "user_id",
+    "name": "user_name"
+  },
+  "type": "message",
+  "details": {
+    "content": "How is everyone doing today?"
+  }
+}
+```
+
+## Example Output
+
+```json
+{
+  {{#each focusClassifiers}}
+  "{{ this.name }}": {
+    "score": "your_objective_score_here",
+    "rationale": "a_short_rationale_here"
+  }
+  {{/each}}
+}
+```

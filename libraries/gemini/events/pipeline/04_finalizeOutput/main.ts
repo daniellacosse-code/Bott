@@ -15,9 +15,13 @@ import { getEventSchema } from "../../utilities/getSchema.ts";
 import { queryGemini } from "../../utilities/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
-import systemPrompt from "./systemPrompt.md";
+import systemPrompt from "./systemPrompt.md" with { type: "text" };
 
 export const finalizeOutput: EventPipelineProcessor = async (context) => {
+  if (!context.data.output.length) {
+    return context;
+  }
+
   context.data.output = await queryGemini<BottEvent[]>(
     context.data.output,
     systemPrompt,

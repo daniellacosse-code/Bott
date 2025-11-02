@@ -17,7 +17,8 @@ import {
   type BottChannel,
   type BottEvent,
   type BottEventClassifier,
-  // BottEventRuleType,
+  type BottEventRule,
+  BottEventRuleType,
   BottEventType,
   type BottUser,
 } from "@bott/model";
@@ -35,31 +36,37 @@ console.log(JSON.stringify(result, null, 2));
 
 // Mocks
 
-const createMockUser = (): BottUser => ({
-  id: faker.string.uuid(),
-  name: faker.internet.username(),
-});
-
-const createMockChannel = (): BottChannel => ({
-  id: faker.string.uuid(),
-  name: `#${faker.lorem.word()}`,
-  space: {
+function createMockUser(): BottUser {
+  return {
     id: faker.string.uuid(),
-    name: faker.lorem.word(),
-  },
-});
+    name: faker.internet.username(),
+  };
+}
 
-const createMockEvent = (
+function createMockChannel(): BottChannel {
+  return {
+    id: faker.string.uuid(),
+    name: `#${faker.lorem.word()}`,
+    space: {
+      id: faker.string.uuid(),
+      name: faker.lorem.word(),
+    },
+  };
+}
+
+function createMockEvent(
   user: BottUser,
   channel: BottChannel,
-): BottEvent<AnyShape> => ({
-  id: faker.string.uuid(),
-  type: BottEventType.MESSAGE,
-  timestamp: faker.date.recent(),
-  user,
-  channel,
-  details: { content: faker.lorem.sentence() },
-});
+): BottEvent<AnyShape> {
+  return {
+    id: faker.string.uuid(),
+    type: BottEventType.MESSAGE,
+    timestamp: faker.date.recent(),
+    user,
+    channel,
+    details: { content: faker.lorem.sentence() },
+  };
+}
 
 function createMockContext(): EventPipelineContext {
   const user = createMockUser();
@@ -67,7 +74,17 @@ function createMockContext(): EventPipelineContext {
   const classifier: BottEventClassifier = {
     name: "isInteresting",
     definition: "Is the content interesting?",
-    examples: { 1: ["boring"], 5: ["fascinating"] },
+    examples: { 1: ["boring", "blah"], 5: ["fascinating", "whohoo"] },
+  };
+
+  const rule: BottEventRule = {
+    name: "onlyLookAtInterestingThings",
+    type: BottEventRuleType.FOCUS_INPUT,
+    definition: "Only look at events that are interesting.",
+    validator: (event) => {
+      return (event.details.scores as any).isInteresting === 5;
+    },
+    requiredClassifiers: [classifier.name],
   };
 
   return {
@@ -82,7 +99,9 @@ function createMockContext(): EventPipelineContext {
     settings: {
       identity: "I am a test bot.",
       classifiers: { [classifier.name]: classifier },
-      rules: {},
+      rules: {
+        [rule.name]: rule,
+      },
     },
   };
 }

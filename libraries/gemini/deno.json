@@ -8,6 +8,6 @@
     ]
   },
   "tasks": {
-    "eventPipelineTest": "deno -A ./events/pipeline/e2e.ts"
+    "eventPipelineTest": "LOG_TOPICS=debug deno --allow-all --env-file=../../.env.development --unstable-raw-imports ./events/pipeline/e2e.ts"
   }
 }

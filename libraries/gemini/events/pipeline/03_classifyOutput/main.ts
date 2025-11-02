@@ -9,10 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { Handlebars } from "https://deno.land/x/handlebars/mod.ts";
+import Handlebars from "npm:handlebars";
 import { type Schema, Type } from "npm:@google/genai";
 
 import { BottEventRuleType } from "@bott/model";
+import { log } from "@bott/logger";
 
 import { CLASSIFIER_MODEL } from "../../../constants.ts";
 import { queryGemini } from "../../utilities/queryGemini.ts";
@@ -22,9 +23,13 @@ import {
 } from "../../utilities/reduceRules.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
-import systemPromptTemplate from "./systemPrompt.md.hbs";
+import systemPromptTemplate from "./systemPrompt.md.hbs" with { type: "text" };
 
 export const classifyOutput: EventPipelineProcessor = async (context) => {
+  if (!context.data.output.length) {
+    return context;
+  }
+
   const output = structuredClone(context.data.output);
 
   const filterClassifiers = reduceClassifiersForRuleType(
@@ -32,19 +37,32 @@ export const classifyOutput: EventPipelineProcessor = async (context) => {
     BottEventRuleType.FILTER_OUTPUT,
   );
 
-  const systemPrompt = await new Handlebars().renderView(
+  if (!filterClassifiers.length) {
+    return context;
+  }
+
+  const systemPrompt = Handlebars.compile(
     systemPromptTemplate,
-    { filterClassifiers },
-  );
+  )({ filterClassifiers });
 
   const responseSchema = {
     type: Type.OBJECT,
     properties: Object.keys(filterClassifiers).reduce(
       (properties, key) => {
         properties[key] = {
-          type: Type.STRING,
-          description: filterClassifiers[key].definition,
-          enum: ["1", "2", "3", "4", "5"],
+          type: Type.OBJECT,
+          properties: {
+            score: {
+              type: Type.STRING,
+              description: filterClassifiers[key].definition,
+              enum: ["1", "2", "3", "4", "5"],
+            },
+            rationale: {
+              type: Type.STRING,
+              description: "A 1-2 sentence rationale for the score given.",
+            },
+          },
+          required: ["score"],
         };
 
         return properties;
@@ -70,7 +88,9 @@ export const classifyOutput: EventPipelineProcessor = async (context) => {
     }
 
     geminiCalls.push((async () => {
-      const scores = await queryGemini(
+      const scoresWithRationale = await queryGemini<
+        Record<string, { score: string; rationale: string | undefined }>
+      >(
         // Provide the current event and all subsequent events as context for scoring.
         output.slice(pointer),
         systemPrompt,
@@ -78,6 +98,17 @@ export const classifyOutput: EventPipelineProcessor = async (context) => {
         context,
         CLASSIFIER_MODEL,
       );
+
+      const scores: Record<string, number> = {};
+
+      for (const classifier in scoresWithRationale) {
+        const { score, rationale } = scoresWithRationale[classifier];
+        if (rationale) {
+          log.debug(`${classifier}: ${score}. Rationale: ${rationale}`);
+        }
+
+        scores[classifier] = Number(score);
+      }
 
       event.details.scores = scores;
     })());

@@ -9,10 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { Handlebars } from "https://deno.land/x/handlebars/mod.ts";
 import { type Schema, Type } from "npm:@google/genai";
+import Handlebars from "npm:handlebars";
 
 import { BottEventRuleType } from "@bott/model";
+import { log } from "@bott/logger";
 
 import { CLASSIFIER_MODEL } from "../../../constants.ts";
 import { queryGemini } from "../../utilities/queryGemini.ts";
@@ -22,7 +23,7 @@ import {
 } from "../../utilities/reduceRules.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
-import systemPromptTemplate from "./systemPrompt.md.hbs";
+import systemPromptTemplate from "./systemPrompt.md.hbs" with { type: "text" };
 
 export const focusInput: EventPipelineProcessor = async (context) => {
   const input = structuredClone(context.data.input);
@@ -32,19 +33,33 @@ export const focusInput: EventPipelineProcessor = async (context) => {
     BottEventRuleType.FOCUS_INPUT,
   );
 
-  const systemPrompt = await new Handlebars().renderView(
+  // If we have no way to determine focus, skip this step.
+  if (Object.keys(focusClassifiers).length === 0) {
+    return context;
+  }
+
+  const systemPrompt = Handlebars.compile(
     systemPromptTemplate,
-    { focusClassifiers },
-  );
+  )({ focusClassifiers });
 
   const responseSchema = {
     type: Type.OBJECT,
     properties: Object.keys(focusClassifiers).reduce(
       (properties, key) => {
         properties[key] = {
-          type: Type.STRING,
-          description: focusClassifiers[key].definition,
-          enum: ["1", "2", "3", "4", "5"],
+          type: Type.OBJECT,
+          properties: {
+            score: {
+              type: Type.STRING,
+              description: focusClassifiers[key].definition,
+              enum: ["1", "2", "3", "4", "5"],
+            },
+            rationale: {
+              type: Type.STRING,
+              description: "A 1-2 sentence rationale for the score given.",
+            },
+          },
+          required: ["score"],
         };
 
         return properties;
@@ -70,7 +85,9 @@ export const focusInput: EventPipelineProcessor = async (context) => {
     }
 
     geminiCalls.push((async () => {
-      const scores = await queryGemini(
+      const scoresWithRationale = await queryGemini<
+        Record<string, { score: string; rationale: string | undefined }>
+      >(
         // Provide the current event and all subsequent events as context for scoring.
         input.slice(pointer),
         systemPrompt,
@@ -78,6 +95,17 @@ export const focusInput: EventPipelineProcessor = async (context) => {
         context,
         CLASSIFIER_MODEL,
       );
+
+      const scores: Record<string, number> = {};
+
+      for (const classifier in scoresWithRationale) {
+        const { score, rationale } = scoresWithRationale[classifier];
+        if (rationale) {
+          log.debug(`${classifier}: ${score}. Rationale: ${rationale}`);
+        }
+
+        scores[classifier] = Number(score);
+      }
 
       event.details.scores = scores;
       event.details.focus = Object.values(focusRules).every((rule) =>
