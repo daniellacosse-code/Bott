@@ -13,6 +13,7 @@ import { assert, assertEquals, assertRejects } from "jsr:@std/assert";
 import { delay } from "jsr:@std/async/delay";
 import { TaskManager } from "./manager.ts";
 import { createTask, type Task } from "./create.ts";
+import { testHandler } from "@bott/logger";
 
 // Helper function to create a versatile test task
 const createTestTask = (
@@ -338,6 +339,9 @@ Deno.test("TaskManager - should handle task errors gracefully", async () => {
   const bucketName = "test-bucket-error";
   const maxSwaps = 1;
 
+  // Clear any previous test logs
+  testHandler.clear();
+
   manager.add({
     name: bucketName,
     completions: [],
@@ -358,9 +362,15 @@ Deno.test("TaskManager - should handle task errors gracefully", async () => {
   );
   assertEquals(bucket.remainingSwaps, maxSwaps, "Swaps reset after failure");
 
-  // The warning is logged via @std/log which outputs to console
-  // The test framework captures console output and displays it in "post-test output"
-  // We can see in the CI logs that the warning "Task failed: test-bucket-error:..." is logged
+  // Verify the warning was logged using the test handler
+  const warningLogs = testHandler.logs.filter((log) =>
+    log.msg.includes("Task failed:")
+  );
+  assert(warningLogs.length > 0, "Warning should have been logged");
+  assert(
+    warningLogs[0].msg.includes(bucketName),
+    "Warning message should contain bucket name",
+  );
 });
 
 Deno.test("TaskManager - push should throw if bucket does not exist", async () => {

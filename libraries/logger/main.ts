@@ -9,7 +9,13 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { ConsoleHandler, getLogger, setup } from "@std/log";
+import {
+  BaseHandler,
+  ConsoleHandler,
+  getLogger,
+  type LogRecord,
+  setup,
+} from "@std/log";
 
 // Parse LOG_TOPICS environment variable
 const allowedTopics = new Set(
@@ -20,16 +26,41 @@ const allowedTopics = new Set(
     .filter((topic) => topic.length > 0),
 );
 
+// Test handler for capturing logs during testing
+class TestHandler extends BaseHandler {
+  public logs: LogRecord[] = [];
+
+  override log(msg: string): void {
+    // Store the raw message for testing
+    this.logs.push({
+      msg,
+      args: [],
+      datetime: new Date(),
+      level: 0,
+      levelName: "NOTSET",
+      loggerName: "default",
+    });
+  }
+
+  clear(): void {
+    this.logs = [];
+  }
+}
+
+// Global test handler instance that can be accessed for testing
+export const testHandler = new TestHandler("DEBUG");
+
 // Setup logger with console handler - allow all levels, filtering is done in wrapper
 try {
   setup({
     handlers: {
       console: new ConsoleHandler("DEBUG"),
+      test: testHandler,
     },
     loggers: {
       default: {
         level: "DEBUG",
-        handlers: ["console"],
+        handlers: ["console", "test"],
       },
     },
   });
