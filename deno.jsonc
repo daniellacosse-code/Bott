@@ -18,7 +18,7 @@
     "@std/log": "jsr:@std/log@^0.224",
     "@std/path": "jsr:@std/path@^1.0.8",
     "@faker-js/faker": "npm:@faker-js/faker",
-    "handlebars": "npm:handlebars",
+    "ejs": "npm:ejs@^3.1.7",
     "discord.js": "npm:discord.js@^14.19.3",
     "mdast-util-from-markdown": "npm:mdast-util-from-markdown@^2.0.2",
     "mdast": "npm:mdast@^3",

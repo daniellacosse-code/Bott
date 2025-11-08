@@ -9,7 +9,6 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import Handlebars from "handlebars";
 import { type Schema, Type } from "@google/genai";
 
 import { BottEventRuleType } from "@bott/model";
@@ -23,7 +22,9 @@ import {
 } from "../../utilities/reduceRules.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
-import systemPromptTemplate from "./systemPrompt.md.hbs" with { type: "text" };
+const systemPrompt = await Deno.readTextFile(
+  new URL("./systemPrompt.md", import.meta.url),
+);
 
 export const filterOutput: EventPipelineProcessor = async (context) => {
   if (!context.data.output.length) {
@@ -40,10 +41,6 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
   if (!Object.keys(filterClassifiers).length) {
     return context;
   }
-
-  const systemPrompt = Handlebars.compile(
-    systemPromptTemplate,
-  )({ filterClassifiers });
 
   const responseSchema = {
     type: Type.OBJECT,
@@ -111,16 +108,15 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
       }
 
       event.details.scores = scores;
+      event.details.filter = Object.values(filterRules).every((rule) =>
+        rule.validator(event)
+      );
     })());
 
     pointer++;
   }
 
   await Promise.all(geminiCalls);
-
-  context.data.output = output.filter((event) =>
-    Object.values(filterRules).every((rule) => rule.validator(event))
-  );
 
   return context;
 };

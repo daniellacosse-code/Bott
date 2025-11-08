@@ -10,7 +10,6 @@
  */
 
 import { type Schema, Type } from "@google/genai";
-import Handlebars from "handlebars";
 
 import { BottEventRuleType } from "@bott/model";
 import { log } from "@bott/logger";
@@ -23,7 +22,9 @@ import {
 } from "../../utilities/reduceRules.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
-import systemPromptTemplate from "./systemPrompt.md.hbs" with { type: "text" };
+const systemPrompt = await Deno.readTextFile(
+  new URL("./systemPrompt.md", import.meta.url),
+);
 
 export const focusInput: EventPipelineProcessor = async (context) => {
   const input = structuredClone(context.data.input);
@@ -37,10 +38,6 @@ export const focusInput: EventPipelineProcessor = async (context) => {
   if (Object.keys(focusClassifiers).length === 0) {
     return context;
   }
-
-  const systemPrompt = Handlebars.compile(
-    systemPromptTemplate,
-  )({ focusClassifiers });
 
   const responseSchema = {
     type: Type.OBJECT,

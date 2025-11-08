@@ -15,7 +15,9 @@ import { getEventSchema } from "../../utilities/getSchema.ts";
 import { queryGemini } from "../../utilities/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
-import systemPrompt from "./systemPrompt.md" with { type: "text" };
+const systemPrompt = await Deno.readTextFile(
+  new URL("./systemPrompt.md", import.meta.url),
+);
 
 export const finalizeOutput: EventPipelineProcessor = async (context) => {
   if (!context.data.output.length) {

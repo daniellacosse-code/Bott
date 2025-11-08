@@ -10,19 +10,25 @@
  */
 
 import { encodeBase64 } from "@std/encoding/base64";
+import ejs from "ejs";
+import type {
+  Content,
+  GenerateContentConfig,
+  Part,
+  Schema,
+} from "@google/genai";
+import type { AnyShape, BottEvent } from "@bott/model";
 
 import type { EventPipelineContext } from "../pipeline/types.ts";
-
 import gemini from "../../client.ts";
 import { EVENT_MODEL } from "../../constants.ts";
-import type { GenerateContentConfig, Schema } from "@google/genai";
-import type { BottEvent } from "@bott/model";
 
-import type { Content, Part } from "@google/genai";
-import type { AnyShape } from "@bott/model";
+const eventStructure = await Deno.readTextFile(
+  new URL("./eventStructure.md.ejs", import.meta.url),
+);
 
 export const queryGemini = async <O>(
-  eventsOrRaw: BottEvent<AnyShape>[] | string,
+  input: BottEvent<AnyShape>[] | string,
   systemPrompt: string,
   responseSchema: Schema | null,
   context: EventPipelineContext,
@@ -34,6 +40,9 @@ export const queryGemini = async <O>(
     systemInstruction: {
       parts: [
         { text: context.settings.identity },
+        {
+          text: ejs.render(eventStructure, context),
+        },
         {
           text: systemPrompt,
         },
@@ -54,9 +63,9 @@ export const queryGemini = async <O>(
 
   const response = await gemini.models.generateContent({
     model,
-    contents: typeof eventsOrRaw === "string"
-      ? [eventsOrRaw]
-      : eventsOrRaw.map((event) =>
+    contents: typeof input === "string"
+      ? [input]
+      : input.map((event) =>
         _transformBottEventToContent(event, context.user.id)
       ),
     config,
@@ -71,33 +80,6 @@ export const queryGemini = async <O>(
     return JSON.parse(result) as O;
   } catch {
     return result as O;
-  }
-};
-
-/**
- * Formats an ISO timestamp as a human-readable relative time string.
- * Examples: "just now", "2 minutes ago", "3 hours ago", "5 days ago"
- * @internal Exported for testing purposes only
- */
-export const _formatTimestampAsRelative = (
-  timestamp: Date | string,
-): string => {
-  const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffSeconds < 60) {
-    return "just now";
-  } else if (diffMinutes < 60) {
-    return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
-  } else if (diffHours < 24) {
-    return diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
-  } else {
-    return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
   }
 };
 
@@ -168,4 +150,31 @@ export const _transformBottEventToContent = (
   }
 
   return content;
+};
+
+/**
+ * Formats an ISO timestamp as a human-readable relative time string.
+ * Examples: "just now", "2 minutes ago", "3 hours ago", "5 days ago"
+ * @internal Exported for testing purposes only
+ */
+export const _formatTimestampAsRelative = (
+  timestamp: Date | string,
+): string => {
+  const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSeconds < 60) {
+    return "just now";
+  } else if (diffMinutes < 60) {
+    return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
+  } else if (diffHours < 24) {
+    return diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
+  } else {
+    return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
+  }
 };

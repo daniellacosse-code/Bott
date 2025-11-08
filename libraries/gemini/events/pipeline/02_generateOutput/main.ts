@@ -9,18 +9,19 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import Handlebars from "handlebars";
-
-import { type BottEvent, BottEventType } from "@bott/model";
+import type { BottEvent } from "@bott/model";
 
 import { getEventSchema } from "../../utilities/getSchema.ts";
 import { queryGemini } from "../../utilities/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
-import rawSystemPrompt from "./systemPrompt_raw.md" with { type: "text" };
-import segmentingSystemPromptTemplate from "./systemPrompt_segment.md.hbs" with {
-  type: "text",
-};
+const rawSystemPrompt = await Deno.readTextFile(
+  new URL("./systemPrompt_raw.md", import.meta.url),
+);
+
+const segmentingSystemPrompt = await Deno.readTextFile(
+  new URL("./systemPrompt_segment.md", import.meta.url),
+);
 
 export const generateOutput: EventPipelineProcessor = async function (
   context,
@@ -36,10 +37,6 @@ export const generateOutput: EventPipelineProcessor = async function (
     null,
     context,
   );
-
-  const segmentingSystemPrompt = Handlebars.compile(
-    segmentingSystemPromptTemplate,
-  )({ context });
 
   context.data.output = await queryGemini<BottEvent[]>(
     rawOutput,

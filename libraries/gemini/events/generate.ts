@@ -126,6 +126,10 @@ export async function* generateEvents(
   }
 
   for (const event of pipelineContext.data.output) {
+    if (event.details.filter === true) {
+      continue;
+    }
+
     yield {
       ...event,
       id: crypto.randomUUID(),
