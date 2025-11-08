@@ -42,14 +42,7 @@ export const generateOutput: EventPipelineProcessor = async function (
   )({ context });
 
   context.data.output = await queryGemini<BottEvent[]>(
-    [{
-      id: "FAKE",
-      type: BottEventType.MESSAGE,
-      timestamp: new Date(),
-      details: {
-        content: rawOutput,
-      },
-    }],
+    rawOutput,
     segmentingSystemPrompt,
     getEventSchema(context),
     context,

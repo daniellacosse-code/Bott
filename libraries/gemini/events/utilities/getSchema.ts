@@ -56,7 +56,7 @@ export const getEventSchema = <O extends AnyShape>(
             properties: {
               content: { type: GeminiStructuredResponseType.STRING },
             },
-            required: ["content", "scores"],
+            required: ["content"],
           },
           parent: {
             type: GeminiStructuredResponseType.OBJECT,

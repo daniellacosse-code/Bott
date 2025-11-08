@@ -22,7 +22,7 @@ import type { Content, Part } from "@google/genai";
 import type { AnyShape } from "@bott/model";
 
 export const queryGemini = async <O>(
-  events: BottEvent<AnyShape>[],
+  eventsOrRaw: BottEvent<AnyShape>[] | string,
   systemPrompt: string,
   responseSchema: Schema | null,
   context: EventPipelineContext,
@@ -54,18 +54,24 @@ export const queryGemini = async <O>(
 
   const response = await gemini.models.generateContent({
     model,
-    contents: events.map((event) =>
-      _transformBottEventToContent(event, context.user.id)
-    ),
+    contents: typeof eventsOrRaw === "string"
+      ? [eventsOrRaw]
+      : eventsOrRaw.map((event) =>
+        _transformBottEventToContent(event, context.user.id)
+      ),
     config,
   });
 
-  return JSON.parse(
-    response.candidates?.[0]?.content?.parts
-      ?.filter((part: Part) => "text" in part && typeof part.text === "string")
-      .map((part: Part) => (part as { text: string }).text)
-      .join("") ?? "",
-  );
+  const result = response.candidates?.[0]?.content?.parts
+    ?.filter((part: Part) => "text" in part && typeof part.text === "string")
+    .map((part: Part) => (part as { text: string }).text)
+    .join("") ?? "";
+
+  try {
+    return JSON.parse(result) as O;
+  } catch {
+    return result as O;
+  }
 };
 
 /**

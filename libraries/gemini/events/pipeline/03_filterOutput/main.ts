@@ -25,7 +25,7 @@ import type { EventPipelineProcessor } from "../types.ts";
 
 import systemPromptTemplate from "./systemPrompt.md.hbs" with { type: "text" };
 
-export const classifyOutput: EventPipelineProcessor = async (context) => {
+export const filterOutput: EventPipelineProcessor = async (context) => {
   if (!context.data.output.length) {
     return context;
   }
@@ -37,7 +37,7 @@ export const classifyOutput: EventPipelineProcessor = async (context) => {
     BottEventRuleType.FILTER_OUTPUT,
   );
 
-  if (!filterClassifiers.length) {
+  if (!Object.keys(filterClassifiers).length) {
     return context;
   }
 

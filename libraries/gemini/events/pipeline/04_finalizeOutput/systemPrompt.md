@@ -1,7 +1,7 @@
 # Task
 
 Take the role of an Event Stream Manager. Your task is to review the flow of the
-following event stream, which is a JSON array of `BottEvent` objects. Ensure the
+provided event stream, which is a JSON array of `BottEvent` objects. Ensure the
 stream has a logical sequence. Fill any missing gaps with new events, correct
 invalid events, and ensure relationships between events (like replies and
 reactions) are valid.
@@ -17,76 +17,93 @@ structure:
   "type": "EVENT_TYPE",
   "details": { ... },
   "timestamp": "ISO_date_string",
-  "parent": "parent_event_id", // Optional
-  "user": { "id": "user_id", "name": "user_name" } // Optional
+  "parent": { "id": "parent_event_id" }, // Optional
 }
 ```
 
-The key event types are `message`, `reply`, `reaction`, `actionCall`, and
-`actionResult`.
+The possible event `type`s are `message`, `reply`, `reaction`, `actionCall`, and
+`actionResult`:
+
+1. **`message`**: A new, standalone message to the channel.
+2. **`reply`**: A direct reply to a specific parent message.
+3. **`reaction`**: An emoji reaction to a specific parent message.
+4. **`actionCall`**: An instruction to the system to execute an asynchronous
+   action.
+5. **`actionResult`**: The result of an `actionCall`.
 
 ## Guidelines
 
-1. **Logical Flow:** The sequence of events should make sense. A `reply` should
-   come after the `message` it's replying to.
-2. **Event Integrity:**
+1. **Semantic Coherence:** If an event's content (in the `details` object) is
+   illogical, nonsensical, or incomplete, you may edit it to make it coherent
+   and sensible within the context of the event stream.
+1. **Completeness:** If the stream seems incomplete, you can add new events to
+   make it more logical.
+1. **Logical Flow:** The sequence of events should make sense. For instance, a
+   `reply` should come after the `message` it's replying to.
+1. **Event Integrity:**
+   - A `message` event DOES NOT have a `parent` field.
    - A `reply` event _must_ have a `parent` field pointing to the `id` of the
      event being replied to.
    - A `reaction` event _must_ have a `parent` field pointing to the `id` of the
      event being reacted to.
    - `actionResult` should typically follow an `actionCall`.
-3. **Completeness:** If the stream seems incomplete, you can add new events to
-   make it more logical. For example, if you see a `reply` to a non-existent
-   message, you might infer what the original message was.
-4. **Semantic Coherence:** If an event's content (in the `details` object) is
-   illogical, nonsensical, or incomplete, you may edit it to make it coherent
-   and sensible within the context of the event stream.
+1. Do not touch events that aren't from Bott. (TODO: include which ones)
 
 ## Example Input
 
-Here is an example of an event stream that needs correction. Notice that the
-`reply` event is missing its `parent`.
+Here is an example of an event stream that needs correction. Notice that there
+is a message clearly missing from the sequence.
 
 ```json
 [
   {
     "id": "msg_1",
     "type": "message",
-    "details": { "content": "Hello world!" },
-    "timestamp": "2025-11-01T12:00:00Z",
-    "user": { "id": "user_a", "name": "Alice" }
+    "details": { "content": "I'm going to tell you a story in three parts." },
+    "timestamp": "2025-11-01T12:00:00Z"
   },
   {
-    "id": "rply_1",
-    "type": "reply",
-    "details": { "content": "Hello to you too!" },
-    "timestamp": "2025-11-01T12:01:00Z",
-    "user": { "id": "user_b", "name": "Bob" }
+    "id": "msg_2",
+    "type": "message",
+    "details": { "content": "Part 1: Once upon a time..." },
+    "timestamp": "2025-11-01T12:00:05Z"
+  },
+  {
+    "id": "msg_4",
+    "type": "message",
+    "details": { "content": "Part 3: ...and they lived happily ever after." },
+    "timestamp": "2025-11-01T12:00:15Z"
   }
 ]
 ```
 
 ## Example Output
 
-Here is the corrected event stream. The `parent` field has been added to the
-`reply` event, linking it to the original message.
-
 ```json
 [
   {
     "id": "msg_1",
     "type": "message",
-    "details": { "content": "Hello world!" },
-    "timestamp": "2025-11-01T12:00:00Z",
-    "user": { "id": "user_a", "name": "Alice" }
+    "details": { "content": "I'm going to tell you a story in three parts." },
+    "timestamp": "2025-11-01T12:00:00Z"
   },
   {
-    "id": "rply_1",
-    "type": "reply",
-    "details": { "content": "Hello to you too!" },
-    "timestamp": "2025-11-01T12:01:00Z",
-    "user": { "id": "user_b", "name": "Bob" },
-    "parent": "msg_1"
+    "id": "msg_2",
+    "type": "message",
+    "details": { "content": "Part 1: Once upon a time..." },
+    "timestamp": "2025-11-01T12:00:05Z"
+  },
+  {
+    "id": "msg_3",
+    "type": "message",
+    "details": { "content": "Part 2: A hero fought a dragon." },
+    "timestamp": "2025-11-01T12:00:10Z"
+  },
+  {
+    "id": "msg_4",
+    "type": "message",
+    "details": { "content": "Part 3: ...and they lived happily ever after." },
+    "timestamp": "2025-11-01T12:00:15Z"
   }
 ]
 ```
