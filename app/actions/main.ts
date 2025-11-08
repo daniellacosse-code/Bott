@@ -11,4 +11,3 @@
 
 export * from "./help.ts";
 export * from "./generateMedia.ts";
-export * from "./mock.ts";

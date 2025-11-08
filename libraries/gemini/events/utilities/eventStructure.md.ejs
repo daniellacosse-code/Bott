@@ -18,12 +18,20 @@ All `BottEvent` objects share the following base properties:
 }
 ```
 
-| Property    | Type     | Description                                                                        |
-| ----------- | -------- | ---------------------------------------------------------------------------------- |
-| `id`        | `string` | A unique identifier for the event.                                                 |
-| `type`      | `string` | The type of event. See `Type-Based Properties` for more details.                   |
-| `timestamp` | `string` | A relative time string (e.g., "a few seconds ago") indicating when the event occurred.                                 |
-| `user`      | `object` | The user who initiated the event. For system events, this is _your_ user identity. |
+
+| Property    | Type     | Description                                                                            |
+| ----------- | -------- | -------------------------------------------------------------------------------------- |
+| `id`        | `string` | A unique identifier for the event.                                                     |
+| `type`      | `string` | The type of event. See `Type-Based Properties` for more details.                       |
+| `timestamp` | `string` | A relative time string (e.g., "a few seconds ago") indicating when the event occurred. |
+| `user`      | `object` | The user who initiated the event. For system events, this is _your_ user identity.     |
+
+### Attached Files
+
+Each `BottEvent` object may have one or more attached files. These are not a part of the JSON object, but rather 
+added by the system under a `--- Attached Files ---` header.
+
+There may be files referenced in events that are missing - they were likely pruned by the system to fit into context.
 
 ##  Type-Based Properties
 

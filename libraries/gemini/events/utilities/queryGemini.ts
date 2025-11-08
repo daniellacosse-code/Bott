@@ -112,19 +112,14 @@ export const _transformBottEventToContent = (
   };
 
   if (event.parent) {
-    // The caller (generateEvents) should have already handled event.parent.files.
-    // We create a simplified parent reference here.
-    const { files: _files, ...parentDetails } = event.parent;
+    const eventDetails = structuredClone(event.parent);
 
-    if (parentDetails.parent) {
-      // This level of nesting in this context is unnecessary.
-      delete parentDetails.parent;
-    }
+    delete eventDetails.files;
+    delete eventDetails.parent;
 
-    // Create an intermediary object with formatted timestamp
     eventToSerialize.parent = {
-      ...parentDetails,
-      timestamp: _formatTimestampAsRelative(parentDetails.timestamp),
+      ...eventDetails,
+      timestamp: _formatTimestampAsRelative(eventDetails.timestamp),
     };
   }
 
@@ -134,7 +129,9 @@ export const _transformBottEventToContent = (
     parts,
   };
 
-  if (event.files) {
+  if (event.files && event.files.length) {
+    parts.push({ text: "--- Attached Files ---" });
+
     for (const file of event.files) {
       if (!file.compressed) {
         continue;

@@ -37,9 +37,9 @@ log.perf("pipeline: start");
 
 const pipelineToTest: EventPipelineProcessor[] = [
   focusInput,
-  // generateOutput,
-  // filterOutput,
-  // finalizeOutput,
+  generateOutput,
+  filterOutput,
+  finalizeOutput,
 ];
 
 let result: EventPipelineContext | object = {};
