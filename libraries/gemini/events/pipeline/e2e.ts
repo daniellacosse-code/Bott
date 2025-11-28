@@ -15,11 +15,10 @@ import {
   type BottAction,
   BottActionOptionType,
   type BottChannel,
+  type BottClassifier,
   type BottEvent,
-  type BottEventClassifier,
-  type BottEventRule,
-  BottEventRuleType,
   BottEventType,
+  type BottReason,
   type BottUser,
 } from "@bott/model";
 import { log } from "@bott/logger";
@@ -189,36 +188,34 @@ export function createMockContext(): EventPipelineContext {
     outputEvent1,
   );
 
-  const classifier: BottEventClassifier = {
+  const classifier: BottClassifier = {
     name: "isInteresting",
     definition: "Is the content interesting?",
     examples: { 1: ["boring", "blah"], 5: ["fascinating", "whohoo"] },
   };
 
-  const classifier2: BottEventClassifier = {
+  const classifier2: BottClassifier = {
     name: "isCorrect",
     definition: "Is the content correct?",
     examples: { 1: ["<a blatant lie>"], 5: ["<a profound truth>"] },
   };
 
-  const focusRule: BottEventRule = {
+  const focusRule: BottReason = {
     name: "onlyLookAtInterestingThings",
-    type: BottEventRuleType.FOCUS_REASON,
     definition: "Only look at events that are interesting.",
     validator: (event) => {
       return (event.details.scores as any).isInteresting === 5;
     },
-    requiredClassifiers: [classifier.name],
+    classifiers: [classifier],
   };
 
-  const filterRule: BottEventRule = {
+  const filterRule: BottReason = {
     name: "onlySayCorrectThings",
-    type: BottEventRuleType.FILTER_OUTPUT,
     definition: "Only say things that are correct.",
     validator: (event) => {
       return (event.details.scores as any).isCorrect >= 4;
     },
-    requiredClassifiers: [classifier2.name],
+    classifiers: [classifier2],
   };
 
   const generateMedia = function (context: any) {
@@ -264,13 +261,9 @@ export function createMockContext(): EventPipelineContext {
     },
     settings: {
       identity: "I am a test bot.",
-      classifiers: {
-        [classifier.name]: classifier,
-        [classifier2.name]: classifier2,
-      },
-      rules: {
-        [focusRule.name]: focusRule,
-        [filterRule.name]: filterRule,
+      reasons: {
+        input: [focusRule],
+        output: [filterRule],
       },
     },
   };

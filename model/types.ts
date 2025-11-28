@@ -145,7 +145,7 @@ type NonEmptyArray<T> = [T, ...Array<T>];
  * Classifiers are used to describe characteristics of events or entities,
  * with a scoring system (e.g., 1-5 scale).
  */
-export interface BottEventClassifier {
+export interface BottClassifier {
   name: string;
   definition: string;
   examples: {
@@ -157,23 +157,14 @@ export interface BottEventClassifier {
   };
 }
 
-export enum BottEventRuleType {
-  /** A rule for focusing on events that match a reason. */
-  FOCUS_REASON = "focusReason",
-
-  /** A rule for removing an output event from being sent. */
-  FILTER_OUTPUT = "filterOutput",
-}
-
 /**
- * Defines the structure for a "Rule" in Bott.
+ * Defines the structure for a "Reason" in Bott.
  * Rules are conditions or actions that Bott must take based on classifier results.
  */
-export interface BottEventRule {
+export interface BottReason {
   name: string;
-  type: BottEventRuleType;
   definition: string;
-  requiredClassifiers?: string[];
+  classifiers?: NonEmptyArray<BottClassifier>;
   validator: (event: BottEvent) => boolean;
 }
 
@@ -244,6 +235,8 @@ export type BottActionResultEvent<D extends AnyShape = { content: string }> =
  */
 export interface BottGlobalSettings {
   identity: string;
-  rules: Record<string, BottEventRule>;
-  classifiers: Record<string, BottEventClassifier>;
+  reasons: {
+    input: BottReason[];
+    output: BottReason[];
+  };
 }

@@ -13,7 +13,7 @@ import { BottGlobalSettings, BottUser } from "@bott/model";
 
 import { getDefaultIdentity } from "./identity.ts";
 import * as _classifiers from "./classifiers.ts";
-import * as rules from "./rules.ts";
+import * as reasons from "./reasons.ts";
 
 const { directedAt, ...classifiers } = _classifiers;
 
@@ -21,12 +21,14 @@ export const getDefaultGlobalSettings = (
   context: { user: BottUser },
 ): BottGlobalSettings => ({
   identity: getDefaultIdentity(context),
-  classifiers: {
-    ...classifiers,
-    [`directedAt${context.user.name}`]: directedAt(context.user),
-  },
-  rules: {
-    ...rules,
-    whenAddressed: rules.whenAddressed(context.user),
+  reasons: {
+    input: [
+      reasons.whenAddressed(context.user),
+      reasons.checkFacts,
+      reasons.ensureImportance,
+    ],
+    output: [
+      reasons.ensureImportance,
+    ],
   },
 });

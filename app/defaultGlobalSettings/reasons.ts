@@ -9,14 +9,22 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BottEventRule, BottEventRuleType, BottUser } from "@bott/model";
+import { BottReason, BottUser } from "@bott/model";
 
-export const whenAddressed: (user: BottUser) => BottEventRule = (user) => ({
+import {
+  directedAt,
+  importance,
+  objectivity,
+  relevance,
+  sincerity,
+  urgency,
+} from "./classifiers.ts";
+
+export const whenAddressed: (user: BottUser) => BottReason = (user) => ({
   name: "whenAddressed",
-  type: BottEventRuleType.FOCUS_REASON,
   definition:
     `You should respond to events that have a \`directedAt${user.name}\` score of 5 or 4, or at 3 when \`importance\` or \`urgency\` is also 4 or greater.`,
-  requiredClassifiers: [`directedAt${user.name}`, "importance", "urgency"],
+  classifiers: [directedAt(user), importance, urgency],
   validator: (event) => {
     const scores = event.details.scores as Record<string, number> | undefined;
 
@@ -36,12 +44,11 @@ export const whenAddressed: (user: BottUser) => BottEventRule = (user) => ({
   },
 });
 
-export const checkFacts: BottEventRule = {
+export const checkFacts: BottReason = {
   name: "checkFacts",
-  type: BottEventRuleType.FOCUS_REASON,
   definition:
     "You must fact-check events of `importance` 3 or greater that have an `objectivity` score of 4 or 5 but avoid engaging with events that have a `sincerity` or `relevance` score of 1 or 2.",
-  requiredClassifiers: ["importance", "objectivity", "sincerity", "relevance"],
+  classifiers: [importance, objectivity, sincerity, relevance],
   validator: (event) => {
     const scores = event.details.scores as Record<string, number> | undefined;
 
@@ -59,11 +66,10 @@ export const checkFacts: BottEventRule = {
   },
 };
 
-export const ensureImportance: BottEventRule = {
+export const ensureImportance: BottReason = {
   name: "ensureImportance",
-  type: BottEventRuleType.FILTER_OUTPUT,
   definition: "You should only send events of `importance` 3 or greater.",
-  requiredClassifiers: ["importance"],
+  classifiers: [importance],
   validator: (event) => {
     const scores = event.details.scores as Record<string, number> | undefined;
 
@@ -71,6 +77,6 @@ export const ensureImportance: BottEventRule = {
       return false;
     }
 
-    return scores.importance < 3;
+    return scores.importance >= 3;
   },
 };

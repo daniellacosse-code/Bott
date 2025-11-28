@@ -11,15 +11,10 @@
 
 import { type Schema, Type } from "@google/genai";
 
-import { BottEventRuleType } from "@bott/model";
 import { log } from "@bott/logger";
 
 import { CLASSIFIER_MODEL } from "../../../constants.ts";
 import { queryGemini } from "../../utilities/queryGemini.ts";
-import {
-  reduceClassifiersForRuleType,
-  reduceRulesForType,
-} from "../../utilities/reduceRules.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
 const systemPrompt = await Deno.readTextFile(
@@ -29,26 +24,26 @@ const systemPrompt = await Deno.readTextFile(
 export const focusInput: EventPipelineProcessor = async (context) => {
   const input = structuredClone(context.data.input);
 
-  const focusClassifiers = reduceClassifiersForRuleType(
-    context.settings,
-    BottEventRuleType.FOCUS_REASON,
+  const inputReasons = context.settings.reasons.input;
+  const inputClassifiers = inputReasons.flatMap((reason) =>
+    reason.classifiers ?? []
   );
 
   // If we have no way to determine focus, skip this step.
-  if (Object.keys(focusClassifiers).length === 0) {
+  if (inputClassifiers.length === 0) {
     return context;
   }
 
   const responseSchema = {
     type: Type.OBJECT,
-    properties: Object.keys(focusClassifiers).reduce(
-      (properties, key) => {
-        properties[key] = {
+    properties: inputClassifiers.reduce(
+      (properties, classifier) => {
+        properties[classifier.name] = {
           type: Type.OBJECT,
           properties: {
             score: {
               type: Type.STRING,
-              description: focusClassifiers[key].definition,
+              description: classifier.definition,
               enum: ["1", "2", "3", "4", "5"],
             },
             rationale: {
@@ -63,13 +58,8 @@ export const focusInput: EventPipelineProcessor = async (context) => {
       },
       {} as Record<string, Schema>,
     ),
-    required: Object.keys(focusClassifiers),
+    required: inputClassifiers.map((classifier) => classifier.name),
   };
-
-  const focusRules = reduceRulesForType(
-    context.settings,
-    BottEventRuleType.FOCUS_REASON,
-  );
 
   const geminiCalls: Promise<void>[] = [];
 
@@ -93,6 +83,7 @@ export const focusInput: EventPipelineProcessor = async (context) => {
           responseSchema,
           context,
           model: CLASSIFIER_MODEL,
+          useIdentity: false,
         },
       );
 
@@ -108,8 +99,8 @@ export const focusInput: EventPipelineProcessor = async (context) => {
       }
 
       event.details.scores = scores;
-      event.details.focus = Object.values(focusRules).some((rule) =>
-        rule.validator(event)
+      event.details.focus = Object.values(inputReasons).some((reason) =>
+        reason.validator(event)
       );
     })());
 

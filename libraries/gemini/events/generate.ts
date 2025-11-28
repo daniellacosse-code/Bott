@@ -131,7 +131,7 @@ export async function* generateEvents(
   }
 
   for (const event of pipelineContext.data.output) {
-    if (event.details.filter === true) {
+    if (event.details.output !== true) {
       continue;
     }
 

@@ -11,15 +11,10 @@
 
 import { type Schema, Type } from "@google/genai";
 
-import { BottEventRuleType } from "@bott/model";
 import { log } from "@bott/logger";
 
 import { CLASSIFIER_MODEL } from "../../../constants.ts";
 import { queryGemini } from "../../utilities/queryGemini.ts";
-import {
-  reduceClassifiersForRuleType,
-  reduceRulesForType,
-} from "../../utilities/reduceRules.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
 const systemPrompt = await Deno.readTextFile(
@@ -32,26 +27,25 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
   }
 
   const output = structuredClone(context.data.output);
-
-  const filterClassifiers = reduceClassifiersForRuleType(
-    context.settings,
-    BottEventRuleType.FILTER_OUTPUT,
+  const outputReasons = context.settings.reasons.output;
+  const outputClassifiers = outputReasons.flatMap((reason) =>
+    reason.classifiers ?? []
   );
 
-  if (!Object.keys(filterClassifiers).length) {
+  if (!outputClassifiers.length) {
     return context;
   }
 
   const responseSchema = {
     type: Type.OBJECT,
-    properties: Object.keys(filterClassifiers).reduce(
-      (properties, key) => {
-        properties[key] = {
+    properties: outputClassifiers.reduce(
+      (properties, classifier) => {
+        properties[classifier.name] = {
           type: Type.OBJECT,
           properties: {
             score: {
               type: Type.STRING,
-              description: filterClassifiers[key].definition,
+              description: classifier.definition,
               enum: ["1", "2", "3", "4", "5"],
             },
             rationale: {
@@ -66,13 +60,8 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
       },
       {} as Record<string, Schema>,
     ),
-    required: Object.keys(filterClassifiers),
+    required: Object.keys(outputClassifiers),
   };
-
-  const filterRules = reduceRulesForType(
-    context.settings,
-    BottEventRuleType.FILTER_OUTPUT,
-  );
 
   const geminiCalls: Promise<void>[] = [];
 
@@ -96,6 +85,7 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
           responseSchema,
           context,
           model: CLASSIFIER_MODEL,
+          useIdentity: false,
         },
       );
 
@@ -111,8 +101,8 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
       }
 
       event.details.scores = scores;
-      event.details.filter = Object.values(filterRules).every((rule) =>
-        rule.validator(event)
+      event.details.output = Object.values(outputReasons).some((reason) =>
+        reason.validator(event)
       );
     })());
 
