@@ -210,10 +210,10 @@ startDiscordBot({
             } /* fall through */
             case BottEventType.REACTION: {
               this.send(genEvent);
-              return;
+              break;
             }
             default:
-              return;
+              break;
           }
         }
       }),

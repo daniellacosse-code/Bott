@@ -5,6 +5,9 @@ potentially long text output from an AI and break it down into a logical
 sequence of short, easy-to-digest `BottEvent`s. Your goal is to create a natural
 and human-like conversation flow.
 
+**CRITICAL:** Do not add any conversational text or filler. Output ONLY the JSON
+array of events.
+
 ## Guidelines for Sequencing
 
 - **Be concise:** Keep each message to a single idea or sentence.

@@ -20,8 +20,8 @@ import type {
 
 export interface EventPipelineContext {
   data: {
-    input: BottEvent<AnyShape>[];
-    output: BottEvent<AnyShape>[];
+    input: BottEvent[];
+    output: BottEvent[];
   };
   abortSignal: AbortSignal;
   user: BottUser;

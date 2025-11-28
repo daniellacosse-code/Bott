@@ -95,7 +95,7 @@ export interface BottFile {
   source?: URL;
   raw?: BottFileData;
   compressed?: BottFileData;
-  parent?: BottEvent<AnyShape>;
+  parent?: BottEvent;
 }
 
 /**
@@ -131,17 +131,12 @@ export interface BottEvent<
   /** Optional channel where the event took place. */
   channel?: BottChannel;
   /** Optional parent event, e.g., the message being replied or reacted to. */
-  parent?: BottEvent<AnyShape>;
+  parent?: BottEvent;
   /** Optional user who triggered or is associated with the event. */
   user?: BottUser;
   /** Optional array of files associated with the event. */
   files?: BottFile[];
 }
-
-/**
- * A BottEvent with `AnyShape` for its details, allowing for any event structure.
- */
-export type AnyBottEvent = BottEvent<AnyShape>;
 
 type NonEmptyArray<T> = [T, ...Array<T>];
 
@@ -179,7 +174,7 @@ export interface BottEventRule {
   type: BottEventRuleType;
   definition: string;
   requiredClassifiers?: string[];
-  validator: (event: BottEvent<AnyShape>) => boolean;
+  validator: (event: BottEvent) => boolean;
 }
 
 /**

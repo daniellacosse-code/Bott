@@ -17,7 +17,7 @@ import type {
   Part,
   Schema,
 } from "@google/genai";
-import type { AnyShape, BottEvent } from "@bott/model";
+import type { BottEvent } from "@bott/model";
 
 import type { EventPipelineContext } from "../pipeline/types.ts";
 import gemini from "../../client.ts";
@@ -27,24 +27,35 @@ const eventStructure = await Deno.readTextFile(
   new URL("./eventStructure.md.ejs", import.meta.url),
 );
 
+export interface QueryGeminiOptions {
+  systemPrompt: string;
+  responseSchema?: Schema;
+  context: EventPipelineContext;
+  model?: string;
+  useIdentity?: boolean;
+}
+
 export const queryGemini = async <O>(
-  input: BottEvent<AnyShape>[] | string,
-  systemPrompt: string,
-  responseSchema: Schema | null,
-  context: EventPipelineContext,
-  model = EVENT_MODEL,
+  input: BottEvent[] | string,
+  {
+    systemPrompt,
+    responseSchema,
+    context,
+    model = EVENT_MODEL,
+    useIdentity = true,
+  }: QueryGeminiOptions,
 ): Promise<O> => {
   const config: GenerateContentConfig = {
     abortSignal: context.abortSignal,
     candidateCount: 1,
     systemInstruction: {
       parts: [
-        { text: context.settings.identity },
-        {
-          text: ejs.render(eventStructure, context),
-        },
+        ...(useIdentity ? [{ text: context.settings.identity }] : []),
         {
           text: systemPrompt,
+        },
+        {
+          text: ejs.render(eventStructure, context),
         },
       ],
     },
@@ -84,7 +95,7 @@ export const queryGemini = async <O>(
 };
 
 export const _transformBottEventToContent = (
-  event: BottEvent<AnyShape>,
+  event: BottEvent,
   modelUserId: string,
 ): Content => {
   // Explicitly construct the object to be stringified to avoid circular references,
@@ -93,7 +104,9 @@ export const _transformBottEventToContent = (
     id: event.id,
     type: event.type,
     details: event.details, // Assuming details are already JSON-serializable
-    timestamp: _formatTimestampAsRelative(event.timestamp),
+    timestamp: _formatTimestampAsRelative(
+      event.timestamp ? event.timestamp : new Date(),
+    ),
     user: event.user ? { id: event.user.id, name: event.user.name } : undefined,
     channel: event.channel
       ? {
@@ -119,7 +132,9 @@ export const _transformBottEventToContent = (
 
     eventToSerialize.parent = {
       ...eventDetails,
-      timestamp: _formatTimestampAsRelative(eventDetails.timestamp),
+      timestamp: _formatTimestampAsRelative(
+        eventDetails.timestamp ? eventDetails.timestamp : new Date(),
+      ),
     };
   }
 

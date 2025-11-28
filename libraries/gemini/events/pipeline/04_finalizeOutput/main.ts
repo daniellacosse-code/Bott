@@ -14,6 +14,7 @@ import type { BottEvent } from "@bott/model";
 import { getEventSchema } from "../../utilities/getSchema.ts";
 import { queryGemini } from "../../utilities/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
+import { log } from "@bott/logger";
 
 const systemPrompt = await Deno.readTextFile(
   new URL("./systemPrompt.md", import.meta.url),
@@ -26,9 +27,11 @@ export const finalizeOutput: EventPipelineProcessor = async (context) => {
 
   context.data.output = await queryGemini<BottEvent[]>(
     context.data.output,
-    systemPrompt,
-    getEventSchema(context),
-    context,
+    {
+      systemPrompt,
+      responseSchema: getEventSchema(context),
+      context,
+    },
   );
 
   return context;

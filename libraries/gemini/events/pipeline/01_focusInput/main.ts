@@ -78,6 +78,7 @@ export const focusInput: EventPipelineProcessor = async (context) => {
     const event = input[pointer];
 
     if (event.details.scores) {
+      pointer++;
       continue;
     }
 
@@ -87,10 +88,12 @@ export const focusInput: EventPipelineProcessor = async (context) => {
       >(
         // Provide the current event and all subsequent events as context for scoring.
         input.slice(pointer),
-        systemPrompt,
-        responseSchema,
-        context,
-        CLASSIFIER_MODEL,
+        {
+          systemPrompt,
+          responseSchema,
+          context,
+          model: CLASSIFIER_MODEL,
+        },
       );
 
       const scores: Record<string, number> = {};

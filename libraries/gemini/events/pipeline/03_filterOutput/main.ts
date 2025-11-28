@@ -81,6 +81,7 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
     const event = output[pointer];
 
     if (event.details.scores) {
+      pointer++;
       continue;
     }
 
@@ -90,10 +91,12 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
       >(
         // Provide the current event and all subsequent events as context for scoring.
         output.slice(pointer),
-        systemPrompt,
-        responseSchema,
-        context,
-        CLASSIFIER_MODEL,
+        {
+          systemPrompt,
+          responseSchema,
+          context,
+          model: CLASSIFIER_MODEL,
+        },
       );
 
       const scores: Record<string, number> = {};
@@ -117,6 +120,8 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
   }
 
   await Promise.all(geminiCalls);
+
+  context.data.output = output;
 
   return context;
 };

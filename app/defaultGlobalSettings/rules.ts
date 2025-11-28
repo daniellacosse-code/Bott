@@ -11,8 +11,6 @@
 
 import { BottEventRule, BottEventRuleType, BottUser } from "@bott/model";
 
-// TODO: I think we're missing a general sense of ... friendly conversationalism, but this is a good first draft.
-
 export const whenAddressed: (user: BottUser) => BottEventRule = (user) => ({
   name: "whenAddressed",
   type: BottEventRuleType.FOCUS_REASON,
@@ -20,7 +18,7 @@ export const whenAddressed: (user: BottUser) => BottEventRule = (user) => ({
     `You should respond to events that have a \`directedAt${user.name}\` score of 5 or 4, or at 3 when \`importance\` or \`urgency\` is also 4 or greater.`,
   requiredClassifiers: [`directedAt${user.name}`, "importance", "urgency"],
   validator: (event) => {
-    const scores = event.details.scores;
+    const scores = event.details.scores as Record<string, number> | undefined;
 
     if (!scores) {
       return false;
@@ -45,7 +43,7 @@ export const checkFacts: BottEventRule = {
     "You must fact-check events of `importance` 3 or greater that have an `objectivity` score of 4 or 5 but avoid engaging with events that have a `sincerity` or `relevance` score of 1 or 2.",
   requiredClassifiers: ["importance", "objectivity", "sincerity", "relevance"],
   validator: (event) => {
-    const scores = event.details.scores;
+    const scores = event.details.scores as Record<string, number> | undefined;
 
     if (!scores) {
       return false;
@@ -67,12 +65,12 @@ export const ensureImportance: BottEventRule = {
   definition: "You should only send events of `importance` 3 or greater.",
   requiredClassifiers: ["importance"],
   validator: (event) => {
-    const scores = event.details.scores;
+    const scores = event.details.scores as Record<string, number> | undefined;
 
     if (!scores) {
       return false;
     }
 
-    return scores.importance >= 3;
+    return scores.importance < 3;
   },
 };
