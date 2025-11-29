@@ -101,7 +101,7 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
       }
 
       event.details.scores = scores;
-      event.details.filter = !Object.values(outputReasons).some((reason) =>
+      event.details.output = Object.values(outputReasons).some((reason) =>
         reason.validator(event)
       );
     })());
