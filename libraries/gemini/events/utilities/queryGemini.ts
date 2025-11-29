@@ -67,9 +67,6 @@ export const queryGemini = async <O>(
   if (responseSchema) {
     config.responseSchema = responseSchema;
     config.responseMimeType = "application/json";
-
-    // Can't use tools and structured response in the same request.
-    delete config.tools;
   }
 
   const response = await gemini.models.generateContent({

@@ -60,7 +60,7 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
       },
       {} as Record<string, Schema>,
     ),
-    required: Object.keys(outputClassifiers),
+    required: outputClassifiers.map((classifier) => classifier.name),
   };
 
   const geminiCalls: Promise<void>[] = [];
@@ -101,7 +101,7 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
       }
 
       event.details.scores = scores;
-      event.details.output = Object.values(outputReasons).some((reason) =>
+      event.details.filter = !Object.values(outputReasons).some((reason) =>
         reason.validator(event)
       );
     })());

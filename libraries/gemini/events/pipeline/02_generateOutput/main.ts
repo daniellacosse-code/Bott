@@ -14,14 +14,9 @@ import type { BottEvent } from "@bott/model";
 import { getEventSchema } from "../../utilities/getSchema.ts";
 import { queryGemini } from "../../utilities/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
-import { log } from "@bott/logger";
 
 const rawSystemPrompt = await Deno.readTextFile(
-  new URL("./systemPrompt_raw.md", import.meta.url),
-);
-
-const segmentingSystemPrompt = await Deno.readTextFile(
-  new URL("./systemPrompt_segment.md", import.meta.url),
+  new URL("./systemPrompt.md", import.meta.url),
 );
 
 export const generateOutput: EventPipelineProcessor = async function (
@@ -32,22 +27,12 @@ export const generateOutput: EventPipelineProcessor = async function (
     return context;
   }
 
-  const rawOutput = await queryGemini<string>(
+  context.data.output = await queryGemini<BottEvent[]>(
     context.data.input,
     {
       systemPrompt: rawSystemPrompt,
-      context,
-    },
-  );
-
-  // TODO: these are "partial" events, we should fix this
-  context.data.output = await queryGemini<BottEvent[]>(
-    `Please segment the following text into a sequence of BottEvents. Do not respond to the content, only format it:\n\n${rawOutput}`,
-    {
-      systemPrompt: segmentingSystemPrompt,
       responseSchema: getEventSchema(context),
       context,
-      useIdentity: false,
     },
   );
 

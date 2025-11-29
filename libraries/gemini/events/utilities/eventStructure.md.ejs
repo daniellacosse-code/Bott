@@ -97,7 +97,8 @@ The `details.scores` object contains either
 
 ### Focus Classifiers
 
-<% for (const classifier of Object.values(settings.classifiers.focus ?? {})) { %>
+<% for (const reason of settings.reasons.input) { %>
+  <% for (const classifier of reason.classifiers ?? []) { %>
 #### <%= classifier.name %>
   <% for (const key of Object.keys(classifier.examples)) { %>
 - **Examples of a score of `<%= key %>`**:
@@ -105,11 +106,13 @@ The `details.scores` object contains either
   - <%= example %>
     <% } %>
   <% } %>
+  <% } %>
 <% } %>
 
-### Filter Classifiers
+### Output Classifiers
 
-<% for (const classifier of Object.values(settings.classifiers.filter ?? {})) { %>
+<% for (const reason of settings.reasons.output) { %>
+  <% for (const classifier of reason.classifiers ?? []) { %>
 #### <%= classifier.name %>
 **Definition**: <%= classifier.definition %>
   <% for (const key of Object.keys(classifier.examples)) { %>
@@ -117,6 +120,7 @@ The `details.scores` object contains either
     <% for (const example of classifier.examples[key]) { %>
   - <%= example %>
     <% } %>
+  <% } %>
   <% } %>
 <% } %>
 
