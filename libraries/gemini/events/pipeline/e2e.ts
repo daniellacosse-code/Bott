@@ -75,7 +75,7 @@ function printEvent(event: BottEvent<AnyShape>) {
     content?: string;
     scores?: Record<string, number>;
     focus?: boolean;
-    filter?: boolean;
+    output?: boolean;
   };
 
   const parts = [
@@ -91,8 +91,8 @@ function printEvent(event: BottEvent<AnyShape>) {
   if (typeof details.focus === "boolean") {
     metadata.push(`focus: ${details.focus}`);
   }
-  if (typeof details.filter === "boolean") {
-    metadata.push(`filter: ${details.filter}`);
+  if (typeof details.output === "boolean") {
+    metadata.push(`output: ${details.output}`);
   }
 
   if (metadata.length > 0) parts.push(`{ ${metadata.join(", ")} }`);

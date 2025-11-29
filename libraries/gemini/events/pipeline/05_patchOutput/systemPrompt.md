@@ -3,6 +3,9 @@
 You are an expert **Conversation Reviewer**. Your goal is to review the proposed
 sequence of `BottEvent`s and "patch" any semantic holes or inconsistencies.
 
+Only the `BottEvent`s with `details.output` set to `true` are to be sent: the
+remaining events are for context only.
+
 **CRITICAL:** Output ONLY the JSON array of events.
 
 ## Guidelines
@@ -23,7 +26,7 @@ sequence of `BottEvent`s and "patch" any semantic holes or inconsistencies.
   {
     "type": "reply",
     "parent": { "id": "msg_123" },
-    "details": { "content": "Here is the image you asked for:" }
+    "details": { "content": "Here is the image you asked for:", "output": true }
   }
   // Missing the actual image or action to generate it!
 ]
@@ -36,13 +39,14 @@ sequence of `BottEvent`s and "patch" any semantic holes or inconsistencies.
   {
     "type": "reply",
     "parent": { "id": "msg_123" },
-    "details": { "content": "Here is the image you asked for:" }
+    "details": { "content": "Here is the image you asked for:", "output": true }
   },
   {
     "type": "actionCall",
     "details": {
       "name": "generateMedia",
-      "options": { "prompt": "...", "type": "image" }
+      "options": { "prompt": "...", "type": "image" },
+      "output": true
     }
   }
 ]
