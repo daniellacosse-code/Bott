@@ -9,20 +9,13 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-/**
- * Runs the Bott application in a container with the specified environment.
- *
- * Usage: deno task runApp <environment>
- * Example: deno task runApp test
- *
- * This will:
- * 1. Build the container image (always for staging/production, only if Dockerfile
- *    changed for test since workspace is mounted)
- * 2. Run it with .env.<environment> file
- * 3. Mount the local volume for the "test" environment
- */
+import { load } from "@std/dotenv";
 
-const envName = Deno.args.find((arg) => !arg.startsWith("--"));
+const testEnv = "test";
+const defaultPort = "8080";
+const buildHashFile = ".build-hash";
+const processSignals = ["SIGINT", "SIGTERM"] as const;
+const [envName] = Deno.args;
 
 if (!envName) {
   console.error("Usage: deno task runApp <environment>");
@@ -30,62 +23,38 @@ if (!envName) {
   Deno.exit(1);
 }
 
-const envFile = `.env.${envName}`;
-const buildHashFile = ".build-hash";
+const containerName = `bott_${envName}`;
+const envPath = `.env.${envName}`;
 
-// Check if env file exists and read PORT value
-let port = "8080"; // default
+await load({ envPath });
+
+// Ensure previous container is removed
 try {
-  const envContent = await Deno.readTextFile(envFile);
-  const portMatch = envContent.match(/^PORT=(\d+)/m);
-  if (portMatch) {
-    port = portMatch[1];
-  }
+  const removeCommand = new Deno.Command("podman", {
+    args: ["rm", "-f", containerName],
+    stdout: "null",
+    stderr: "null",
+  });
+  await removeCommand.output();
+  // Give it a moment to release resources
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 } catch {
-  console.error(`Environment file not found: ${envFile}`);
-  Deno.exit(1);
+  // ignore
 }
 
-// Compute hash of Dockerfile to detect changes
-async function computeDockerfileHash(): Promise<string> {
-  const dockerfile = await Deno.readTextFile("Dockerfile");
-  const encoder = new TextEncoder();
-  const data = encoder.encode(dockerfile);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+// Build the container if needed
+const currentDockerfileHash = await computeFileHash("Dockerfile");
+let storedDockerfileHash = "";
+try {
+  storedDockerfileHash = await Deno.readTextFile(buildHashFile);
+} catch {
+  // ignore
 }
 
-// Check if build is needed by comparing Dockerfile hash (only for test env)
-async function isBuildNeeded(): Promise<boolean> {
-  try {
-    const currentHash = await computeDockerfileHash();
-    const storedHash = await Deno.readTextFile(buildHashFile);
-    return currentHash !== storedHash.trim();
-  } catch {
-    // If hash file doesn't exist or can't be read, build is needed
-    return true;
-  }
-}
-
-// Save the Dockerfile hash after successful build
-async function saveBuildHash(): Promise<void> {
-  const hash = await computeDockerfileHash();
-  await Deno.writeTextFile(buildHashFile, hash);
-}
-
-// Build logic:
-// - For test: only build if Dockerfile changed (workspace is mounted)
-// - For staging/production: always build (source needs to be copied)
-const isTestEnv = envName === "test";
-const buildNeeded = isTestEnv ? await isBuildNeeded() : true;
-
-if (buildNeeded) {
-  if (isTestEnv) {
-    console.log("Dockerfile changed, building container...");
-  } else {
-    console.log("Building container...");
-  }
+if (envName === testEnv && currentDockerfileHash === storedDockerfileHash) {
+  console.log(`Build unchanged for '${testEnv}', skipping...`);
+} else {
+  console.log("Building container...");
   const buildProcess = new Deno.Command("podman", {
     args: ["build", "-t", "bott", "."],
     stdout: "inherit",
@@ -97,35 +66,57 @@ if (buildNeeded) {
     console.error("Failed to build container");
     Deno.exit(1);
   }
-  if (isTestEnv) {
-    await saveBuildHash();
-  }
-} else {
-  console.log("Dockerfile unchanged, skipping build...");
+
+  await Deno.writeTextFile(buildHashFile, currentDockerfileHash);
 }
 
-// Prepare run arguments
-const runArgs = [
+// Run the new container
+const port = Deno.env.get("PORT") || defaultPort;
+const args = [
   "run",
+  "--name",
+  containerName,
   "--rm",
   "--env-file",
-  envFile,
+  envPath,
+  "-p",
+  `${port}:${port}`,
 ];
 
-// Mount volume for test environment
-if (isTestEnv) {
-  runArgs.push("-v", `${Deno.cwd()}:/workspace:Z`);
+// Add volume if we are in test mode
+if (envName === testEnv) {
+  args.push("-v", `${Deno.cwd()}:/workspace:Z`);
 }
 
-runArgs.push("-p", `${port}:${port}`, "bott");
-
-// Run the container
-console.log(`Running container with ${envFile} on port ${port}...`);
-const runProcess = new Deno.Command("podman", {
-  args: runArgs,
+console.log(`Running container with ${envPath} on port ${port}...`);
+const process = new Deno.Command("podman", {
+  args: [...args, "bott"],
   stdout: "inherit",
   stderr: "inherit",
-});
+}).spawn();
 
-const runResult = await runProcess.output();
-Deno.exit(runResult.success ? 0 : 1);
+for (const signal of processSignals) {
+  Deno.addSignalListener(signal, () => {
+    try {
+      process.kill(signal);
+    } catch {
+      // ignore
+    }
+
+    Deno.exit(0);
+  });
+}
+
+const status = await process.status;
+Deno.exit(status.code);
+
+// ---
+// helper function to compute file hash
+async function computeFileHash(file: string): Promise<string> {
+  const data = await Deno.readTextFile(file);
+  const dataBuffer = new TextEncoder().encode(data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", dataBuffer);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}

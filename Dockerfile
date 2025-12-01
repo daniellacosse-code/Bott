@@ -15,4 +15,4 @@ COPY ./model /model
 ENV PORT=8080
 EXPOSE $PORT
 
-CMD ["deno", "task", "start:prod"]
+CMD ["deno", "run", "--allow-all", "./app/main.ts"]
