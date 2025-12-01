@@ -23,16 +23,13 @@
     "mdast-util-from-markdown": "npm:mdast-util-from-markdown@^2.0.2",
     "mdast": "npm:mdast@^3",
     "turndown": "npm:turndown@^7.2.0",
-    "unist-util-visit": "npm:unist-util-visit@^5.0.0"
+    "unist-util-visit": "npm:unist-util-visit@^5.0.0",
+    "@std/dotenv": "jsr:@std/dotenv@^0.225.2"
   },
   "tasks": {
-    "build": "podman build -t bott .",
     "reset": "rm -rf ./fs_root",
     "setup": "brew bundle && gcloud auth login",
-    // TODO: refactor "start" to run the container in all cases
-    "start:dev": "deno run --allow-all --env-file=.env.development ./app/main.ts",
-    "start:prod": "deno run --allow-all ./app/main.ts",
-    "start": "deno task build && podman run --rm --env-file .env.development -p 8080:8080 bott"
+    "runApp": "deno run --allow-all --watch=. ./scripts/runApp.ts"
   },
   "workspace": [
     "./model",

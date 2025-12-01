@@ -38,16 +38,16 @@ A Discord bot, powered by Gemini. Currently in development: see the
 
 #### Instructions
 
-1. Copy `.env.example` to `.env.development`:
+1. Copy `.env.example` to `.env.test`:
 
 ```sh
-cp .env.example .env.development
+cp .env.example .env.test
 ```
 
-3. Get your GCP information and add it to `.env.development`.
-4. Get your Discord information and add it to `.env.development`.
+3. Get your GCP information and add it to `.env.test`.
+4. Get your Discord information and add it to `.env.test`.
 5. Set up the environment with `deno task setup`.
-6. Start Bott with `deno task start:dev`.
+6. Start the bot with `deno task runApp test`.
 
 ### Configuring Bott
 
