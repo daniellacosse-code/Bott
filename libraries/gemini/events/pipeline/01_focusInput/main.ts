@@ -72,6 +72,11 @@ export const focusInput: EventPipelineProcessor = async (context) => {
       continue;
     }
 
+    if (event.user?.id === context.user.id) {
+      pointer++;
+      continue;
+    }
+
     geminiCalls.push((async () => {
       const scoresWithRationale = await queryGemini<
         Record<string, { score: string; rationale: string | undefined }>
@@ -88,11 +93,11 @@ export const focusInput: EventPipelineProcessor = async (context) => {
       );
 
       const scores: Record<string, number> = {};
-
+      let logMessage = `Event ${event.id}:\n`;
       for (const classifier in scoresWithRationale) {
         const { score, rationale } = scoresWithRationale[classifier];
         if (rationale) {
-          log.debug(`${classifier}: ${score}. Rationale: ${rationale}`);
+          logMessage += `  ${classifier}: ${score}. Rationale: ${rationale}\n`;
         }
 
         scores[classifier] = Number(score);
@@ -102,6 +107,8 @@ export const focusInput: EventPipelineProcessor = async (context) => {
       event.details.focus = Object.values(inputReasons).some((reason) =>
         reason.validator(event)
       );
+
+      log.debug(logMessage + "    Marked for focus: " + event.details.focus);
     })());
 
     pointer++;

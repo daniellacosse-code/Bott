@@ -15,7 +15,7 @@ import { getEventSchema } from "../../utilities/getSchema.ts";
 import { queryGemini } from "../../utilities/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
-const rawSystemPrompt = await Deno.readTextFile(
+const systemPrompt = await Deno.readTextFile(
   new URL("./systemPrompt.md", import.meta.url),
 );
 
@@ -30,11 +30,15 @@ export const generateOutput: EventPipelineProcessor = async function (
   context.data.output = await queryGemini<BottEvent[]>(
     context.data.input,
     {
-      systemPrompt: rawSystemPrompt,
+      systemPrompt,
       responseSchema: getEventSchema(context),
       context,
     },
   );
+
+  for (const event of context.data.output) {
+    event.details.output = true;
+  }
 
   return context;
 };

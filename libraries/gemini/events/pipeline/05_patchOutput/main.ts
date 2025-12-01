@@ -33,5 +33,9 @@ export const patchOutput: EventPipelineProcessor = async (context) => {
     },
   );
 
+  for (const event of context.data.output) {
+    event.details.output = true;
+  }
+
   return context;
 };

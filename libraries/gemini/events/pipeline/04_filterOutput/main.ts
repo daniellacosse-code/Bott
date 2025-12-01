@@ -16,6 +16,7 @@ import { log } from "@bott/logger";
 import { CLASSIFIER_MODEL } from "../../../constants.ts";
 import { queryGemini } from "../../utilities/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
+import { BottEventType } from "@bott/model";
 
 const systemPrompt = await Deno.readTextFile(
   new URL("./systemPrompt.md", import.meta.url),
@@ -74,6 +75,11 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
       continue;
     }
 
+    if (event.type === BottEventType.REACTION) {
+      pointer++;
+      continue;
+    }
+
     geminiCalls.push((async () => {
       const scoresWithRationale = await queryGemini<
         Record<string, { score: string; rationale: string | undefined }>
@@ -90,11 +96,16 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
       );
 
       const scores: Record<string, number> = {};
+      let logMessage = `Message Candidate:\n`;
+
+      logMessage += `  Content: ${event.details.content}\n`;
+      logMessage += `  Name: ${event.details.name}\n`;
 
       for (const classifier in scoresWithRationale) {
         const { score, rationale } = scoresWithRationale[classifier];
         if (rationale) {
-          log.debug(`${classifier}: ${score}. Rationale: ${rationale}`);
+          logMessage +=
+            `    ${classifier}: ${score}. Rationale: ${rationale}\n`;
         }
 
         scores[classifier] = Number(score);
@@ -103,6 +114,10 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
       event.details.scores = scores;
       event.details.output = Object.values(outputReasons).some((reason) =>
         reason.validator(event)
+      );
+
+      log.debug(
+        logMessage + "      Marked for output: " + event.details.output,
       );
     })());
 

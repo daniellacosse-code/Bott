@@ -125,7 +125,13 @@ export async function* generateEvents(
 
   try {
     // Update the newly scored events
-    await addEventData(...pipelineContext.data.input);
+    await addEventData(...pipelineContext.data.input.map((event) => ({
+      ...event,
+      details: {
+        ...event.details,
+        focus: undefined, // Avoid writing focus to the DB.
+      },
+    })));
   } catch (error) {
     log.warn(error);
   }
