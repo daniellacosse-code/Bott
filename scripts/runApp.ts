@@ -16,7 +16,8 @@
  * Example: deno task runApp test
  *
  * This will:
- * 1. Build the container image (if Dockerfile has changed since last build)
+ * 1. Build the container image (always for staging/production, only if Dockerfile
+ *    changed for test since workspace is mounted)
  * 2. Run it with .env.<environment> file
  * 3. Mount the local volume for the "test" environment
  */
@@ -55,7 +56,7 @@ async function computeDockerfileHash(): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Check if build is needed by comparing Dockerfile hash
+// Check if build is needed by comparing Dockerfile hash (only for test env)
 async function isBuildNeeded(): Promise<boolean> {
   try {
     const currentHash = await computeDockerfileHash();
@@ -73,10 +74,18 @@ async function saveBuildHash(): Promise<void> {
   await Deno.writeTextFile(buildHashFile, hash);
 }
 
-// Build the container if Dockerfile has changed
-const buildNeeded = await isBuildNeeded();
+// Build logic:
+// - For test: only build if Dockerfile changed (workspace is mounted)
+// - For staging/production: always build (source needs to be copied)
+const isTestEnv = envName === "test";
+const buildNeeded = isTestEnv ? await isBuildNeeded() : true;
+
 if (buildNeeded) {
-  console.log("Dockerfile changed, building container...");
+  if (isTestEnv) {
+    console.log("Dockerfile changed, building container...");
+  } else {
+    console.log("Building container...");
+  }
   const buildProcess = new Deno.Command("podman", {
     args: ["build", "-t", "bott", "."],
     stdout: "inherit",
@@ -88,7 +97,9 @@ if (buildNeeded) {
     console.error("Failed to build container");
     Deno.exit(1);
   }
-  await saveBuildHash();
+  if (isTestEnv) {
+    await saveBuildHash();
+  }
 } else {
   console.log("Dockerfile unchanged, skipping build...");
 }
@@ -102,7 +113,7 @@ const runArgs = [
 ];
 
 // Mount volume for test environment
-if (envName === "test") {
+if (isTestEnv) {
   runArgs.push("-v", `${Deno.cwd()}:/workspace:Z`);
 }
 
