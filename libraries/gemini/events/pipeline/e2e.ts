@@ -206,7 +206,8 @@ export function createMockContext(): EventPipelineContext {
     name: "onlyLookAtInterestingThings",
     definition: "Only look at events that are interesting.",
     validator: (event) => {
-      return (event.details.scores as any).isInteresting === 5;
+      return (event.details.scores as Record<string, number>).isInteresting ===
+        5;
     },
     classifiers: [classifier],
   };
@@ -215,12 +216,12 @@ export function createMockContext(): EventPipelineContext {
     name: "onlySayCorrectThings",
     definition: "Only say things that are correct.",
     validator: (event) => {
-      return (event.details.scores as any).isCorrect >= 4;
+      return (event.details.scores as Record<string, number>).isCorrect >= 4;
     },
     classifiers: [classifier2],
   };
 
-  const generateMedia = function (context: any) {
+  const generateMedia = function (context: object) {
     return context;
   };
 
