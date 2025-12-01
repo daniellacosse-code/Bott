@@ -75,6 +75,7 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
       continue;
     }
 
+    // No need to filter reactions, really.
     if (event.type === BottEventType.REACTION) {
       pointer++;
       continue;

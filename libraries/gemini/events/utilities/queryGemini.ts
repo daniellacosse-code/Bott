@@ -95,28 +95,32 @@ export const _transformBottEventToContent = (
   event: BottEvent,
   modelUserId: string,
 ): Content => {
-  // TODO: better typing
-  const eventToSerialize = structuredClone(event) as unknown as Record<
-    string,
-    unknown
-  >;
+  const { files: _files, parent, timestamp, ...rest } = event;
 
-  delete eventToSerialize.files;
+  let serializedParent;
+  if (parent) {
+    const {
+      files: _pFiles,
+      parent: _pParent,
+      timestamp: pTimestamp,
+      ...pRest
+    } = parent;
 
-  eventToSerialize.timestamp = _formatTimestampAsRelative(
-    event.timestamp ? event.timestamp : new Date(),
-  );
-
-  if (event.parent) {
-    const parent = eventToSerialize.parent as Record<string, unknown>;
-
-    delete parent.files;
-    delete parent.parent;
-
-    parent.timestamp = _formatTimestampAsRelative(
-      event.parent.timestamp ? event.parent.timestamp : new Date(),
-    );
+    serializedParent = {
+      ...structuredClone(pRest),
+      timestamp: _formatTimestampAsRelative(
+        pTimestamp ? pTimestamp : new Date(),
+      ),
+    };
   }
+
+  const eventToSerialize = {
+    ...structuredClone(rest),
+    timestamp: _formatTimestampAsRelative(
+      timestamp ? timestamp : new Date(),
+    ),
+    parent: serializedParent,
+  };
 
   const parts: Part[] = [{ text: JSON.stringify(eventToSerialize) }];
   const content: Content = {
