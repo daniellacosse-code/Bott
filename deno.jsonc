@@ -35,7 +35,7 @@
     "app:staging": "deno task build && podman run --rm --env-file .env.staging -p 8080:8080 bott",
     // Production: container for public deployment (TBA)
     "app:production": "deno task build && podman run --rm --env-file .env.production -p 8080:8080 bott",
-    // Local development without container (deprecated, prefer app:test)
+    // Direct Deno execution (no container) for faster iteration
     "start:dev": "deno run --allow-all --env-file=.env.test ./app/main.ts",
     "start:prod": "deno run --allow-all ./app/main.ts",
     // Test runner in container
