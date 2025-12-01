@@ -12,20 +12,23 @@
 /**
  * Runs the Bott application in a container with the specified environment.
  *
- * Usage: deno task runApp <environment>
+ * Usage: deno task runApp <environment> [--skip-build]
  * Example: deno task runApp test
+ * Example: deno task runApp test --skip-build
  *
  * This will:
- * 1. Build the container image
+ * 1. Build the container image (unless --skip-build is passed)
  * 2. Run it with .env.<environment> file
  * 3. Mount the local volume for the "test" environment
  */
 
-const envName = Deno.args[0];
+const skipBuild = Deno.args.includes("--skip-build");
+const envName = Deno.args.find((arg) => !arg.startsWith("--"));
 
 if (!envName) {
-  console.error("Usage: deno task runApp <environment>");
+  console.error("Usage: deno task runApp <environment> [--skip-build]");
   console.error("Example: deno task runApp test");
+  console.error("Example: deno task runApp test --skip-build");
   Deno.exit(1);
 }
 
@@ -44,18 +47,22 @@ try {
   Deno.exit(1);
 }
 
-// Build the container
-console.log("Building container...");
-const buildProcess = new Deno.Command("podman", {
-  args: ["build", "-t", "bott", "."],
-  stdout: "inherit",
-  stderr: "inherit",
-});
+// Build the container (unless --skip-build is passed)
+if (!skipBuild) {
+  console.log("Building container...");
+  const buildProcess = new Deno.Command("podman", {
+    args: ["build", "-t", "bott", "."],
+    stdout: "inherit",
+    stderr: "inherit",
+  });
 
-const buildResult = await buildProcess.output();
-if (!buildResult.success) {
-  console.error("Failed to build container");
-  Deno.exit(1);
+  const buildResult = await buildProcess.output();
+  if (!buildResult.success) {
+    console.error("Failed to build container");
+    Deno.exit(1);
+  }
+} else {
+  console.log("Skipping build...");
 }
 
 // Prepare run arguments
