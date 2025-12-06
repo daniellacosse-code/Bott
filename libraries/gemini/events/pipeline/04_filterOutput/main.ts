@@ -27,7 +27,7 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
     return context;
   }
 
-  const output = structuredClone(context.data.output);
+  const output = context.data.output;
   const outputReasons = context.settings.reasons.output;
   const outputRatingScales = [
     ...new Set(outputReasons.flatMap((reason) => reason.ratingScales ?? [])),

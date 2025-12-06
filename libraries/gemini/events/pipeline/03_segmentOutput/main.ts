@@ -26,7 +26,7 @@ export const segmentOutput: EventPipelineProcessor = async (context) => {
 
   log.debug(`Segmenting ${context.data.output.length} events...`);
 
-  const output = structuredClone(context.data.output);
+  const output = context.data.output;
   const segmentPromises: Promise<BottEvent[]>[] = [];
 
   let pointer = 0;
