@@ -60,7 +60,7 @@ export async function* generateEvents(
 
     const event = structuredClone(inputEvents[i]);
 
-    if (event.timestamp.getTime() < timeCutoff) {
+    if (event.createdAt.getTime() < timeCutoff) {
       break;
     }
 
@@ -108,6 +108,7 @@ export async function* generateEvents(
       input: prunedInput,
       output: [],
     },
+    evaluationState: new Map(),
     ...context,
   };
 
@@ -124,27 +125,27 @@ export async function* generateEvents(
   }
 
   try {
-    // Update the newly scored events
-    await addEventData(...pipelineContext.data.input.map((event) => ({
-      ...event,
-      details: {
-        ...event.details,
-        focus: undefined, // Avoid writing focus to the DB.
-      },
-    })));
+    const processingTime = new Date();
+
+    await addEventData(
+      ...pipelineContext.data.input.map((event) => ({
+        ...event,
+        lastProcessedAt: processingTime,
+      })),
+    );
   } catch (error) {
     log.warn(error);
   }
 
   for (const event of pipelineContext.data.output) {
-    if (event.details.output !== true) {
+    if (!pipelineContext.evaluationState.get(event)?.outputReasons?.length) {
       continue;
     }
 
     yield {
       ...event,
       id: crypto.randomUUID(),
-      timestamp: new Date(),
+      createdAt: new Date(),
       user: context.user,
       channel: context.channel,
       // Gemini does not return the full parent event

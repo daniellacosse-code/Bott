@@ -73,9 +73,7 @@ export const queryGemini = async <O>(
     model,
     contents: typeof input === "string"
       ? [input]
-      : input.map((event) =>
-        _transformBottEventToContent(event, context.user.id)
-      ),
+      : input.map((event) => _transformBottEventToContent(event, context)),
     config,
   });
 
@@ -84,8 +82,14 @@ export const queryGemini = async <O>(
     .map((part: Part) => (part as { text: string }).text)
     .join("") ?? "";
 
+  // Despite the schema, Gemini may still return a code block.
+  const cleanedResult = result.replace(/^```json\s*/i, "").replace(
+    /^```\s*/,
+    "",
+  ).replace(/```\s*$/, "");
+
   try {
-    return JSON.parse(result) as O;
+    return JSON.parse(cleanedResult) as O;
   } catch {
     return result as O;
   }
@@ -93,38 +97,46 @@ export const queryGemini = async <O>(
 
 export const _transformBottEventToContent = (
   event: BottEvent,
-  modelUserId: string,
+  context: EventPipelineContext,
 ): Content => {
-  const { files: _files, parent, timestamp, ...rest } = event;
+  const {
+    files: _files,
+    parent: _parent,
+    createdAt,
+    ...rest
+  } = structuredClone(event);
 
-  let serializedParent;
-  if (parent) {
-    const {
-      files: _pFiles,
-      parent: _pParent,
-      timestamp: pTimestamp,
-      ...pRest
-    } = parent;
+  let parent;
 
-    serializedParent = {
-      ...structuredClone(pRest),
-      timestamp: _formatTimestampAsRelative(
-        pTimestamp ? pTimestamp : new Date(),
-      ),
+  if (_parent) {
+    parent = {
+      ..._parent,
+      createdAt: _formatTimestampAsRelative(_parent.createdAt),
     };
+
+    delete parent.parent;
+    delete parent.files;
   }
 
+  const metadata = context.evaluationState.get(event);
+
   const eventToSerialize = {
-    ...structuredClone(rest),
-    timestamp: _formatTimestampAsRelative(
-      timestamp ? timestamp : new Date(),
-    ),
-    parent: serializedParent,
+    ...rest,
+    createdAt: _formatTimestampAsRelative(createdAt),
+    parent,
+    _pipelineEvaluationMetadata: {
+      focusReasons: metadata?.focusReasons?.map(({ name, instruction }) => ({
+        name,
+        instruction,
+      })),
+      outputReasons: metadata?.outputReasons?.map(({ name }) => name),
+      ratings: metadata?.ratings,
+    },
   };
 
   const parts: Part[] = [{ text: JSON.stringify(eventToSerialize) }];
   const content: Content = {
-    role: (event.user && event.user.id === modelUserId) ? "model" : "user",
+    role: (event.user && event.user.id === context.user.id) ? "model" : "user",
     parts,
   };
 
@@ -154,8 +166,12 @@ export const _transformBottEventToContent = (
  * @internal Exported for testing purposes only
  */
 export const _formatTimestampAsRelative = (
-  timestamp: Date | string,
-): string => {
+  timestamp: Date | string | undefined,
+): string | undefined => {
+  if (!timestamp) {
+    return undefined;
+  }
+
   const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
