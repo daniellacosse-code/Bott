@@ -43,35 +43,35 @@ A Discord bot, powered by Gemini. Currently in development: see the
 1. Open the project in VS Code or another IDE that supports devcontainers.
 2. When prompted, click "Reopen in Container" or run the "Dev Containers: Reopen
    in Container" command.
-3. Copy `.env.example` to `.env.development`:
+3. Copy `.env.example` to `.env.dev`:
 
 ```sh
-cp .env.example .env.development
+cp .env.example .env.dev
 ```
 
-4. Get your GCP information and add it to `.env.development`.
-5. Get your Discord information and add it to `.env.development`.
+4. Get your GCP information and add it to `.env.dev`.
+5. Get your Discord information and add it to `.env.dev`.
 6. The bot will automatically start via VS Code tasks. To run manually, use:
 
 ```sh
-deno run --allow-all --watch=. ./app/main.ts
+deno run --allow-all --env-file=.env.dev --watch=app/,libraries/,model/ ./app/main.ts
 ```
 
 ##### Option 2: Local Development
 
-1. Copy `.env.example` to `.env.development`:
+1. Copy `.env.example` to `.env.dev`:
 
 ```sh
-cp .env.example .env.development
+cp .env.example .env.dev
 ```
 
-2. Get your GCP information and add it to `.env.development`.
-3. Get your Discord information and add it to `.env.development`.
+2. Get your GCP information and add it to `.env.dev`.
+3. Get your Discord information and add it to `.env.dev`.
 4. Set up the environment with `deno task setup`.
 5. Start the bot with:
 
 ```sh
-deno run --allow-all --watch=. ./app/main.ts
+deno run --allow-all --env-file=.env.dev --watch=app/,libraries/,model/ ./app/main.ts
 ```
 
 ### Configuring Bott
