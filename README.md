@@ -38,16 +38,33 @@ A Discord bot, powered by Gemini. Currently in development: see the
 
 #### Instructions
 
-1. Copy `.env.example` to `.env.test`:
+##### Option 1: Using DevContainer (Recommended)
+
+1. Open the project in VS Code or another IDE that supports devcontainers.
+2. When prompted, click "Reopen in Container" or run the "Dev Containers: Reopen
+   in Container" command.
+3. Copy `.env.example` to `.env.development`:
 
 ```sh
-cp .env.example .env.test
+cp .env.example .env.development
 ```
 
-3. Get your GCP information and add it to `.env.test`.
-4. Get your Discord information and add it to `.env.test`.
-5. Set up the environment with `deno task setup`.
-6. Start the bot with `deno task runApp test`.
+4. Get your GCP information and add it to `.env.development`.
+5. Get your Discord information and add it to `.env.development`.
+6. Start the bot with `deno task start:dev`.
+
+##### Option 2: Local Development
+
+1. Copy `.env.example` to `.env.development`:
+
+```sh
+cp .env.example .env.development
+```
+
+2. Get your GCP information and add it to `.env.development`.
+3. Get your Discord information and add it to `.env.development`.
+4. Set up the environment with `deno task setup`.
+5. Start the bot with `deno task start:dev`.
 
 ### Configuring Bott
 
