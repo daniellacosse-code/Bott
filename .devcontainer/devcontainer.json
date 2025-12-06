@@ -1,0 +1,35 @@
+{
+  "name": "Bott Development Container",
+  "dockerFile": "Dockerfile",
+  "context": "..",
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "runArgs": [
+    "--name=bott_dev"
+  ],
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": {
+      "label": "Health Check",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "denoland.vscode-deno"
+      ],
+      "settings": {
+        "deno.enable": true,
+        "files.autoSave": "onFocusChange",
+        "files.refactoring.autoSave": true,
+        "[typescript]": {
+          "editor.defaultFormatter": "denoland.vscode-deno",
+          "editor.formatOnSave": true
+        }
+      }
+    }
+  },
+  "postCreateCommand": "deno --version",
+  "remoteUser": "root"
+}
