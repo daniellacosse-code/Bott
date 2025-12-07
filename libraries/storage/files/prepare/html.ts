@@ -25,7 +25,9 @@ const turndownService = new TurndownService({
   linkStyle: "inlined",
 });
 
-export const prepareHtmlAsMarkdown = async (data: Uint8Array) => {
+export const prepareHtmlAsMarkdown = async (
+  data: Uint8Array,
+): Promise<File> => {
   const htmlText = new TextDecoder().decode(data);
 
   const extracted = await extractFromHtml(htmlText, undefined, {
@@ -50,8 +52,9 @@ export const prepareHtmlAsMarkdown = async (data: Uint8Array) => {
       "\n\n...(truncated)";
   }
 
-  return {
-    data: new TextEncoder().encode(result),
-    type: BottAttachmentType.MD,
-  };
+  return new File(
+    [new TextEncoder().encode(result)],
+    "compressed.md",
+    { type: BottAttachmentType.MD },
+  );
 };

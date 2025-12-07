@@ -70,7 +70,7 @@ export async function* generateEvents(
         if (!attachment.compressed) continue;
 
         const newTotalTokens = resourceAccumulator.tokens +
-          attachment.compressed.data.byteLength;
+          attachment.compressed.size;
 
         if (newTotalTokens > INPUT_FILE_TOKEN_LIMIT) continue;
 

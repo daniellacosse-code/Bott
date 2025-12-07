@@ -9,12 +9,12 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottEvent, BottEventType, BottFile } from "@bott/model";
+import type { BottEvent, BottEventType } from "@bott/model";
 import { log } from "@bott/logger";
 
 import { commit } from "../commit.ts";
 import { sql } from "../sql.ts";
-import { resolveFile } from "../../files/resolve.ts";
+import { resolveAttachment } from "../../files/resolveAttachment.ts";
 
 export const getEvents = async (
   ...ids: string[]
@@ -27,7 +27,7 @@ export const getEvents = async (
         s.id as s_id, s.name as s_name, s.description as s_description, -- space
         u.id as u_id, u.name as u_name, -- user
         p.id as p_id, -- parent event
-        f.id as f_id, f.source_url as f_source_url -- file
+        f.id as f_id, f.is_compressed as f_is_compressed, f.type as f_type, f.source_url as f_source_url -- file
       from
         events e
       left join
@@ -50,6 +50,10 @@ export const getEvents = async (
   }
 
   const events = new Map<string, BottEvent>();
+  const fileRows = new Map<
+    string,
+    Map<boolean, { type: string; sourceUrl?: string }>
+  >();
 
   for (
     const {
@@ -61,26 +65,18 @@ export const getEvents = async (
       ...rowData
     } of result.reads
   ) {
-    let fileInRow: BottFile | undefined;
+    // Collect file rows first
     if (rowData.f_id) {
-      try {
-        fileInRow = await resolveFile({
-          id: rowData.f_id,
-          source: rowData.f_source_url
-            ? new URL(rowData.f_source_url)
-            : undefined,
-        });
-      } catch (e) {
-        log.warn(`Failed to resolve file [${rowData.f_id}]: ${e}`);
+      if (!fileRows.has(rowData.f_id)) {
+        fileRows.set(rowData.f_id, new Map());
       }
+      fileRows.get(rowData.f_id)!.set(rowData.f_is_compressed as boolean, {
+        type: rowData.f_type as string,
+        sourceUrl: rowData.f_source_url as string | undefined,
+      });
     }
 
     if (events.has(id)) {
-      if (fileInRow) {
-        events.get(id)!.files ??= [];
-        events.get(id)!.files!.push(fileInRow);
-      }
-
       continue;
     }
 
@@ -90,7 +86,7 @@ export const getEvents = async (
       details: JSON.parse(details),
       createdAt: new Date(createdAt),
       lastProcessedAt: lastProcessedAt ? new Date(lastProcessedAt) : undefined,
-      files: fileInRow ? [fileInRow] : undefined,
+      attachments: undefined,
     };
 
     if (rowData.c_id) {
@@ -113,11 +109,48 @@ export const getEvents = async (
       };
     }
 
-    if (rowData.p_id) {
-      [event.parent] = await getEvents(rowData.p_id);
+    events.set(id, event);
+  }
+
+  // Process attachments and attach to events
+  const processedAttachments = new Set<string>();
+
+  for (const { e_id: eventId, f_id: attachmentId } of result.reads) {
+    if (!attachmentId || processedAttachments.has(attachmentId)) {
+      continue;
     }
 
-    events.set(id, event);
+    processedAttachments.add(attachmentId);
+    const variants = fileRows.get(attachmentId)!;
+    const event = events.get(eventId)!;
+
+    // Get source URL from either variant (they should be the same)
+    const rawVariant = variants.get(false);
+    const compressedVariant = variants.get(true);
+    const sourceUrl = rawVariant?.sourceUrl ?? compressedVariant?.sourceUrl;
+
+    try {
+      const attachment = await resolveAttachment({
+        id: attachmentId,
+        source: sourceUrl ? new URL(sourceUrl) : new URL("data:,unknown"),
+        parent: event,
+      });
+
+      event.attachments ??= [];
+      event.attachments.push(attachment);
+    } catch (e) {
+      log.warn(`Failed to resolve file [${attachmentId}]: ${e}`);
+    }
+  }
+
+  // Handle parent events
+  for (const rowData of result.reads) {
+    if (rowData.p_id && events.has(rowData.e_id)) {
+      const event = events.get(rowData.e_id)!;
+      if (!event.parent) {
+        [event.parent] = await getEvents(rowData.p_id);
+      }
+    }
   }
 
   return [...events.values()];

@@ -58,8 +58,9 @@ export const generatePhotoData: BottAttachmentDataGenerator = async (
     throw new Error("No image bytes");
   }
 
-  return {
-    data: decodeBase64(imageData.image.imageBytes),
-    type: BottAttachmentType.PNG,
-  };
+  return new File(
+    [decodeBase64(imageData.image.imageBytes)],
+    "photo.png",
+    { type: BottAttachmentType.PNG },
+  );
 };

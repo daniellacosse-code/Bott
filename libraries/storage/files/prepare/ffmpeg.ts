@@ -21,7 +21,7 @@ const FFMPEG_TIMEOUT_MS = 5 * 60 * 1000;
 const _ffmpeg = async (
   args: string[],
   input: Uint8Array,
-): Promise<Uint8Array> => {
+): Promise<BlobPart> => {
   throwIfUnsafeFileSize(input);
 
   const tempInputFilePath = await Deno.makeTempFile({
@@ -88,7 +88,7 @@ const MAX_DIMENSION = 480;
 
 export const prepareStaticImageAsWebp = async (
   data: Uint8Array,
-) => {
+): Promise<File> => {
   const args = [
     "-y",
     "-i",
@@ -110,12 +110,16 @@ export const prepareStaticImageAsWebp = async (
     "webp", // Output format container
     "{{OUTPUT_FILE}}",
   ];
-  return { data: await _ffmpeg(args, data), type: BottAttachmentType.WEBP };
+  return new File(
+    [await _ffmpeg(args, data)],
+    "compressed.webp",
+    { type: BottAttachmentType.WEBP },
+  );
 };
 
 export const prepareAudioAsOpus = async (
   data: Uint8Array,
-) => {
+): Promise<File> => {
   const DURATION_SECONDS = 60;
 
   const args = [
@@ -139,12 +143,16 @@ export const prepareAudioAsOpus = async (
     "opus", // Output format
     "{{OUTPUT_FILE}}",
   ];
-  return { data: await _ffmpeg(args, data), type: BottAttachmentType.OPUS };
+  return new File(
+    [await _ffmpeg(args, data)],
+    "compressed.opus",
+    { type: BottAttachmentType.OPUS },
+  );
 };
 
 export const prepareDynamicImageAsMp4 = async (
   data: Uint8Array,
-) => {
+): Promise<File> => {
   const DURATION_SECONDS = 30;
   const FRAME_RATE = 15;
 
@@ -165,5 +173,9 @@ export const prepareDynamicImageAsMp4 = async (
     "{{OUTPUT_FILE}}",
   ];
 
-  return { data: await _ffmpeg(args, data), type: BottAttachmentType.MP4 };
+  return new File(
+    [await _ffmpeg(args, data)],
+    "compressed.mp4",
+    { type: BottAttachmentType.MP4 },
+  );
 };

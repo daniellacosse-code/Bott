@@ -136,12 +136,12 @@ Deno.test("Storage - prepareHtml", async () => {
   startStorage(tempDir);
 
   const inputData = new TextEncoder().encode(htmlInput);
-
-  const { data } = await prepareHtmlAsMarkdown(inputData);
-  const resultMarkdown = new TextDecoder().decode(data);
+  const result = await prepareHtmlAsMarkdown(inputData);
+  const data = new Uint8Array(await result.arrayBuffer());
+  const markdownContent = new TextDecoder().decode(data);
 
   assertEquals(
-    resultMarkdown,
+    markdownContent,
     expectedMarkdownOutput,
   );
 });

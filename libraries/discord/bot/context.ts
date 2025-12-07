@@ -68,9 +68,11 @@ export const callWithContext = <
           }
 
           files.push(
-            new AttachmentBuilder(Buffer.from(file.raw.data as Uint8Array), {
+            new AttachmentBuilder(Buffer.from(await file.raw.bytes()), {
               name: `${file.id}.${
-                BOTT_ATTACHMENT_TYPE_LOOKUP[file.raw.type].toLowerCase()
+                BOTT_ATTACHMENT_TYPE_LOOKUP[
+                  file.raw.type as keyof typeof BOTT_ATTACHMENT_TYPE_LOOKUP
+                ].toLowerCase()
               }`,
             }),
           );

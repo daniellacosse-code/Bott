@@ -71,9 +71,9 @@ export const queryGemini = async <O>(
 
   const response = await gemini.models.generateContent({
     model,
-    contents: typeof input === "string"
-      ? [input]
-      : input.map((event) => _transformBottEventToContent(event, context)),
+    contents: typeof input === "string" ? [input] : await Promise.all(
+      input.map((event) => _transformBottEventToContent(event, context)),
+    ),
     config,
   });
 
@@ -95,10 +95,10 @@ export const queryGemini = async <O>(
   }
 };
 
-export const _transformBottEventToContent = (
+export const _transformBottEventToContent = async (
   event: BottEvent,
   context: EventPipelineContext,
-): Content => {
+): Promise<Content> => {
   const {
     attachments: _attachments,
     parent: _parent,
@@ -151,7 +151,7 @@ export const _transformBottEventToContent = (
       parts.push({
         inlineData: {
           mimeType: attachment.compressed.type,
-          data: encodeBase64(attachment.compressed.data!),
+          data: encodeBase64(await attachment.compressed.bytes()),
         },
       });
     }

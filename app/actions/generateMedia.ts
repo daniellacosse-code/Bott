@@ -14,7 +14,6 @@ import {
   type BottActionCallEvent,
   BottActionOptionType,
   type BottActionResultEvent,
-  type BottAttachmentData,
   BottEventType,
 } from "@bott/model";
 import { createTask } from "@bott/task";
@@ -125,7 +124,7 @@ export const generateMedia: BottAction<
         taskManager.push(
           type,
           createTask(async (abortSignal: AbortSignal) => {
-            let attachmentData: BottAttachmentData | undefined;
+            let attachmentFile: File | undefined;
 
             try {
               const context = {
@@ -134,17 +133,17 @@ export const generateMedia: BottAction<
 
               switch (type) {
                 case GeneratedMediaType.PHOTO:
-                  attachmentData = await generatePhotoData(prompt, context);
+                  attachmentFile = await generatePhotoData(prompt, context);
                   break;
                 case GeneratedMediaType.MOVIE:
-                  attachmentData = await generateMovieData(prompt, context);
+                  attachmentFile = await generateMovieData(prompt, context);
                   break;
                 case GeneratedMediaType.SONG:
-                  attachmentData = await generateSongData(prompt, context);
+                  attachmentFile = await generateSongData(prompt, context);
                   break;
                 case GeneratedMediaType.ESSAY:
                 default:
-                  attachmentData = await generateEssayData(prompt, context);
+                  attachmentFile = await generateEssayData(prompt, context);
                   break;
               }
             } catch (error) {
@@ -156,7 +155,7 @@ export const generateMedia: BottAction<
             }
 
             // This shouldn't happen.
-            if (!attachmentData) {
+            if (!attachmentFile) {
               throw new Error("Failed to generate media");
             }
 
@@ -172,7 +171,7 @@ export const generateMedia: BottAction<
 
             resultEvent.attachments = [{
               id: crypto.randomUUID(),
-              raw: attachmentData,
+              raw: attachmentFile,
               parent: resultEvent,
             }];
 

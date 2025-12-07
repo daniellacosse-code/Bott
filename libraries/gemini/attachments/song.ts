@@ -56,10 +56,11 @@ export const generateSongData: BottAttachmentDataGenerator = async (
 
   const { predictions } = await response.json();
 
-  return {
-    data: decodeBase64(predictions[0].bytesBase64Encoded),
-    type: BottAttachmentType.WAV,
-  };
+  return new File(
+    [decodeBase64(predictions[0].bytesBase64Encoded)],
+    "song.wav",
+    { type: BottAttachmentType.WAV },
+  );
 };
 
 async function getAccessToken(): Promise<string> {

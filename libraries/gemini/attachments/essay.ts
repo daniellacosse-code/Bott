@@ -51,8 +51,11 @@ export const generateEssayData: BottAttachmentDataGenerator = async (
     throw new Error("No text in sanitized response");
   }
 
-  return {
-    data: new TextEncoder().encode(sanitizedResponse.text),
-    type: BottAttachmentType.TXT,
-  };
+  return new File(
+    [new TextEncoder().encode(sanitizedResponse.text)],
+    "essay.txt",
+    {
+      type: BottAttachmentType.TXT,
+    },
+  );
 };

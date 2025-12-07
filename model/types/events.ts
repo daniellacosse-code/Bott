@@ -29,26 +29,52 @@ export enum BottAttachmentType {
   WEBP = "image/webp",
 }
 
-/**
- * Defines the structure for file data, which can be either a direct `Uint8Array`
- * or a path to the file, along with its `BottAttachmentType`.
- */
-export type BottAttachmentData = {
-  data: Uint8Array;
-  type: BottAttachmentType;
+type BottEventAttachmentBase = {
+  id: string;
+  parent: BottEvent;
 };
 
-/**
- * Defines the structure for an attachment in Bott.
- * Represents a file attachment associated with an event.
- */
-export interface BottEventAttachment {
-  id: string;
-  source?: URL;
-  raw?: BottAttachmentData;
-  compressed?: BottAttachmentData;
-  parent: BottEvent;
-}
+// Source only - not yet fetched
+type BottEventAttachmentSource = BottEventAttachmentBase & {
+  source: URL;
+  raw?: never;
+  compressed?: never;
+};
+
+// Raw only - generated content without a source
+type BottEventAttachmentRawOnly = BottEventAttachmentBase & {
+  source?: never;
+  raw: File;
+  compressed?: never;
+};
+
+// Source + Raw - fetched from URL
+type BottEventAttachmentSourceRaw = BottEventAttachmentBase & {
+  source: URL;
+  raw: File;
+  compressed?: never;
+};
+
+// Raw + Compressed - generated content that's been compressed
+type BottEventAttachmentRawCompressed = BottEventAttachmentBase & {
+  source?: never;
+  raw: File;
+  compressed: File;
+};
+
+// Source + Raw + Compressed - fetched and compressed
+type BottEventAttachmentComplete = BottEventAttachmentBase & {
+  source: URL;
+  raw: File;
+  compressed: File;
+};
+
+export type BottEventAttachment =
+  | BottEventAttachmentSource
+  | BottEventAttachmentRawOnly
+  | BottEventAttachmentSourceRaw
+  | BottEventAttachmentRawCompressed
+  | BottEventAttachmentComplete;
 
 /**
  * Enumerates the different types of events that can occur in Bott.

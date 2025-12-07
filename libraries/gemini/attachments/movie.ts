@@ -69,10 +69,11 @@ export const generateMovieData: BottAttachmentDataGenerator = async (
     throw new Error("No video bytes");
   }
 
-  return {
-    type: BottAttachmentType.MP4,
-    data: decodeBase64(videoData.video.videoBytes),
-  };
+  return new File(
+    [decodeBase64(videoData.video.videoBytes)],
+    "movie.mp4",
+    { type: BottAttachmentType.MP4 },
+  );
 };
 
 function doVideoJob(

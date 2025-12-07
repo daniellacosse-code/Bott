@@ -43,8 +43,11 @@ create table if not exists events (
 );
 
 create table if not exists files (
-  id varchar(36) primary key not null,
+  id varchar(36) not null, -- unique by (id, is_compressed)
+  is_compressed boolean not null, -- true for compressed, false for raw
+  type varchar(64), -- mime type
   source_url text,
   parent_id varchar(36),
-  foreign key(parent_id) references events(id)
+  foreign key(parent_id) references events(id),
+  primary key (id, is_compressed)
 );

@@ -20,7 +20,7 @@ import { log } from "@bott/logger";
 
 import { sql } from "../sql.ts";
 import { commit, type TransactionResults } from "../commit.ts";
-import { resolveFile } from "../../files/resolve.ts";
+import { resolveAttachment } from "../../files/resolveAttachment.ts";
 
 const getAddChannelsSql = (
   ...channels: BottChannel[]
@@ -68,21 +68,50 @@ const getAddEventsSql = (...events: BottEvent[]) => {
   `;
 };
 
-const getAddFilesSql = (...files: BottEventAttachment[]) => {
-  if (!files.length) {
+const getAddFilesSql = (...attachments: BottEventAttachment[]) => {
+  if (!attachments.length) {
+    return;
+  }
+
+  const values: ReturnType<typeof sql>[] = [];
+  for (const attachment of attachments) {
+    if (attachment.raw) {
+      values.push(
+        sql`(${attachment.id}, false, ${attachment.raw.type}, ${
+          attachment.source?.toString() ?? null
+        }, ${attachment.parent.id})`,
+      );
+    }
+
+    if (attachment.compressed) {
+      values.push(
+        sql`(${attachment.id}, true, ${attachment.compressed.type}, ${
+          attachment.source?.toString() ?? null
+        }, ${attachment.parent.id})`,
+      );
+    }
+
+    if (!attachment.raw && !attachment.compressed) {
+      values.push(
+        sql`(${attachment.id}, false, ${null}, ${attachment.source.toString()}, ${attachment.parent.id})`,
+      );
+    }
+  }
+
+  if (!values.length) {
     return;
   }
 
   return sql`
   insert into files (
     id,
+    is_compressed,
+    type,
     source_url,
     parent_id
-  ) values ${
-    files.map((f) =>
-      sql`(${f.id}, ${f.source?.toString() ?? null}, ${f.parent.id})`
-    )
-  } on conflict(id) do update set
+  ) values ${values} 
+  on conflict(id, is_compressed) do update set
+    type = excluded.type,
     source_url = excluded.source_url,
     parent_id = excluded.parent_id
   `;
@@ -147,7 +176,7 @@ export const addEventData = async (
   const spaces = new Map<string, BottSpace>();
   const channels = new Map<string, BottChannel>();
   const users = new Map<string, BottUser>();
-  const files = new Map<string, BottEventAttachment>();
+  const attachments = new Map<string, BottEventAttachment>();
 
   for (const event of events.values()) {
     if (event.channel) {
@@ -162,10 +191,10 @@ export const addEventData = async (
     if (event.attachments) {
       for (const attachment of event.attachments) {
         try {
-          const resolvedFile = await resolveFile(attachment);
+          const resolvedAttachment = await resolveAttachment(attachment);
 
-          files.set(resolvedFile.id, {
-            ...resolvedFile,
+          attachments.set(resolvedAttachment.id, {
+            ...resolvedAttachment,
             parent: event,
           });
         } catch (e) {
@@ -182,7 +211,7 @@ export const addEventData = async (
     getAddEventsSql(
       ...topologicallySortEvents(...events.values()),
     ),
-    getAddFilesSql(...files.values()),
+    getAddFilesSql(...attachments.values()),
   );
 
   return results;
