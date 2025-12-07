@@ -17,7 +17,7 @@ import type {
   BottGlobalSettings,
   BottUser,
 } from "@bott/model";
-import { addEventData } from "@bott/storage";
+import { addEvents } from "@bott/storage";
 import { log } from "@bott/logger";
 
 import pipeline, { type EventPipelineContext } from "./pipeline/main.ts";
@@ -131,7 +131,7 @@ export async function* generateEvents(
   try {
     const processingTime = new Date();
 
-    await addEventData(
+    await addEvents(
       ...pipelineContext.data.input.map((event) => ({
         ...event,
         lastProcessedAt: processingTime,

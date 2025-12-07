@@ -42,13 +42,19 @@ create table if not exists events (
   foreign key(user_id) references users(id)
 );
 
-create table if not exists files (
-  id varchar(36) not null, -- unique by (id, is_compressed)
-  is_compressed boolean not null,
-  type varchar(64), -- mime type
-  disk_location text not null,
-  original_source text,
+create table if not exists attachments (
+  id varchar(36) not null primary key,
+  source_url text not null,
+  raw_file_id varchar(36),
+  compressed_file_id varchar(36),
   parent_id varchar(36),
   foreign key(parent_id) references events(id),
-  primary key (id, is_compressed)
+  foreign key(raw_file_id) references files(id),
+  foreign key(compressed_file_id) references files(id)
+);
+
+create table if not exists files (
+  id varchar(36) not null primary key,
+  type varchar(64), -- mime type
+  path text not null
 );

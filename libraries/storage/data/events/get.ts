@@ -10,11 +10,9 @@
  */
 
 import type { BottEvent, BottEventType } from "@bott/model";
-import { log } from "@bott/logger";
 
 import { commit } from "../commit.ts";
 import { sql } from "../sql.ts";
-import { resolveAttachment } from "../../files/resolveAttachment.ts";
 
 export const getEvents = async (
   ...ids: string[]
@@ -27,7 +25,9 @@ export const getEvents = async (
         s.id as s_id, s.name as s_name, s.description as s_description, -- space
         u.id as u_id, u.name as u_name, -- user
         p.id as p_id, -- parent event
-        f.id as f_id, f.is_compressed as f_is_compressed, f.type as f_type, f.disk_location as f_disk_location, f.original_source as f_original_source -- file
+        a.id as a_id, a.source_url as a_source_url, -- attachment
+        rf.id as rf_id, rf.type as rf_type, rf.path as rf_path, -- raw file
+        cf.id as cf_id, cf.type as cf_type, cf.path as cf_path -- compressed file
       from
         events e
       left join
@@ -39,7 +39,11 @@ export const getEvents = async (
       left join
         users u on e.user_id = u.id
       left join
-        files f on e.id = f.parent_id
+        attachments a on e.id = a.parent_id
+      left join
+        files rf on a.raw_file_id = rf.id
+      left join
+        files cf on a.compressed_file_id = cf.id
       where
         e.id in (${ids})
       order by e.created_at asc`,
@@ -50,13 +54,6 @@ export const getEvents = async (
   }
 
   const events = new Map<string, BottEvent>();
-  const fileRows = new Map<
-    string,
-    Map<
-      boolean,
-      { type: string; diskLocation?: string; originalSource?: string }
-    >
-  >();
 
   for (
     const {
@@ -68,18 +65,6 @@ export const getEvents = async (
       ...rowData
     } of result.reads
   ) {
-    // Collect file rows first
-    if (rowData.f_id) {
-      if (!fileRows.has(rowData.f_id)) {
-        fileRows.set(rowData.f_id, new Map());
-      }
-      fileRows.get(rowData.f_id)!.set(rowData.f_is_compressed as boolean, {
-        type: rowData.f_type as string,
-        diskLocation: rowData.f_disk_location as string | undefined,
-        originalSource: rowData.f_original_source as string | undefined,
-      });
-    }
-
     if (events.has(id)) {
       continue;
     }
@@ -116,46 +101,37 @@ export const getEvents = async (
     events.set(id, event);
   }
 
-  // Process attachments and attach to events
-  const processedAttachments = new Set<string>();
-
-  for (const { e_id: eventId, f_id: attachmentId } of result.reads) {
-    if (!attachmentId || processedAttachments.has(attachmentId)) {
+  // Handle attachments
+  for (const rowData of result.reads) {
+    if (!rowData.a_id || !events.has(rowData.e_id)) {
       continue;
     }
 
-    processedAttachments.add(attachmentId);
-    const variants = fileRows.get(attachmentId)!;
-    const event = events.get(eventId)!;
+    const event = events.get(rowData.e_id)!;
 
-    // Get metadata from variants
-    const rawVariant = variants.get(false);
-    const compressedVariant = variants.get(true);
-    const originalSource = rawVariant?.originalSource ??
-      compressedVariant?.originalSource;
-
-    try {
-      const attachment = await resolveAttachment({
-        id: attachmentId,
-        originalSource: originalSource ? new URL(originalSource) : undefined,
-        raw: rawVariant?.diskLocation
-          ? {
-            path: new URL(rawVariant.diskLocation),
-          }
-          : undefined,
-        compressed: compressedVariant?.diskLocation
-          ? {
-            path: new URL(compressedVariant.diskLocation),
-          }
-          : undefined,
-        parent: event,
-      });
-
-      event.attachments ??= [];
-      event.attachments.push(attachment);
-    } catch (e) {
-      log.warn(`Failed to resolve file [${attachmentId}]: ${e}`);
+    if (!event.attachments) {
+      event.attachments = [];
     }
+
+    event.attachments.push({
+      id: rowData.a_id,
+      originalSource: new URL(rowData.a_source_url),
+      raw: {
+        id: rowData.rf_id,
+        file: new File([Deno.readFileSync(rowData.rf_path)], rowData.rf_path, {
+          type: rowData.rf_type,
+        }),
+        path: rowData.rf_path,
+      },
+      compressed: {
+        id: rowData.cf_id,
+        file: new File([Deno.readFileSync(rowData.cf_path)], rowData.cf_path, {
+          type: rowData.cf_type,
+        }),
+        path: rowData.cf_path,
+      },
+      parent: event,
+    });
   }
 
   // Handle parent events

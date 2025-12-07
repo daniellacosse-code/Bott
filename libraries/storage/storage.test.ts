@@ -14,9 +14,9 @@ import { assertEquals, assertExists } from "@std/assert";
 import { BottEventType } from "@bott/model";
 import { log } from "@bott/logger";
 
-import { addEventData } from "./data/events/add.ts";
+import { addEvents } from "./data/events/add.ts";
 import { getEvents } from "./data/events/get.ts";
-import { prepareHtmlAsMarkdown } from "./files/prepare/html.ts";
+import { prepareHtmlAsMarkdown } from "./prepare/html.ts";
 import { startStorage } from "./start.ts";
 
 Deno.test("Storage - addEventsData, getEvents", async () => {
@@ -64,7 +64,7 @@ Deno.test("Storage - addEventsData, getEvents", async () => {
 
   log.debug("Adding events.");
 
-  addEventData(nancyGreeting, bobReply, nancyReaction);
+  addEvents(nancyGreeting, bobReply, nancyReaction);
 
   log.debug("Getting events.");
 
@@ -136,7 +136,10 @@ Deno.test("Storage - prepareHtml", async () => {
   startStorage(tempDir);
 
   const inputData = new TextEncoder().encode(htmlInput);
-  const result = await prepareHtmlAsMarkdown(inputData);
+  const result = await prepareHtmlAsMarkdown(
+    new File([inputData], "test.html"),
+    "1",
+  );
   const data = new Uint8Array(await result.arrayBuffer());
   const markdownContent = new TextDecoder().decode(data);
 

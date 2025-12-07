@@ -17,6 +17,7 @@ import {
   BottEventType,
 } from "@bott/model";
 import { createTask } from "@bott/task";
+import { prepareAttachmentFromFile } from "@bott/storage";
 import {
   generateEssayData,
   generateMovieData,
@@ -169,13 +170,9 @@ export const generateMedia: BottAction<
               parent: requestEvent,
             };
 
-            resultEvent.attachments = [{
-              id: crypto.randomUUID(),
-              raw: {
-                file: attachmentFile,
-              },
-              parent: resultEvent,
-            }];
+            resultEvent.attachments = [
+              await prepareAttachmentFromFile(attachmentFile, resultEvent),
+            ];
 
             resolve(resultEvent);
           }),

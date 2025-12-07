@@ -13,50 +13,6 @@ import type { BottChannel, BottUser } from "./entities.ts";
 import type { AnyShape } from "./utility.ts";
 
 /**
- * Enumerates the different types of files that can be associated with a BottEvent.
- */
-export enum BottAttachmentType {
-  GIF = "image/gif",
-  HTML = "text/html",
-  JPEG = "image/jpeg",
-  MD = "text/markdown",
-  MP3 = "audio/mpeg",
-  MP4 = "video/mp4",
-  OPUS = "audio/opus",
-  PNG = "image/png",
-  TXT = "text/plain",
-  WAV = "audio/x-wav",
-  WEBP = "image/webp",
-}
-
-// Unresolved attachment - metadata only, files not loaded
-export type UnresolvedBottEventAttachment = {
-  id: string;
-  parent: BottEvent;
-  originalSource?: URL; // Original remote source (e.g., Discord CDN)
-  raw?: {
-    path?: URL; // file:// URL to disk location
-  };
-  compressed?: {
-    path?: URL; // file:// URL to disk location
-  };
-};
-
-// Resolved attachment - files loaded in memory
-export type BottEventAttachment = {
-  id: string;
-  parent: BottEvent;
-  originalSource?: URL; // Original remote source (e.g., Discord CDN)
-  raw?: {
-    path?: URL; // file:// URL to disk location
-    file: File; // Loaded file data
-  };
-  compressed?: {
-    path?: URL; // file:// URL to disk location
-    file: File; // Loaded file data
-  };
-};
-/**
  * Enumerates the different types of events that can occur in Bott.
  */
 export enum BottEventType {
@@ -104,4 +60,40 @@ export type BottActionCallEvent<O extends AnyShape = AnyShape> = BottEvent & {
 export type BottActionResultEvent<D extends AnyShape = AnyShape> = BottEvent & {
   type: BottEventType.ACTION_RESULT;
   details: D;
+};
+
+/**
+ * Enumerates the different types of files that can be associated with a BottEvent.
+ */
+export enum BottAttachmentType {
+  GIF = "image/gif",
+  HTML = "text/html",
+  JPEG = "image/jpeg",
+  MD = "text/markdown",
+  MP3 = "audio/mpeg",
+  MP4 = "video/mp4",
+  OPUS = "audio/opus",
+  PNG = "image/png",
+  TXT = "text/plain",
+  WAV = "audio/x-wav",
+  WEBP = "image/webp",
+}
+
+/**
+ * Represents an attachment associated with a BottEvent.
+ */
+export type BottEventAttachment = {
+  id: string;
+  parent: BottEvent;
+  originalSource: URL;
+  raw: {
+    id: string;
+    path: string;
+    file: File;
+  };
+  compressed: {
+    id: string;
+    path: string;
+    file: File;
+  };
 };

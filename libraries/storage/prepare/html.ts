@@ -13,7 +13,7 @@ import { extractFromHtml } from "@extractus/article-extractor";
 import TurndownService from "turndown";
 import { BottAttachmentType } from "@bott/model";
 
-import { STORAGE_FILE_SIZE_CAUTION } from "../../start.ts";
+import { STORAGE_FILE_SIZE_CAUTION } from "../start.ts";
 
 const turndownService = new TurndownService({
   headingStyle: "atx", // Use # for headings.
@@ -26,9 +26,10 @@ const turndownService = new TurndownService({
 });
 
 export const prepareHtmlAsMarkdown = async (
-  data: Uint8Array,
+  file: File,
+  attachmentId: string,
 ): Promise<File> => {
-  const htmlText = new TextDecoder().decode(data);
+  const htmlText = new TextDecoder().decode(await file.arrayBuffer());
 
   const extracted = await extractFromHtml(htmlText, undefined, {
     contentLengthThreshold: 0,
@@ -54,7 +55,7 @@ export const prepareHtmlAsMarkdown = async (
 
   return new File(
     [new TextEncoder().encode(result)],
-    "compressed.md",
+    `${attachmentId}.compressed.md`,
     { type: BottAttachmentType.MD },
   );
 };

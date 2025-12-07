@@ -18,7 +18,7 @@ import {
   BottEventType,
 } from "@bott/model";
 import {
-  addEventData,
+  addEvents,
   getEventIdsForChannel,
   getEvents,
   startStorage,
@@ -74,7 +74,7 @@ startDiscordBot({
       return;
     }
 
-    const result = addEventData(event);
+    const result = addEvents(event);
 
     if ("error" in result) {
       log.error("Failed to add event to database:", result);
@@ -181,7 +181,7 @@ startDiscordBot({
                   });
 
                   // Also store the "response" event.
-                  addEventData(responseEvent);
+                  addEvents(responseEvent);
                 } catch (error) {
                   log.warn("Failed to generate media:", error);
 
