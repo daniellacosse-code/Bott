@@ -62,19 +62,25 @@ export const callWithContext = <
       send: async (event: BottEvent) => {
         const files = [];
 
-        for (const file of event.attachments ?? []) {
-          if (!file.raw) {
+        for (const attachment of event.attachments ?? []) {
+          if (!attachment.raw?.file) {
             continue;
           }
 
           files.push(
-            new AttachmentBuilder(Buffer.from(await file.raw.bytes()), {
-              name: `${file.id}.${
-                BOTT_ATTACHMENT_TYPE_LOOKUP[
-                  file.raw.type as keyof typeof BOTT_ATTACHMENT_TYPE_LOOKUP
-                ].toLowerCase()
-              }`,
-            }),
+            new AttachmentBuilder(
+              Buffer.from(
+                new Uint8Array(await attachment.raw.file.arrayBuffer()),
+              ),
+              {
+                name: `${attachment.id}.${
+                  BOTT_ATTACHMENT_TYPE_LOOKUP[
+                    attachment.raw.file
+                      .type as keyof typeof BOTT_ATTACHMENT_TYPE_LOOKUP
+                  ].toLowerCase()
+                }`,
+              },
+            ),
           );
         }
 

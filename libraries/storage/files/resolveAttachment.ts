@@ -15,6 +15,7 @@ import {
   BOTT_ATTACHMENT_TYPE_LOOKUP,
   BottAttachmentType,
   type BottEventAttachment,
+  type UnresolvedBottEventAttachment,
 } from "@bott/model";
 import { throwIfUnsafeFileSize, throwIfUnsafeUrl } from "../validation.ts";
 import { log } from "@bott/logger";
@@ -32,127 +33,116 @@ const FETCH_TIMEOUT_MS = 30 * 1000;
 const MAX_TXT_WORDS = 600;
 
 /**
- * Fully resolves a `BottEventAttachment` object by ensuring its `raw` and `compressed` data are available.
- * If `raw` data is missing, it attempts to fetch it from the `source` URL.
- * If `compressed` data is missing, it generates it from the `raw` data based on the file type.
- * @param attachment `file` to be resolved.
- * @returns `BottEventAttachment` with its `raw` and `compressed` data populated.
+ * Fully resolves an attachment by loading file data from disk or remote sources.
+ * @param attachment Unresolved attachment with metadata
+ * @returns Fully resolved attachment with File objects loaded
  */
 export const resolveAttachment = async (
-  attachment: BottEventAttachment,
+  attachment: UnresolvedBottEventAttachment,
 ): Promise<BottEventAttachment> => {
   const fileRoot = join(STORAGE_FILE_ROOT, attachment.id);
 
   Deno.mkdirSync(fileRoot, { recursive: true });
 
-  let rawFilePath, compressedFilePath;
-  for (const diskFile of Deno.readDirSync(fileRoot)) {
-    if (diskFile.name.startsWith("raw.")) {
-      rawFilePath = join(fileRoot, diskFile.name);
-    } else if (diskFile.name.startsWith("compressed.")) {
-      compressedFilePath = join(fileRoot, diskFile.name);
+  // Load raw file
+  let rawFile: File | undefined;
+  const rawPath = attachment.raw?.path ?? attachment.originalSource;
+
+  if (rawPath) {
+    if (rawPath.protocol === "file:") {
+      // Load from disk
+      const diskPath = rawPath.pathname;
+      try {
+        const fileExtension = diskPath.split(".").pop();
+        rawFile = new File(
+          [Deno.readFileSync(diskPath)],
+          `raw.${fileExtension}`,
+          {
+            type: BottAttachmentType[
+              fileExtension?.toUpperCase() as keyof typeof BottAttachmentType
+            ],
+          },
+        );
+      } catch (e) {
+        log.warn(`Failed to read raw file from ${diskPath}: ${e}`);
+      }
+    } else {
+      // Fetch from remote URL
+      throwIfUnsafeUrl(rawPath);
+
+      log.debug(`Fetching raw file from source URL: ${rawPath}`);
+
+      const response = await fetch(rawPath, {
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        redirect: "follow",
+        headers: {
+          "User-Agent": "Bott",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = new Uint8Array(await response.arrayBuffer());
+
+      throwIfUnsafeFileSize(data);
+
+      const type = response.headers.get("content-type")?.split(";")[0].trim() ??
+        "";
+
+      if (
+        !Object.values(BottAttachmentType).includes(type as BottAttachmentType)
+      ) {
+        throw new Error(`Unsupported content type: ${type}`);
+      }
+
+      rawFile = new File([data], `raw.${type.split("/")[1]}`, { type });
     }
   }
 
-  let rawFile: File | undefined = attachment.raw;
+  // Save raw file to disk if not already there
+  if (rawFile && !attachment.raw?.path) {
+    const extension = BOTT_ATTACHMENT_TYPE_LOOKUP[
+      rawFile.type as BottAttachmentType
+    ].toLowerCase();
+    const rawDiskPath = join(fileRoot, `raw.${extension}`);
 
-  if (rawFilePath && !rawFile) {
-    const rawFileExtension = rawFilePath.split(".").pop();
-
-    rawFile = new File(
-      [Deno.readFileSync(rawFilePath)],
-      `raw.${rawFileExtension}`,
-      {
-        type: BottAttachmentType[
-          rawFileExtension?.toUpperCase() as keyof typeof BottAttachmentType
-        ],
-      },
-    );
-  }
-
-  if (!rawFile) {
-    if (!attachment.source) {
-      throw new Error(
-        "File source URL is required when raw data is missing.",
-      );
-    }
-
-    throwIfUnsafeUrl(attachment.source);
-
-    log.debug(
-      `Fetching raw file from source URL: ${attachment.source}`,
-    );
-
-    const response = await fetch(attachment.source, {
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      redirect: "follow",
-      headers: {
-        "User-Agent": "Bott",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = new Uint8Array(await response.arrayBuffer());
-
-    throwIfUnsafeFileSize(data);
-
-    const type = response.headers.get("content-type")?.split(";")[0].trim() ??
-      "";
-
-    if (
-      !Object.values(BottAttachmentType).includes(type as BottAttachmentType)
-    ) {
-      throw new Error(`Unsupported content type: ${type}`);
-    }
-
-    rawFile = new File([data], `raw.${type.split("/")[1]}`, { type });
-  }
-
-  if (!rawFilePath && rawFile) {
     log.debug(
       `Writing raw file to disk: ${attachment.id}, type: ${rawFile.type}`,
     );
 
     Deno.writeFileSync(
-      join(
-        fileRoot,
-        `raw.${
-          BOTT_ATTACHMENT_TYPE_LOOKUP[
-            rawFile.type as BottAttachmentType
-          ].toLowerCase()
-        }`,
-      ),
+      rawDiskPath,
       new Uint8Array(await rawFile.arrayBuffer()),
     );
   }
 
-  let compressedFile: File | undefined = attachment.compressed;
+  // Load compressed file
+  let compressedFile: File | undefined;
+  const compressedPath = attachment.compressed?.path;
 
-  if (compressedFilePath && !compressedFile) {
-    const compressedFileExtension = compressedFilePath.split(".").pop();
-
-    compressedFile = new File(
-      [Deno.readFileSync(compressedFilePath)],
-      `compressed.${compressedFileExtension}`,
-      {
-        type: BottAttachmentType[
-          compressedFileExtension
-            ?.toUpperCase() as keyof typeof BottAttachmentType
-        ],
-      },
-    );
+  if (compressedPath && compressedPath.protocol === "file:") {
+    // Load from disk
+    const diskPath = compressedPath.pathname;
+    try {
+      const fileExtension = diskPath.split(".").pop();
+      compressedFile = new File(
+        [Deno.readFileSync(diskPath)],
+        `compressed.${fileExtension}`,
+        {
+          type: BottAttachmentType[
+            fileExtension?.toUpperCase() as keyof typeof BottAttachmentType
+          ],
+        },
+      );
+    } catch (e) {
+      log.warn(`Failed to read compressed file from ${diskPath}: ${e}`);
+    }
   }
 
-  if (!compressedFile) {
-    if (!rawFile) {
-      throw new Error(
-        "File raw data is required when compressed data is missing.",
-      );
-    }
-
+  // Generate compressed from raw if needed
+  if (!compressedFile && rawFile) {
     const rawData = new Uint8Array(await rawFile.arrayBuffer());
     const rawType = rawFile.type as BottAttachmentType;
 
@@ -195,63 +185,47 @@ export const resolveAttachment = async (
     }
   }
 
-  if (!compressedFilePath && compressedFile) {
+  // Save compressed file to disk if not already there
+  if (compressedFile && !attachment.compressed?.path) {
+    const extension = BOTT_ATTACHMENT_TYPE_LOOKUP[
+      compressedFile.type as BottAttachmentType
+    ].toLowerCase();
+    const compressedDiskPath = join(fileRoot, `compressed.${extension}`);
+
     log.debug(
       `Writing compressed file to disk: ${attachment.id}, type: ${compressedFile.type}`,
     );
 
     Deno.writeFileSync(
-      join(
-        fileRoot,
-        `compressed.${
-          BOTT_ATTACHMENT_TYPE_LOOKUP[
-            compressedFile.type as BottAttachmentType
-          ]
-            .toLowerCase()
-        }`,
-      ),
+      compressedDiskPath,
       new Uint8Array(await compressedFile.arrayBuffer()),
     );
   }
 
-  // Return properly typed variant based on what we have
-  if (attachment.source) {
-    if (compressedFile) {
-      return {
-        id: attachment.id,
-        source: attachment.source,
-        raw: rawFile,
-        compressed: compressedFile,
-        parent: attachment.parent,
-      };
-    } else if (rawFile) {
-      return {
-        id: attachment.id,
-        source: attachment.source,
-        raw: rawFile,
-        parent: attachment.parent,
-      };
-    } else {
-      return attachment;
-    }
-  } else {
-    if (compressedFile) {
-      return {
-        id: attachment.id,
-        raw: rawFile,
-        compressed: compressedFile,
-        parent: attachment.parent,
-      };
-    } else if (rawFile) {
-      return {
-        id: attachment.id,
-        raw: rawFile,
-        parent: attachment.parent,
-      };
-    } else {
-      throw new Error(
-        "Attachment must have either source URL or raw file data",
-      );
-    }
+  // Build resolved attachment
+  const resolved: BottEventAttachment = {
+    id: attachment.id,
+    parent: attachment.parent,
+    originalSource: attachment.originalSource,
+  };
+
+  if (rawFile) {
+    resolved.raw = {
+      path: attachment.raw?.path ?? (
+        attachment.originalSource ? undefined : 
+        new URL(`file://${join(fileRoot, `raw.${BOTT_ATTACHMENT_TYPE_LOOKUP[rawFile.type as BottAttachmentType].toLowerCase()}`)}`)
+      ),
+      file: rawFile,
+    };
   }
+
+  if (compressedFile) {
+    resolved.compressed = {
+      path: attachment.compressed?.path ?? 
+        new URL(`file://${join(fileRoot, `compressed.${BOTT_ATTACHMENT_TYPE_LOOKUP[compressedFile.type as BottAttachmentType].toLowerCase()}`)}`),
+      file: compressedFile,
+    };
+  }
+
+  return resolved;
 };

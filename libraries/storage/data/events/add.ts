@@ -75,25 +75,33 @@ const getAddFilesSql = (...attachments: BottEventAttachment[]) => {
 
   const values: ReturnType<typeof sql>[] = [];
   for (const attachment of attachments) {
-    if (attachment.raw) {
+    if (attachment.raw?.path) {
       values.push(
-        sql`(${attachment.id}, false, ${attachment.raw.type}, ${
-          attachment.source?.toString() ?? null
+        sql`(${attachment.id}, false, ${
+          attachment.raw.file?.type ?? null
+        }, ${attachment.raw.path.toString()}, ${
+          attachment.originalSource?.toString() ?? null
         }, ${attachment.parent.id})`,
       );
     }
 
-    if (attachment.compressed) {
+    if (attachment.compressed?.path) {
       values.push(
-        sql`(${attachment.id}, true, ${attachment.compressed.type}, ${
-          attachment.source?.toString() ?? null
+        sql`(${attachment.id}, true, ${
+          attachment.compressed.file?.type ?? null
+        }, ${attachment.compressed.path.toString()}, ${
+          attachment.originalSource?.toString() ?? null
         }, ${attachment.parent.id})`,
       );
     }
 
-    if (!attachment.raw && !attachment.compressed) {
+    if (
+      !attachment.raw?.path && !attachment.compressed?.path &&
+      attachment.originalSource
+    ) {
+      // Just originalSource, no files resolved yet
       values.push(
-        sql`(${attachment.id}, false, ${null}, ${attachment.source.toString()}, ${attachment.parent.id})`,
+        sql`(${attachment.id}, false, ${null}, ${null}, ${attachment.originalSource.toString()}, ${attachment.parent.id})`,
       );
     }
   }
@@ -103,17 +111,10 @@ const getAddFilesSql = (...attachments: BottEventAttachment[]) => {
   }
 
   return sql`
-  insert into files (
-    id,
-    is_compressed,
-    type,
-    source_url,
-    parent_id
-  ) values ${values} 
-  on conflict(id, is_compressed) do update set
-    type = excluded.type,
-    source_url = excluded.source_url,
-    parent_id = excluded.parent_id
+    insert into files (id, is_compressed, type, disk_location, original_source, parent_id)
+    values ${values}
+    on conflict (id, is_compressed)
+    do update set type = excluded.type, disk_location = excluded.disk_location, original_source = excluded.original_source, parent_id = excluded.parent_id
   `;
 };
 

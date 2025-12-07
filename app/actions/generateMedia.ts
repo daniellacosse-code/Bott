@@ -171,7 +171,9 @@ export const generateMedia: BottAction<
 
             resultEvent.attachments = [{
               id: crypto.randomUUID(),
-              raw: attachmentFile,
+              raw: {
+                file: attachmentFile,
+              },
               parent: resultEvent,
             }];
 

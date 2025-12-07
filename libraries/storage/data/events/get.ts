@@ -27,7 +27,7 @@ export const getEvents = async (
         s.id as s_id, s.name as s_name, s.description as s_description, -- space
         u.id as u_id, u.name as u_name, -- user
         p.id as p_id, -- parent event
-        f.id as f_id, f.is_compressed as f_is_compressed, f.type as f_type, f.source_url as f_source_url -- file
+        f.id as f_id, f.is_compressed as f_is_compressed, f.type as f_type, f.disk_location as f_disk_location, f.original_source as f_original_source -- file
       from
         events e
       left join
@@ -52,7 +52,10 @@ export const getEvents = async (
   const events = new Map<string, BottEvent>();
   const fileRows = new Map<
     string,
-    Map<boolean, { type: string; sourceUrl?: string }>
+    Map<
+      boolean,
+      { type: string; diskLocation?: string; originalSource?: string }
+    >
   >();
 
   for (
@@ -72,7 +75,8 @@ export const getEvents = async (
       }
       fileRows.get(rowData.f_id)!.set(rowData.f_is_compressed as boolean, {
         type: rowData.f_type as string,
-        sourceUrl: rowData.f_source_url as string | undefined,
+        diskLocation: rowData.f_disk_location as string | undefined,
+        originalSource: rowData.f_original_source as string | undefined,
       });
     }
 
@@ -124,15 +128,26 @@ export const getEvents = async (
     const variants = fileRows.get(attachmentId)!;
     const event = events.get(eventId)!;
 
-    // Get source URL from either variant (they should be the same)
+    // Get metadata from variants
     const rawVariant = variants.get(false);
     const compressedVariant = variants.get(true);
-    const sourceUrl = rawVariant?.sourceUrl ?? compressedVariant?.sourceUrl;
+    const originalSource = rawVariant?.originalSource ??
+      compressedVariant?.originalSource;
 
     try {
       const attachment = await resolveAttachment({
         id: attachmentId,
-        source: sourceUrl ? new URL(sourceUrl) : new URL("data:,unknown"),
+        originalSource: originalSource ? new URL(originalSource) : undefined,
+        raw: rawVariant?.diskLocation
+          ? {
+            path: new URL(rawVariant.diskLocation),
+          }
+          : undefined,
+        compressed: compressedVariant?.diskLocation
+          ? {
+            path: new URL(compressedVariant.diskLocation),
+          }
+          : undefined,
         parent: event,
       });
 

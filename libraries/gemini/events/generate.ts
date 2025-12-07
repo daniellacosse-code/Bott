@@ -67,23 +67,25 @@ export async function* generateEvents(
     if (event.attachments) {
       const attachmentsToKeep = [];
       for (const attachment of event.attachments) {
-        if (!attachment.compressed) continue;
+        if (!attachment.compressed?.file) continue;
 
         const newTotalTokens = resourceAccumulator.tokens +
-          attachment.compressed.size;
+          attachment.compressed.file.size;
 
         if (newTotalTokens > INPUT_FILE_TOKEN_LIMIT) continue;
 
-        const isAudio = attachment.compressed.type === BottAttachmentType.MP3 ||
-          attachment.compressed.type === BottAttachmentType.OPUS ||
-          attachment.compressed.type === BottAttachmentType.WAV;
+        const isAudio =
+          attachment.compressed.file.type === BottAttachmentType.MP3 ||
+          attachment.compressed.file.type === BottAttachmentType.OPUS ||
+          attachment.compressed.file.type === BottAttachmentType.WAV;
 
         if (
           isAudio &&
           resourceAccumulator.audioFiles >= INPUT_FILE_AUDIO_COUNT_LIMIT
         ) continue;
 
-        const isVideo = attachment.compressed.type === BottAttachmentType.MP4;
+        const isVideo =
+          attachment.compressed.file.type === BottAttachmentType.MP4;
 
         if (
           isVideo &&

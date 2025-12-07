@@ -144,14 +144,16 @@ export const _transformBottEventToContent = async (
     parts.push({ text: "--- Attached Files ---" });
 
     for (const attachment of event.attachments) {
-      if (!attachment.compressed) {
+      if (!attachment.compressed?.file) {
         continue;
       }
 
       parts.push({
         inlineData: {
-          mimeType: attachment.compressed.type,
-          data: encodeBase64(await attachment.compressed.bytes()),
+          mimeType: attachment.compressed.file.type,
+          data: encodeBase64(
+            new Uint8Array(await attachment.compressed.file.arrayBuffer()),
+          ),
         },
       });
     }

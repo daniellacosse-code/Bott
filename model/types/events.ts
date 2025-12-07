@@ -29,53 +29,33 @@ export enum BottAttachmentType {
   WEBP = "image/webp",
 }
 
-type BottEventAttachmentBase = {
+// Unresolved attachment - metadata only, files not loaded
+export type UnresolvedBottEventAttachment = {
   id: string;
   parent: BottEvent;
+  originalSource?: URL; // Original remote source (e.g., Discord CDN)
+  raw?: {
+    path?: URL; // file:// URL to disk location
+  };
+  compressed?: {
+    path?: URL; // file:// URL to disk location
+  };
 };
 
-// Source only - not yet fetched
-type BottEventAttachmentSource = BottEventAttachmentBase & {
-  source: URL;
-  raw?: never;
-  compressed?: never;
+// Resolved attachment - files loaded in memory
+export type BottEventAttachment = {
+  id: string;
+  parent: BottEvent;
+  originalSource?: URL; // Original remote source (e.g., Discord CDN)
+  raw?: {
+    path?: URL; // file:// URL to disk location
+    file: File; // Loaded file data
+  };
+  compressed?: {
+    path?: URL; // file:// URL to disk location
+    file: File; // Loaded file data
+  };
 };
-
-// Raw only - generated content without a source
-type BottEventAttachmentRawOnly = BottEventAttachmentBase & {
-  source?: never;
-  raw: File;
-  compressed?: never;
-};
-
-// Source + Raw - fetched from URL
-type BottEventAttachmentSourceRaw = BottEventAttachmentBase & {
-  source: URL;
-  raw: File;
-  compressed?: never;
-};
-
-// Raw + Compressed - generated content that's been compressed
-type BottEventAttachmentRawCompressed = BottEventAttachmentBase & {
-  source?: never;
-  raw: File;
-  compressed: File;
-};
-
-// Source + Raw + Compressed - fetched and compressed
-type BottEventAttachmentComplete = BottEventAttachmentBase & {
-  source: URL;
-  raw: File;
-  compressed: File;
-};
-
-export type BottEventAttachment =
-  | BottEventAttachmentSource
-  | BottEventAttachmentRawOnly
-  | BottEventAttachmentSourceRaw
-  | BottEventAttachmentRawCompressed
-  | BottEventAttachmentComplete;
-
 /**
  * Enumerates the different types of events that can occur in Bott.
  */
