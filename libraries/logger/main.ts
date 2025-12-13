@@ -50,6 +50,11 @@ class TestHandler extends BaseHandler {
 // Using "NOTSET" level (lowest) since filtering is done in wrapper, not at handler level
 export const testHandler: TestHandler = new TestHandler("NOTSET");
 
+// Helper function for tests to add log topics dynamically
+export function addLogTopic(topic: string): void {
+  allowedTopics.add(topic.toLowerCase().trim());
+}
+
 // Setup logger - allow all levels at handler/logger level since filtering is done in wrapper
 try {
   setup({
