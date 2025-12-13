@@ -2,31 +2,23 @@
 
 Thinking about contributing to Bott? There are a number of ways you can help!
 
-### Report Unexpected Behavior
+## Reporting Issues
+
+### Unexpected Behavior
 
 If you find a bug, please open an issue! Include as much detail as possible in
 the form. Screenshots, logs, and video captures are super helpful!
 
-> [!WARNING] <ins>**Security Vulnerabilities**</ins> are different. Please see
+> [!WARNING]
+> **Security Vulnerabilities** are different. Please see
 > [./SECURITY.md](./SECURITY.md).
 
-### Request Features
+### Feature Requests
 
 If you have an idea for a new feature or an improvement to an existing one,
 please open an issue to discuss it!
 
-### Submit Pull Requests
-
-There are numerous issues tracked in the
-[issues tab](https://github.com/daniellacosse-code/Bott/issues) that need work!
-
-In order to submit a pull request, you will need to sign the
-[**Contributor License Agreement (CLA)**](./CONTRIBUTOR_AGREEMENT.md). By
-signing a CLA, you (or your employer) grant us the rights necessary to use and
-distribute your contributions under our [dual-licensing model](./LICENSE). This
-helps protect both you as a contributor and the project.
-
-## Development
+## Submitting Code
 
 ### Getting started
 
@@ -51,11 +43,16 @@ cp .env.example .env.test
 5. Set up the environment with `deno task setup`.
 6. Start the bot with `deno task runApp test`.
 
-### Configuring Bott
+### Pull Requests
 
-Bott is configured via a series of environment variables. For a full list,
-descriptions, and default values, please refer to the
-[constants.ts](./constants.ts) file.
+There are numerous issues tracked in the
+[issues tab](https://github.com/daniellacosse-code/Bott/issues) that need work!
+
+In order to submit a pull request, you will need to sign the
+[**Contributor License Agreement (CLA)**](./CONTRIBUTOR_AGREEMENT.md). By
+signing a CLA, you (or your employer) grant us the rights necessary to use and
+distribute your contributions under our [dual-licensing model](./LICENSE). This
+helps protect both you as a contributor and the project.
 
 ### Deploying Bott
 

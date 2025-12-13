@@ -23,8 +23,8 @@ An autonomous groupchat agent.
   [`Identity`](./app/defaultGlobalSettings/identity.ts) and
   [`Reasons`](./app/defaultGlobalSettings/reasons.ts) to determine when to
   engage with server members.
-- They view and can discuss most types of media posted in chat. (See the
-  [Supported Attachment Types](./models/types/events.ts))
+- They view and can discuss most types of media posted in chat. _(See:
+  [Supported Attachment Types](./model/types/events.ts))_
 - They asynchronously perform tasks as requested:
   - Generates photos, movies, songs and essays as requested.
   - _(TBD)_
@@ -81,32 +81,36 @@ flowchart TD
   style Model fill:#c7e2e2,color:black,stroke:#333,stroke-width:2px
 ```
 
+#### Configuration
+
+Bott is configured via a series of environment variables. For a full list,
+descriptions, and default values, please refer to the
+[constants.ts](./constants.ts) file.
+
 #### Event Generation
 
-Bott processes incoming messages and events through complicated multi-step to
-avoid undue chatter. For a more detailed breakdown of this process _(currently
-implemented via Gemini)_, see the
-**[Gemini Event Pipeline documentation](./libraries/gemini/events)**.
+Bott processes incoming messages and events through a complicated multi-step
+process to avoid undue chatter. For a more detailed breakdown of this process
+_(currently implemented via Gemini - see:
+**[Gemini Event Pipeline documentation](./libraries/gemini/events)**)_.
 
 ## Gallery
 
 <table>
-<tr>
-<td>
-<figure>
-  <img width="360" alt="origin_of_bott" src="assets/origin.png" />
-  <br>
-  <figcaption>Bott's origin</figcaption>
-</figure>
-</td>
-<td>
-<figure>
-  <img width="360" src="assets/concept.png" alt="concept" />
-  <br>
-  <figcaption>concept art by DanielLaCos.se</figcaption>
-</figure>
-</td>
-</tr>
+  <tr>
+    <td>
+      <figure style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+        <img width="360" alt="origin_of_bott" src="assets/origin.png" />
+        <figcaption style="color: gray;">Bott's origin</figcaption>
+        </figure>
+    </td>
+    <td>
+      <figure style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+        <img width="360" src="assets/concept.png" alt="concept" />
+        <figcaption style="color: gray;">concept art by <a href="https://DanielLaCos.se">DanielLaCos.se</a></figcaption>
+      </figure>
+    </td>
+  </tr>
 </table>
 
 ## Licensing
