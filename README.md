@@ -39,11 +39,7 @@ An autonomous groupchat agent.
 
 - [Gemini](./libraries/gemini)
 
-## Development
-
-**Interested in contributing?** See our [Contribution Guide](./CONTRIBUTING.md)!
-
-### High-level Architecture
+## High-level Architecture
 
 > [!TIP]
 > Click on the links in the diagram below to navigate to a specific component's
@@ -80,18 +76,22 @@ flowchart TD
   style Model fill:#c7e2e2,color:black,stroke:#333,stroke-width:2px
 ```
 
-#### Configuration
+### Configuration
 
 Bott is configured via a series of environment variables. For a full list,
 descriptions, and default values, please refer to the
 [constants.ts](./constants.ts) file.
 
-#### Event Generation
+### Event Generation
 
 Bott processes incoming messages and events through a complicated multi-step
 process to avoid undue chatter. For a more detailed breakdown of this process
 _(currently implemented via Gemini - see:
 **[Gemini Event Pipeline documentation](./libraries/gemini/events)**)_.
+
+## Contributing
+
+**Interested in contributing?** See our [Contribution Guide](./CONTRIBUTING.md)!
 
 ## Gallery
 
