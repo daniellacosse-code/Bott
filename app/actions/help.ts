@@ -35,10 +35,9 @@ export const help: BottAction = Object.assign(
                   value:
                     "Currently, @Bott can read urls and photos when responding. They may sometimes say things that are not correct.",
                 },
-                { name: "/help", value: "Display this Help Menu." },
+                { name: "/help", value: "Display this help menu." },
               ],
-              footer:
-                "(@Bott written by DanielLaCos.se ᛫ Powered by Google Gemini)",
+              footer: "(Under development ᛫ written by DanielLaCos.se)",
             }),
           ],
         },

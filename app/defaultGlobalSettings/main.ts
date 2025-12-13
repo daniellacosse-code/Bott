@@ -9,22 +9,28 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import ejs from "ejs";
 import { BottGlobalSettings, BottUser } from "@bott/model";
 
-import { getDefaultIdentity } from "./identity.ts";
 import * as reasons from "./reasons.ts";
 
 export const getDefaultGlobalSettings = (
   context: { user: BottUser },
-): BottGlobalSettings => ({
-  identity: getDefaultIdentity(context),
-  reasons: {
-    input: [
-      reasons.whenAddressed(context.user),
-      reasons.checkFacts,
-    ],
-    output: [
-      reasons.ensurePotentialImpact,
-    ],
-  },
-});
+): BottGlobalSettings => {
+  const identityTemplate = Deno.readTextFileSync(
+    new URL("./identity.md.ejs", import.meta.url),
+  );
+
+  return {
+    identity: ejs.render(identityTemplate, context),
+    reasons: {
+      input: [
+        reasons.whenAddressed(context.user),
+        reasons.checkFacts,
+      ],
+      output: [
+        reasons.ensurePotentialImpact,
+      ],
+    },
+  };
+};
