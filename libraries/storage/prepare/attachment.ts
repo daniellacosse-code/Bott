@@ -79,7 +79,7 @@ export async function prepareAttachmentFromUrl(
   // Save raw file
   const rawExtension = BOTT_ATTACHMENT_TYPE_LOOKUP[type as BottAttachmentType]
     .toLowerCase();
-  const rawPath = join(fileSystemRoot, `raw.${rawExtension}`);
+  const rawPath = join(fileSystemRoot, `${attachmentId}.raw.${rawExtension}`);
 
   log.debug(`Writing raw file: ${attachmentId}, type: ${type}`);
   Deno.writeFileSync(rawPath, data);
