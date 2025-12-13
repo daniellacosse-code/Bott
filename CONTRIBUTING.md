@@ -53,35 +53,9 @@ cp .env.example .env.test
 
 ### Configuring Bott
 
-<details>
-<summary>Bott is configured via a series of environment variables.</summary>
-
-| Name                                  | Description                                                                                           | Default                    |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------- |
-| `CONFIG_ERROR_MODEL`                  | The AI model used for generating user-friendly error messages.                                        | gemini-2.5-flash           |
-| `CONFIG_ESSAY_MODEL`                  | The AI model used for generating essays and long-form text content.                                   | gemini-3-pro-preview       |
-| `CONFIG_EVENTS_MODEL`                 | The AI model used for generating responses to chat events and user messages.                          | gemini-2.5-flash           |
-| `CONFIG_INPUT_EVENT_COUNT_LIMIT`      | The maximum number of past chat events to include in the context for the AI model.                    | 2000                       |
-| `CONFIG_INPUT_EVENT_TIME_LIMIT_MS`    | The maximum age (in ms) of past chat events to include in the context.                                | 86400000 (24h)             |
-| `CONFIG_INPUT_FILE_AUDIO_COUNT_LIMIT` | The maximum number of audio files to analyze per input.                                               | 1                          |
-| `CONFIG_INPUT_FILE_TOKEN_LIMIT`       | The maximum number of tokens to use for analyzing the content of input files.                         | 500000                     |
-| `CONFIG_INPUT_FILE_VIDEO_COUNT_LIMIT` | The maximum number of video files to analyze per input.                                               | 10                         |
-| `CONFIG_MOVIE_MODEL`                  | The AI model used for generating video content.                                                       | veo-3.1-fast-generate-001  |
-| `CONFIG_PHOTO_MODEL`                  | The AI model used for generating images.                                                              | gemini-3-pro-image-preview |
-| `CONFIG_RATE_LIMIT_IMAGES`            | The maximum number of images Bott can generate per month.                                             | 100                        |
-| `CONFIG_RATE_LIMIT_MUSIC`             | The maximum number of songs Bott can generate per month.                                              | 25                         |
-| `CONFIG_RATE_LIMIT_VIDEOS`            | The maximum number of videos Bott can generate per month.                                             | 10                         |
-| `CONFIG_RATING_MODEL`                 | The AI model used for rating events and potential responses.                                          | gemini-2.5-flash-lite      |
-| `CONFIG_SONG_MODEL`                   | The AI model used for generating music and audio content.                                             | lyria-002                  |
-| `DISCORD_TOKEN`                       | The authentication token for your Discord bot application.                                            | -                          |
-| `FILE_SYSTEM_ROOT`                    | The root directory on the local file system for storing input and output files.                       | `./fs_root`                |
-| `GOOGLE_ACCESS_TOKEN`                 | An access token for authenticating with Google Cloud APIs (for local development).                    | -                          |
-| `GOOGLE_PROJECT_ID`                   | The ID of your Google Cloud project.                                                                  | -                          |
-| `GOOGLE_PROJECT_LOCATION`             | The GCP region where your Vertex AI resources are located.                                            | -                          |
-| `LOG_TOPICS`                          | Controls which log topics to display. Comma-separated list of topics: debug, info, warn, error, perf. | info,warn,error            |
-| `PORT`                                | The port of the health check server required for GCP Cloud Run.                                       | 8080                       |
-
-</details>
+Bott is configured via a series of environment variables. For a full list,
+descriptions, and default values, please refer to the
+[constants.ts](./constants.ts) file.
 
 ### Deploying Bott
 
@@ -100,7 +74,7 @@ which gcloud
    your active project.
 
 ```sh
-gcloud auth login
+gcloud auth application-default login
 gcloud config set project <YOUR_PROJECT_ID>
 ```
 

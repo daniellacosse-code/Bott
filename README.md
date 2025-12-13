@@ -30,11 +30,11 @@ An autonomous groupchat agent.
 
 #### Chat Clients
 
-- [Discord](./libraries/discord/README.md)
+- [Discord](./libraries/discord)
 
 #### AI Models
 
-- [Gemini](./libraries/gemini/README.md)
+- [Gemini](./libraries/gemini)
 
 ## Development
 
@@ -45,22 +45,23 @@ An autonomous groupchat agent.
 ### High-level Architecture
 
 > [!TIP]
-> Review the code data model annotated in [./model/types](./model/types).
+> Click on the components in the diagram below to navigate to their
+> documentation.
 
 ```mermaid
-graph TD
-  subgraph "@bott/model"["./model"]
-    BottDiscord["**@bott/discord**"]
+flowchart TD
+  subgraph "@bott/model"["<a href='./model'>**@bott/model**</a>"]
+    BottDiscord["<a href='./libraries/discord'>**@bott/discord**</a>"]
     
-    subgraph App["./app"]
-      BottAppLayer["**@bott/task**"]
-      BottDataLayer["**@bott/storage**<br>Persistence layer"]
+    subgraph App["<a href='./app'>./app</a>"]
+      BottAppLayer["<a href='./libraries/task'>**@bott/task**</a>"]
+      BottDataLayer["<a href='./libraries/storage'>**@bott/storage**</a><br>Persistence layer"]
       
       BottAppLayer --> BottDataLayer
       BottDataLayer --> BottAppLayer
     end
     
-    BottGemini["**@bott/gemini**"]
+    BottGemini["<a href='./libraries/gemini'>**@bott/gemini**</a>"]
   end
 
   %% Flow from Discord User to Bot and back

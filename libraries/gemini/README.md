@@ -22,3 +22,7 @@ Bott uses specialized models for generating specific media types:
 - **Essays**: Generates long-form text content using Gemini Pro.
 
 These are exposed via specific modules in `./files/`.
+
+> [!NOTE]
+> Configuration constants for models and limits are defined in the root
+> `constants.ts` file.
