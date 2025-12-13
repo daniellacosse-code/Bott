@@ -1,25 +1,40 @@
-<img width="320" alt="origin_of_bott" src="https://github.com/user-attachments/assets/71c13505-5758-4202-8612-8a7f79f4fba0" />
+# <img src="assets/avatar.jpg" width="32" /> `@Bott`
 
-# 🤖 `@Bott` [IN DEVELOPMENT]
-
-![in development](https://img.shields.io/badge/in%20development-red)
+[![Maintainability](https://qlty.sh/gh/daniellacosse-code/projects/Bott/maintainability.svg)](https://qlty.sh/gh/daniellacosse-code/projects/Bott)
 ![github checks](https://github.com/daniellacosse-code/Bott/actions/workflows/qualityChecks.yml/badge.svg)
 [![discord](https://img.shields.io/discord/1294993662534483978)](https://DanielLaCos.se)
 
-A Discord bot, powered by Gemini. Currently in development: see the
-[alpha release milestone](https://github.com/daniellacosse-code/Bott/milestone/2).
+An autonomous groupchat agent.
 
-## Features
+---
 
-- Uses judgement on when to engage with server members, taking channel context
-  into consideration.
-- Views and discusses media posted in chat.
-  - Supports reading JPEGs, PNGs, and most websites.
-  - Experimental support for MP4s, GIFs, WAVs and MP3 files.
-- Generates photos, movies, songs and essays as requested.
-- Translates technical errors into user-friendly language, when appropriate.
+> [!WARNING]
+>
+> 🛑 ![in development](https://img.shields.io/badge/in%20development-red) 🛑
+>
+> **Currently in development:** see the
+> [alpha release milestone](https://github.com/daniellacosse-code/Bott/milestone/2).
+> Use at your own risk.
 
-<img width="320" src="assets/concept.png" alt="concept" />
+## Current Features
+
+- Uses its pre-configured `Identity` and `Reasons` to determine when to engage
+  with server members.
+- Views and discusses most types of media posted in chat. (See
+  [Media Support](#media-support))
+- Asynchronously performs tasks as requested:
+  - Generates photos, movies, songs and essays as requested.
+  - _(TBD)_
+
+### Supported Integrations
+
+#### Chat Clients
+
+- [Discord](https://discord.com/)
+
+#### AI Models
+
+- [Gemini](https://gemini.google.com/)
 
 ## Development
 
@@ -191,7 +206,19 @@ graph TD
   style App fill:#5555DD;
 ```
 
----
+## Gallery
+
+<figure>
+<img width="360" alt="origin_of_bott" src="assets/origin.png" />
+
+<figcaption>origin of bott</figcaption>
+</figure>
+
+<figure>
+<img width="360" src="assets/concept.png" alt="concept" />
+
+<figcaption>concept art by DanielLaCos.se</figcaption>
+</figure>
 
 ## Licensing
 
