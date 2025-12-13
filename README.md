@@ -41,8 +41,7 @@ An autonomous groupchat agent.
 
 ## Development
 
-**Interested in contributing?** See our [Contribution Guide](./CONTRIBUTING.md)
-for contribution guidelines and the development guide!
+**Interested in contributing?** See our [Contribution Guide](./CONTRIBUTING.md)!
 
 ### High-level Architecture
 
@@ -99,15 +98,17 @@ _(currently implemented via Gemini - see:
 <table>
   <tr>
     <td>
-      <figure style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+      <figure>
         <img width="360" alt="origin_of_bott" src="assets/origin.png" />
-        <figcaption style="color: gray;">Bott's origin</figcaption>
-        </figure>
+        <br />
+        <figcaption>Bott's origin</figcaption>
+      </figure>
     </td>
     <td>
-      <figure style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+      <figure>
         <img width="360" src="assets/concept.png" alt="concept" />
-        <figcaption style="color: gray;">concept art by <a href="https://DanielLaCos.se">DanielLaCos.se</a></figcaption>
+        <br />
+        <figcaption>concept art by <a href="https://DanielLaCos.se">DanielLaCos.se</a></figcaption>
       </figure>
     </td>
   </tr>
