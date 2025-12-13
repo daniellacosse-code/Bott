@@ -168,9 +168,7 @@ export function addColumnIfNotExists(
         `Added column ${columnName} to table ${tableName}`,
       );
     } catch (error) {
-      log.warn(
-        `Failed to add column ${columnName} to table ${tableName}: ${error}`,
-      );
+      // Re-throw without logging - let caller handle error logging
       throw error;
     }
   }
@@ -186,5 +184,5 @@ export function applyMigrations(_db: DatabaseSync): void {
   // Example usage:
   // addColumnIfNotExists(_db, 'spaces', 'new_field', 'text');
 
-  log.debug("Schema migrations applied successfully");
+  log.debug("Schema migration check completed (no migrations needed)");
 }
