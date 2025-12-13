@@ -35,6 +35,36 @@ Deno.test("Migrations - addColumnIfNotExists adds new column", () => {
   assertExists(descriptionColumn, "Description column should exist");
 });
 
+Deno.test("Migrations - addColumnIfNotExists handles complex column definitions", () => {
+  const db = new DatabaseSync(":memory:");
+
+  // Create a test table
+  db.exec(`
+    create table test_table (
+      id varchar(36) primary key not null
+    );
+  `);
+
+  // Add columns with various valid definitions
+  addColumnIfNotExists(db, "test_table", "col1", "text not null");
+  addColumnIfNotExists(db, "test_table", "col2", "integer default 0");
+  addColumnIfNotExists(
+    db,
+    "test_table",
+    "col3",
+    "varchar(255) not null unique",
+  );
+
+  // Verify columns were added
+  const stmt = db.prepare("PRAGMA table_info(test_table)");
+  const columns = stmt.all() as Array<{ name: string }>;
+  const columnNames = columns.map((col) => col.name);
+
+  assertEquals(columnNames.includes("col1"), true, "col1 should exist");
+  assertEquals(columnNames.includes("col2"), true, "col2 should exist");
+  assertEquals(columnNames.includes("col3"), true, "col3 should exist");
+});
+
 Deno.test("Migrations - addColumnIfNotExists handles existing column", () => {
   const db = new DatabaseSync(":memory:");
 
