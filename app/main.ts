@@ -15,6 +15,7 @@ import {
   type AnyShape,
   type BottAction,
   BottActionCallEvent,
+  BottEvent,
   BottEventType,
 } from "@bott/model";
 import {
@@ -153,7 +154,7 @@ startDiscordBot({
               let responsePromise;
 
               switch (
-                (genEvent as BottActionCallEvent<AnyShape>).details.name
+                (genEvent as BottActionCallEvent<AnyShape>).detail.name
               ) {
                 // We only have the "generateMedia" handler for now.
                 case "generateMedia":
@@ -168,22 +169,23 @@ startDiscordBot({
                 try {
                   const responseEvent = await responsePromise;
                   responseEvent.parent = genEvent;
-
                   // Request/response events are system-only.
-                  this.send({
-                    id: crypto.randomUUID(),
-                    type: genEvent.parent
-                      ? BottEventType.REPLY
-                      : BottEventType.MESSAGE,
-                    details: {
-                      content: responseEvent.details.content || "",
-                    },
-                    attachments: responseEvent.attachments,
-                    createdAt: new Date(),
-                    user: this.user,
-                    channel: thisChannel,
-                    parent: genEvent.parent,
-                  });
+                  this.send(
+                    new BottEvent(
+                      genEvent.parent
+                        ? BottEventType.REPLY
+                        : BottEventType.MESSAGE,
+                      {
+                        detail: {
+                          content: responseEvent.detail.content || "",
+                        },
+                        attachments: responseEvent.attachments,
+                        user: this.user,
+                        channel: thisChannel,
+                        parent: genEvent.parent,
+                      },
+                    ),
+                  );
 
                   // Also store the "response" event.
                   addEvents(responseEvent);
@@ -204,7 +206,7 @@ startDiscordBot({
             case BottEventType.MESSAGE:
             case BottEventType.REPLY: {
               const words =
-                (genEvent.details.content as string).split(/\s+/).length;
+                (genEvent.detail.content as string).split(/\s+/).length;
               const delayMs = (words / WORDS_PER_MINUTE) * MS_IN_MINUTE;
               const cappedDelayMs = Math.min(delayMs, MAX_TYPING_TIME_MS);
               await delay(cappedDelayMs, { signal: abortSignal });

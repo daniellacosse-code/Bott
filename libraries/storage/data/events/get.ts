@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottEvent, BottEventType } from "@bott/model";
+import { BottEvent } from "@bott/model";
 
 import { commit } from "../commit.ts";
 import { sql } from "../sql.ts";
@@ -20,7 +20,7 @@ export const getEvents = async (
   const result = commit(
     sql`
       select
-        e.id as e_id, e.type as e_type, e.details as e_details, e.created_at as e_created_at, e.last_processed_at as e_last_processed_at, -- event
+        e.id as e_id, e.type as e_type, e.detail as e_detail, e.created_at as e_created_at, e.last_processed_at as e_last_processed_at, -- event
         c.id as c_id, c.name as c_name, c.description as c_description, c.config as c_config, -- channel
         s.id as s_id, s.name as s_name, s.description as s_description, -- space
         u.id as u_id, u.name as u_name, -- user
@@ -59,7 +59,7 @@ export const getEvents = async (
     const {
       e_id: id,
       e_type: type,
-      e_details: details,
+      e_detail: detail,
       e_created_at: createdAt,
       e_last_processed_at: lastProcessedAt,
       ...rowData
@@ -69,14 +69,15 @@ export const getEvents = async (
       continue;
     }
 
-    const event: BottEvent = {
-      id,
-      type: type as BottEventType,
-      details: JSON.parse(details),
-      createdAt: new Date(createdAt),
-      lastProcessedAt: lastProcessedAt ? new Date(lastProcessedAt) : undefined,
-      attachments: undefined,
-    };
+    const event = new BottEvent(type, {
+      detail: JSON.parse(detail),
+    });
+
+    event.id = id;
+    event.createdAt = new Date(createdAt);
+    event.lastProcessedAt = lastProcessedAt
+      ? new Date(lastProcessedAt)
+      : undefined;
 
     if (rowData.c_id) {
       event.channel = {
