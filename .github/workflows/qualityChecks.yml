@@ -41,7 +41,8 @@ jobs:
           mkdir -p coverage
           deno coverage cov_profile --lcov --output=coverage/lcov.info
 
-      - uses: qltysh/qlty-action/coverage@v2
+      - name: Upload Coverage
+        uses: qltysh/qlty-action/coverage@v2
         with:
           token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
           files: coverage/lcov.info
