@@ -84,7 +84,7 @@ export const callWithContext = <
           );
         }
 
-        const messageContent = event.details.content as string;
+        const messageContent = event.detail.content as string;
 
         let messageResult;
         switch (event.type) {

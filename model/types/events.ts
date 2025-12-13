@@ -51,6 +51,9 @@ export interface BottEvent<
   user?: BottUser;
   /** Optional array of attachments associated with the event. */
   attachments?: BottEventAttachment[];
+
+  /** Requires JSON.stringify support. */
+  toJSON(): Record<string, unknown>;
 }
 
 /**

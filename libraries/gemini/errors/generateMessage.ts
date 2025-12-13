@@ -13,7 +13,7 @@ import {
   type AnyShape,
   type BottActionCallEvent,
   type BottChannel,
-  type BottEvent,
+  BottEvent,
   BottEventType,
   type BottGlobalSettings,
   type BottUser,
@@ -37,9 +37,9 @@ export async function generateErrorMessage<O extends AnyShape>(
 
   const geminiInput = {
     request: {
-      name: requestEvent.details.name,
-      options: requestEvent.details.options,
-      user_message_content: requestEvent.parent?.details?.content,
+      name: requestEvent.detail.name,
+      options: requestEvent.detail.options,
+      user_message_content: requestEvent.parent?.detail?.content,
     },
     error: {
       message: error.message,
@@ -64,16 +64,16 @@ export async function generateErrorMessage<O extends AnyShape>(
 
   const interpretation = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
-  return {
-    id: crypto.randomUUID(),
-    type: requestEvent.parent ? BottEventType.REPLY : BottEventType.MESSAGE,
-    details: {
-      content: interpretation ||
-        "[SYSTEM] An error occurred while processing your request.",
+  return new BottEvent(
+    requestEvent.parent ? BottEventType.REPLY : BottEventType.MESSAGE,
+    {
+      detail: {
+        content: interpretation ||
+          "[SYSTEM] An error occurred while processing your request.",
+      },
+      user: context.user,
+      channel: context.channel,
+      parent: requestEvent.parent,
     },
-    createdAt: new Date(),
-    user: context.user,
-    channel: context.channel,
-    parent: requestEvent.parent,
-  };
+  );
 }
