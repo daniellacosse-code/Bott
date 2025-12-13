@@ -9,8 +9,6 @@
 
 An autonomous groupchat agent.
 
----
-
 > [!CAUTION]
 >
 > 🛑 ![in development](https://img.shields.io/badge/in%20development-red) 🛑
@@ -21,11 +19,13 @@ An autonomous groupchat agent.
 
 ## Current Features
 
-- Bott uses a pre-configured `Identity` and `Reasons` to determine when to
+- Bott uses a pre-configured
+  [`Identity`](./app/defaultGlobalSettings/identity.ts) and
+  [`Reasons`](./app/defaultGlobalSettings/reasons.ts) to determine when to
   engage with server members.
-- Views and discusses most types of media posted in chat. (See
-  [Media Support](#media-support))
-- Asynchronously performs tasks as requested:
+- They view and can discuss most types of media posted in chat. (See the
+  [Supported Attachment Types](./models/types/events.ts))
+- They asynchronously perform tasks as requested:
   - Generates photos, movies, songs and essays as requested.
   - _(TBD)_
 
@@ -95,12 +95,14 @@ implemented via Gemini)_, see the
 <td>
 <figure>
   <img width="360" alt="origin_of_bott" src="assets/origin.png" />
+  <br>
   <figcaption>Bott's origin</figcaption>
 </figure>
 </td>
 <td>
 <figure>
   <img width="360" src="assets/concept.png" alt="concept" />
+  <br>
   <figcaption>concept art by DanielLaCos.se</figcaption>
 </figure>
 </td>

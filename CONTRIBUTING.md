@@ -7,7 +7,7 @@ Thinking about contributing to Bott? There are a number of ways you can help!
 If you find a bug, please open an issue! Include as much detail as possible in
 the form. Screenshots, logs, and video captures are super helpful!
 
-> **NOTE:** <ins>**Security Vulnerabilities**</ins> are different. Please see
+> [!WARNING] <ins>**Security Vulnerabilities**</ins> are different. Please see
 > [./SECURITY.md](./SECURITY.md).
 
 ### Request Features
@@ -33,7 +33,7 @@ helps protect both you as a contributor and the project.
 #### Prerequisites
 
 - Homebrew ([https://brew.sh/](https://brew.sh/))
-- GCP Project
+- A GCP Project
   ([https://developers.google.com/workspace/guides/create-project](https://developers.google.com/workspace/guides/create-project))
 - A Registered Discord Application
   ([https://discord.com/developers/applications](https://discord.com/developers/applications))
@@ -59,9 +59,8 @@ descriptions, and default values, please refer to the
 
 ### Deploying Bott
 
-<details>
-<summary>Deploying Bott to Google Cloud Run can be done entirely from your command line
-using the `gcloud` CLI.</summary>
+Deploying Bott to Google Cloud Run can be done entirely from your command line
+using the `gcloud` CLI.
 
 1. **Install Google Cloud SDK**: First, ensure you have the Google Cloud SDK
    installed. (e.g. via `brew install google-cloud-sdk`)
@@ -135,5 +134,3 @@ gcloud run deploy bott-service \
 ```sh
 gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=bott-service" --limit 50
 ```
-
-</details>

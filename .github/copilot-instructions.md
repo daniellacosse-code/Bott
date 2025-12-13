@@ -114,4 +114,5 @@ content generation capabilities.
 
 ### Configuration Options
 
-Key environment variables are defined in [constants.ts](../constants.ts). See that file for the full list and default values.
+Key environment variables are defined in [constants.ts](../constants.ts). See
+that file for the full list and default values.
