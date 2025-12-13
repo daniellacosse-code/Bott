@@ -11,7 +11,7 @@
 
 import { assertEquals, assertExists } from "@std/assert";
 import { DatabaseSync } from "node:sqlite";
-import { addColumnIfNotExists } from "./migrations.ts";
+import { addColumnIfNotExists, applyMigrations } from "./migrations.ts";
 
 Deno.test("Migrations - addColumnIfNotExists adds new column", () => {
   const db = new DatabaseSync(":memory:");
@@ -311,4 +311,71 @@ Deno.test("Migrations - accepts valid string defaults with special characters", 
   assertEquals(columnNames.includes("col2"), true, "col2 should exist");
   assertEquals(columnNames.includes("col3"), true, "col3 should exist");
   assertEquals(columnNames.includes("col4"), true, "col4 should exist");
+});
+
+Deno.test("Migrations - applyMigrations sets schema version on fresh database", () => {
+  const db = new DatabaseSync(":memory:");
+
+  // Create tables
+  const schema = Deno.readTextFileSync(
+    new URL("./schema.sql", import.meta.url).pathname,
+  );
+  db.exec(schema);
+
+  // Apply migrations (should set version to 1)
+  applyMigrations(db);
+
+  // Check version was set
+  const stmt = db.prepare("PRAGMA user_version");
+  const result = stmt.get() as { user_version: number };
+
+  assertEquals(result.user_version, 1, "Schema version should be set to 1");
+});
+
+Deno.test("Migrations - applyMigrations is idempotent", () => {
+  const db = new DatabaseSync(":memory:");
+
+  // Create tables
+  const schema = Deno.readTextFileSync(
+    new URL("./schema.sql", import.meta.url).pathname,
+  );
+  db.exec(schema);
+
+  // Apply migrations multiple times
+  applyMigrations(db);
+  applyMigrations(db);
+  applyMigrations(db);
+
+  // Check version is still correct
+  const stmt = db.prepare("PRAGMA user_version");
+  const result = stmt.get() as { user_version: number };
+
+  assertEquals(
+    result.user_version,
+    1,
+    "Schema version should remain 1 after multiple calls",
+  );
+});
+
+Deno.test("Migrations - applyMigrations handles upgrading from version 0", () => {
+  const db = new DatabaseSync(":memory:");
+
+  // Create tables (version 0 - no version set)
+  const schema = Deno.readTextFileSync(
+    new URL("./schema.sql", import.meta.url).pathname,
+  );
+  db.exec(schema);
+
+  // Verify initial version is 0
+  let stmt = db.prepare("PRAGMA user_version");
+  let result = stmt.get() as { user_version: number };
+  assertEquals(result.user_version, 0, "Initial version should be 0");
+
+  // Apply migrations
+  applyMigrations(db);
+
+  // Verify version was upgraded
+  stmt = db.prepare("PRAGMA user_version");
+  result = stmt.get() as { user_version: number };
+  assertEquals(result.user_version, 1, "Version should be upgraded to 1");
 });

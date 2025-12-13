@@ -175,14 +175,63 @@ export function addColumnIfNotExists(
 }
 
 /**
+ * Current schema version
+ * Increment this number when adding new migrations
+ */
+const CURRENT_SCHEMA_VERSION = 1;
+
+/**
+ * Get the current schema version from the database
+ */
+function getSchemaVersion(db: DatabaseSync): number {
+  const stmt = db.prepare("PRAGMA user_version");
+  const result = stmt.get() as { user_version: number };
+  return result.user_version;
+}
+
+/**
+ * Set the schema version in the database
+ */
+function setSchemaVersion(db: DatabaseSync, version: number): void {
+  db.exec(`PRAGMA user_version = ${version}`);
+}
+
+/**
  * Apply any schema migrations needed for existing databases
  * This ensures that older database schemas are updated to the current version
+ * Uses PRAGMA user_version to track schema version and only apply needed migrations
  */
-export function applyMigrations(_db: DatabaseSync): void {
-  // Currently no migrations needed - all columns are created with tables
-  // This function is here for future schema evolution
-  // Example usage:
-  // addColumnIfNotExists(_db, 'spaces', 'new_field', 'text');
+export function applyMigrations(db: DatabaseSync): void {
+  const currentVersion = getSchemaVersion(db);
 
-  log.debug("Schema migration check completed (no migrations needed)");
+  if (currentVersion === CURRENT_SCHEMA_VERSION) {
+    log.debug(
+      `Schema is up to date (version ${CURRENT_SCHEMA_VERSION})`,
+    );
+    return;
+  }
+
+  log.info(
+    `Migrating schema from version ${currentVersion} to ${CURRENT_SCHEMA_VERSION}`,
+  );
+
+  // Apply migrations incrementally based on current version
+  // This ensures that databases at any version can be upgraded safely
+
+  // Version 0 -> 1: Initial schema (all tables created via schema.sql)
+  if (currentVersion < 1) {
+    // No migrations needed for version 1
+    // All tables are created by schema.sql
+    log.debug("Applied migration: version 0 -> 1 (initial schema)");
+  }
+
+  // Future migrations go here:
+  // if (currentVersion < 2) {
+  //   addColumnIfNotExists(db, 'spaces', 'metadata', 'text');
+  //   log.debug("Applied migration: version 1 -> 2");
+  // }
+
+  // Update schema version
+  setSchemaVersion(db, CURRENT_SCHEMA_VERSION);
+  log.info(`Schema migration completed (version ${CURRENT_SCHEMA_VERSION})`);
 }
