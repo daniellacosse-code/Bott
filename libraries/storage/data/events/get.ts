@@ -113,6 +113,10 @@ export const getEvents = async (
       event.attachments = [];
     }
 
+    if (event.attachments.find((a) => a.id === rowData.a_id)) {
+      continue;
+    }
+
     event.attachments.push({
       id: rowData.a_id,
       originalSource: new URL(rowData.a_source_url),

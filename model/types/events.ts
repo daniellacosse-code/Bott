@@ -63,7 +63,7 @@ export type BottActionResultEvent<D extends AnyShape = AnyShape> = BottEvent & {
 };
 
 /**
- * Enumerates the different types of files that can be associated with a BottEvent.
+ * Enumerates the different types of attachments that can be associated with a BottEvent.
  */
 export enum BottAttachmentType {
   GIF = "image/gif",

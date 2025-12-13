@@ -199,8 +199,8 @@ export const addEvents = (
     getAddChannelsSql(...channels.values()),
     getAddUsersSql(...users.values()),
     getAddFilesSql(...files),
-    getAddAttachmentsSql(...attachments),
     getAddEventsSql(...topologicallySortEvents(...events.values())),
+    getAddAttachmentsSql(...attachments),
   ];
 
   const results = commit(...statements.filter((smt) => smt !== undefined));
