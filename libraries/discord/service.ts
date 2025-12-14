@@ -175,6 +175,11 @@ export const startDiscordService: BottServiceFactory = async ({
 
     const payload: MessageCreateOptions = { content, files };
 
+    if (event.detail.embed) {
+      // deno-lint-ignore no-explicit-any
+      payload.embeds = [event.detail.embed as any];
+    }
+
     if (event.type === BottEventType.REPLY && event.parent) {
       payload.reply = { messageReference: event.parent.id };
     }
