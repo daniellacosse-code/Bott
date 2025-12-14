@@ -12,8 +12,8 @@ content generation capabilities.
 
 ### Initial Setup
 
-- Copy configuration template: `cp config.example.yml config.dev.yml`
-- Configure settings in `config.dev.yml`:
+- Copy configuration template: `cp .env.example.yml .env.dev.yml`
+- Configure settings in `.env.dev.yml`:
   - `GOOGLE_PROJECT_ID` - GCP project ID
   - `GOOGLE_PROJECT_LOCATION` - GCP region (e.g., us-central1)
   - `GOOGLE_ACCESS_TOKEN` - GCP access token
@@ -75,12 +75,8 @@ content generation capabilities.
 ├── deno.json             # Deno configuration and tasks
 ├── Containerfile         # Container build instructions
 ├── Brewfile              # macOS dependencies via Homebrew
-├── config.example.yml    # Configuration template
+├── .env.example.yml      # Environment configuration template
 ├── .devcontainer/        # Devcontainer configuration
-├── scripts/              # Development and utility scripts
-│   ├── dev.ts           # Development server with YAML config loading
-│   ├── configLoader.ts  # YAML configuration parser
-│   └── configLoader.test.ts  # Tests for config loader
 ├── app/                  # Main application
 │   ├── README.md        # Application layer documentation
 │   ├── main.ts          # Entry point
@@ -110,7 +106,7 @@ content generation capabilities.
 ### Debugging
 
 - Check logs in the VS Code terminal where the bot is running
-- Verify configuration is set correctly in `config.dev.yml`
+- Verify configuration is set correctly in `.env.dev.yml`
 - Test network connectivity to Discord API and Google Cloud APIs
 - Validate file permissions for `FILE_SYSTEM_ROOT` directory (default:
   `./fs_root`)

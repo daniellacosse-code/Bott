@@ -8,7 +8,9 @@
       "args": [
         "run",
         "--allow-all",
-        "./scripts/dev.ts"
+        "--env-file=.env.dev.yml",
+        "--watch=app/,libraries/,model/",
+        "./app/main.ts"
       ],
       "isBackground": true,
       "runOptions": {
