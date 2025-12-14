@@ -11,25 +11,42 @@
 
 /**
  * Shell logger wrapper that calls the bash logging utilities
- * Provides integration between TypeScript and bash log.sh
+ * Provides integration between TypeScript and bash logger.sh
  */
 
 import type { Logger } from "./logging.ts";
 import loggerSh from "logger.sh" with { type: "text" };
 
+// Queue for batching log calls
+interface LogCall {
+  fnName: string;
+  args: string[];
+}
+
+let logQueue: LogCall[] = [];
+let flushTimer: number | null = null;
+const BATCH_DELAY_MS = 100; // Batch logs within 100ms window
+
 /**
- * Execute a bash log command
+ * Flush queued log calls
  */
-async function execLog(fnName: string, ...args: unknown[]): Promise<void> {
-  // Use separate arguments to avoid shell injection
+async function flushLogs(): Promise<void> {
+  if (logQueue.length === 0) return;
+
+  const batch = logQueue;
+  logQueue = [];
+  flushTimer = null;
+
+  // Build a single bash script with all log calls
+  const script = batch.map((call) => {
+    const escapedArgs = call.args.map((arg) =>
+      arg.replace(/'/g, "'\\''")
+    ).join("' '");
+    return `${call.fnName} '${escapedArgs}'`;
+  }).join("\n");
+
   const command = new Deno.Command("bash", {
-    args: [
-      "-c",
-      `source /dev/stdin && "${1}" "$@"`,
-      "--",
-      fnName,
-      ...args.map((arg) => String(arg)),
-    ],
+    args: ["-c", `source /dev/stdin\n${script}`],
     stdin: "piped",
     stdout: "piped",
     stderr: "piped",
@@ -54,41 +71,61 @@ async function execLog(fnName: string, ...args: unknown[]): Promise<void> {
 }
 
 /**
- * Shell logger that wraps bash log.sh functions and conforms to Logger interface
+ * Queue a log call for batch processing
+ */
+function queueLog(fnName: string, ...args: unknown[]): void {
+  logQueue.push({
+    fnName,
+    args: args.map((arg) => String(arg)),
+  });
+
+  // Schedule flush if not already scheduled
+  if (flushTimer === null) {
+    flushTimer = setTimeout(() => {
+      flushLogs().catch((err) => {
+        console.error("Failed to flush logs:", err);
+      });
+    }, BATCH_DELAY_MS);
+  }
+}
+
+/**
+ * Shell logger that wraps bash logger.sh functions and conforms to Logger interface
+ * Batches log calls for efficiency
  */
 export const shellLog: Logger = {
   /**
    * Log debug message via bash logger
    */
   debug(...args: unknown[]): void {
-    execLog("debug_log", ...args);
+    queueLog("debug_log", ...args);
   },
 
   /**
    * Log info message via bash logger
    */
   info(...args: unknown[]): void {
-    execLog("info_log", ...args);
+    queueLog("info_log", ...args);
   },
 
   /**
    * Log warning message via bash logger
    */
   warn(...args: unknown[]): void {
-    execLog("warn_log", ...args);
+    queueLog("warn_log", ...args);
   },
 
   /**
    * Log error message via bash logger
    */
   error(...args: unknown[]): void {
-    execLog("error_log", ...args);
+    queueLog("error_log", ...args);
   },
 
   /**
    * Performance logging - uses purple color
    */
   perf(...args: unknown[]): void {
-    execLog("perf_log", ...args);
+    queueLog("perf_log", ...args);
   },
 };

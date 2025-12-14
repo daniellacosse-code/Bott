@@ -11,3 +11,4 @@
 
 export * from "./logging.ts";
 export * from "./testing.ts";
+export { shellLog } from "./shell.ts";
