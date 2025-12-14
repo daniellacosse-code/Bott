@@ -12,7 +12,7 @@ set -euo pipefail
 
 # Get script directory and source utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/utils/log.sh"
+source "$SCRIPT_DIR/../libraries/logger/log.sh"
 source "$SCRIPT_DIR/utils/checks.sh"
 
 # Default values
@@ -250,8 +250,10 @@ deploy() {
 
 # Main execution
 main() {
-  info_log "Bott Deployment Script"
-  info_log "======================"
+  cat <<EOF
+$(info_log "Bott Deployment Script")
+$(info_log "======================")
+EOF
   
   check_gcloud
   info_log "gcloud CLI found"
@@ -264,9 +266,11 @@ main() {
   get_region
   
   if deploy; then
-    echo ""
-    info_log "Deployment complete!"
-    info_log "To view logs, run: ./scripts/logs"
+    cat <<EOF
+
+$(info_log "Deployment complete!")
+$(info_log "To view logs, run: ./scripts/logs")
+EOF
     exit 0
   else
     exit 1

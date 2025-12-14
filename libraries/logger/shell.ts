@@ -86,9 +86,9 @@ export const shellLog: Logger = {
   },
 
   /**
-   * Performance logging - not implemented for shell logger
+   * Performance logging - uses purple color
    */
-  perf(_label?: string): void {
-    // Shell logger doesn't support perf logging
+  perf(...args: unknown[]): void {
+    execLog("log", "PERF", "\x1b[35m", ...args);
   },
 };

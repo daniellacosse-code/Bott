@@ -24,10 +24,10 @@ please open an issue to discuss it!
 
 #### Prerequisites
 
-- A Registered Discord Application
-  ([https://discord.com/developers/applications](https://discord.com/developers/applications))
+None required! The setup script will automatically install all required dependencies (Homebrew on macOS, gcloud SDK, Deno) and help you create a GCP project if needed.
 
-Note: The setup script will automatically install all required dependencies (Homebrew on macOS, gcloud SDK, Deno) and help you create a GCP project if needed.
+Optional: A Registered Discord Application if you want to use Discord integration
+  ([https://discord.com/developers/applications](https://discord.com/developers/applications))
 
 #### Instructions
 

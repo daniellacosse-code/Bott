@@ -12,7 +12,7 @@ set -euo pipefail
 
 # Get script directory and source utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/utils/log.sh"
+source "$SCRIPT_DIR/../libraries/logger/log.sh"
 source "$SCRIPT_DIR/utils/checks.sh"
 
 # Default values
