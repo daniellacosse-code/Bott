@@ -11,11 +11,11 @@
       ],
       "settings": {
         "deno.enable": true,
-        "files.autoSave": "onFocusChange",
-        "files.refactoring.autoSave": true,
         "[typescript]": {
-          "editor.defaultFormatter": "denoland.vscode-deno",
-          "editor.formatOnSave": true
+          "editor.defaultFormatter": "denoland.vscode-deno"
+        },
+        "[markdown]": {
+          "editor.defaultFormatter": "denoland.vscode-deno"
         }
       }
     }

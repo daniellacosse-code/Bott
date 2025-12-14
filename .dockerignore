@@ -1,5 +1,10 @@
-.git
-.env.*
+.devcontainer
 .dockerignore
+.env.*
+.git
+.github
+.output
+.vscode
+assets
 Brewfile
 Dockerfile
