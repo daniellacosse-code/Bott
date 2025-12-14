@@ -10,14 +10,17 @@
 
 set -euo pipefail
 
-# Get script directory and source common utilities
+# Get script directory and source utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/utils/common.sh"
+source "$SCRIPT_DIR/utils/log.sh"
+source "$SCRIPT_DIR/utils/gcloud.sh"
 
 # Default values
-SERVICE_NAME="${SERVICE_NAME:-bott-service}"
-ENV_FILE="${ENV_FILE:-.env.production}"
+ENV="${ENV:-production}"
+GCP_SERVICE_NAME="${GCP_SERVICE_NAME:-bott-$ENV}"
+ENV_FILE="${ENV_FILE:-.env.$ENV}"
 ALLOW_UNAUTHENTICATED="${ALLOW_UNAUTHENTICATED:-true}"
+DEFAULT_REGION="us-central1"
 
 # Ensure user is authenticated
 ensure_authenticated() {
@@ -36,15 +39,12 @@ setup_project() {
   
   if [ -z "$project_id" ]; then
     log_warn "GOOGLE_PROJECT_ID not set in environment file."
-    read -r -p "Enter your GCP Project ID (or press Enter to be prompted for a name): " project_id
+    read -r -p "Enter your GCP Project ID (or press Enter to auto-generate): " project_id
     
     if [ -z "$project_id" ]; then
-      # Prompt for a project name
-      read -r -p "Enter a unique project ID (e.g., my-bott-bot): " project_id
-      if [ -z "$project_id" ]; then
-        log_error "Project ID is required"
-        exit 1
-      fi
+      # Auto-generate a unique project ID
+      project_id="bott-$(date +%s)-$RANDOM"
+      log_info "Auto-generating project ID: $project_id"
       log_info "Creating new project: $project_id"
       
       if gcloud projects create "$project_id" 2>/dev/null; then
@@ -191,8 +191,8 @@ validate_env_vars() {
 # Get or prompt for region
 get_region() {
   if [ -z "${REGION:-}" ]; then
-    log_info "No REGION environment variable set."
-    read -r -p "Enter GCP region for deployment (e.g., us-central1): " REGION
+    log_info "No REGION environment variable set. Using default: $DEFAULT_REGION"
+    REGION="$DEFAULT_REGION"
     export REGION
   fi
   log_info "Deploying to region: $REGION"
@@ -222,7 +222,7 @@ convert_env_to_yaml() {
 # Deploy to Cloud Run
 deploy() {
   log_info "Starting deployment to Google Cloud Run..."
-  log_info "Service: $SERVICE_NAME"
+  log_info "Service: $GCP_SERVICE_NAME"
   log_info "Region: $REGION"
   
   # Convert env file to YAML
@@ -231,7 +231,7 @@ deploy() {
   yaml_env_file=$(convert_env_to_yaml)
   
   local deploy_args=(
-    "run" "deploy" "$SERVICE_NAME"
+    "run" "deploy" "$GCP_SERVICE_NAME"
     "--source" "."
     "--region" "$REGION"
     "--project" "$GOOGLE_PROJECT_ID"
@@ -247,6 +247,8 @@ deploy() {
     "--port" "8080"
   )
 
+  # Note: ALLOW_UNAUTHENTICATED controls public access to the Cloud Run service.
+  # Set to "false" for internal services that require authentication.
   if [ "$ALLOW_UNAUTHENTICATED" = "true" ]; then
     deploy_args+=("--allow-unauthenticated")
   fi
@@ -258,7 +260,7 @@ deploy() {
     log_info "Deployment successful!"
     
     # Get the service URL
-    SERVICE_URL=$(gcloud run services describe "$SERVICE_NAME" --region="$REGION" --project="$GOOGLE_PROJECT_ID" --format="value(status.url)" 2>/dev/null || echo "")
+    SERVICE_URL=$(gcloud run services describe "$GCP_SERVICE_NAME" --region="$REGION" --project="$GOOGLE_PROJECT_ID" --format="value(status.url)" 2>/dev/null || echo "")
     if [ -n "$SERVICE_URL" ]; then
       log_info "Service URL: $SERVICE_URL"
     fi

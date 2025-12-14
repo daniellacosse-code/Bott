@@ -56,16 +56,20 @@ helps protect both you as a contributor and the project.
 
 ### Deploying Bott
 
-Deploying Bott to Google Cloud Run is fully automated. The deployment script
-will handle authentication, project setup, API enablement, service account
-configuration, and deployment.
+Deploying Bott to Google Cloud Run is fully automated.
 
-1. **Install Google Cloud SDK**: First, ensure you have the Google Cloud SDK
-   installed. (e.g. via `brew install google-cloud-sdk`)
+1. **Run Setup**: First, run the setup script to install dependencies and authenticate:
 
 ```sh
-which gcloud
+./scripts/setup
+# Or using deno task
+deno task setup
 ```
+
+The setup script will:
+- Install dependencies via Homebrew (on macOS)
+- Authenticate with Google Cloud
+- Guide you through initial configuration
 
 2. **Create a `.env.production` file**: Create a `.env.production` file from the
    provided `.env.example` file and fill in your configuration values.
@@ -79,12 +83,13 @@ cp .env.example .env.production
    remaining setup steps.
 
 ```sh
-./scripts/deploy
+./scripts/deploy_gcp
+# Or using deno task
+deno task deploy
 ```
 
 The script will automatically:
-- Authenticate with Google Cloud (if needed)
-- Create or verify your GCP project
+- Create or verify your GCP project (with auto-generated project ID if needed)
 - Enable required APIs (Vertex AI, Cloud Storage, Cloud Run, etc.)
 - Configure service account permissions
 - Deploy your application to Cloud Run
@@ -94,4 +99,6 @@ The script will automatically:
 
 ```sh
 ./scripts/logs
+# Or using deno task
+deno task logs
 ```

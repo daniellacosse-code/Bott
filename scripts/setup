@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# @license
+# This file is part of Bott.
+#
+# This project is dual-licensed:
+# - Non-commercial use: AGPLv3 (see LICENSE file for full text).
+# - Commercial use: Proprietary License (contact D@nielLaCos.se for details).
+#
+# Copyright (C) 2025 DanielLaCos.se
+
+set -euo pipefail
+
+# Get script directory and source utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils/log.sh"
+source "$SCRIPT_DIR/utils/gcloud.sh"
+
+# Main setup function
+main() {
+  log_info "Bott Setup Script"
+  log_info "================="
+  
+  # Check if running on macOS
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    log_info "Detected macOS"
+    
+    # Check if brew is installed
+    if ! command -v brew &> /dev/null; then
+      log_error "Homebrew is not installed. Please install it from https://brew.sh"
+      exit 1
+    fi
+    
+    log_info "Installing dependencies via Homebrew..."
+    brew bundle
+  else
+    log_info "Detected non-macOS system"
+    log_warn "Please manually install dependencies:"
+    log_warn "  - Google Cloud SDK (gcloud)"
+    log_warn "  - Deno runtime"
+  fi
+  
+  # Check if gcloud is installed
+  check_gcloud
+  log_info "gcloud CLI found"
+  
+  # Authenticate with gcloud
+  log_info "Authenticating with Google Cloud..."
+  if ! gcloud auth list --filter=status:ACTIVE --format="value(account)" 2>/dev/null | grep -q .; then
+    log_info "Running: gcloud auth application-default login"
+    gcloud auth application-default login
+  else
+    log_info "Already authenticated with gcloud"
+  fi
+  
+  log_info "Setup complete!"
+  log_info ""
+  log_info "Next steps:"
+  log_info "  1. Create your environment file: cp .env.example .env.test"
+  log_info "  2. Edit .env.test with your configuration"
+  log_info "  3. Run the bot: deno task runApp test"
+  log_info "  4. Deploy to production: ENV=production ./scripts/deploy_gcp"
+}
+
+# Run main function
+main "$@"
