@@ -108,7 +108,7 @@ export const startMainService: BottServiceFactory = ({
 
   // Handle action calls
   addEventListener(BottEventType.ACTION_CALL, async (
-    event: BottActionCallEvent<GenerateMediaOptions>,
+    event: BottActionCallEvent,
     service?: BottService,
   ) => {
     if (!service) {
@@ -120,7 +120,9 @@ export const startMainService: BottServiceFactory = ({
     switch (event.detail.name) {
       case "generateMedia":
       default:
-        responsePromise = generateMedia(event);
+        responsePromise = generateMedia(
+          event as BottActionCallEvent<GenerateMediaOptions>,
+        );
         break;
     }
 
@@ -144,11 +146,9 @@ export const startMainService: BottServiceFactory = ({
         attachments: event.attachments,
         user: service.user,
         channel: event.channel,
-        parent: event.parent,
+        parent: event.parent?.parent,
       },
     );
-
-    replyEvent.parent = event.parent?.parent;
 
     globalThis.dispatchEvent(replyEvent);
   });

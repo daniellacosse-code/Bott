@@ -16,6 +16,7 @@ import {
   Client,
   Events as DiscordEvents,
   GatewayIntentBits,
+  type JSONEncodable,
   type Message,
   type MessageCreateOptions,
   REST,
@@ -132,19 +133,20 @@ export const startDiscordService: BottServiceFactory = async ({
     if (service?.user?.id === localService.user.id) return;
     if (!service) return;
 
+    const content = event.detail.content as string;
+
     const channel = await client.channels.fetch(event.channel.id);
     if (!channel || channel.type !== ChannelType.GuildText) return;
 
-    if (event.type === BottEventType.REACTION) {
+    if (event.type === BottEventType.REACTION && event.parent) {
       const message = await channel.messages.fetch(
-        event.parent!.id,
+        event.parent.id,
       );
 
-      return message.react(event.detail.content as string);
+      return message.react(content);
     }
 
-    // Message or Reply
-    const content = event.detail.content as string;
+    // Message or Reply (or force reaction)
     const attachments = event.attachments || [];
 
     if (!content && attachments.length === 0) return;
@@ -177,7 +179,7 @@ export const startDiscordService: BottServiceFactory = async ({
 
     if (event.detail.embed) {
       // deno-lint-ignore no-explicit-any
-      payload.embeds = [event.detail.embed as any];
+      payload.embeds = [event.detail.embed as JSONEncodable<any>];
     }
 
     if (event.type === BottEventType.REPLY && event.parent) {
