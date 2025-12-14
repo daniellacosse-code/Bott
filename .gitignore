@@ -4,8 +4,7 @@ config*.yml
 !config.example.yml
 
 .signatures/
-fs_root/
-.build-hash
+.output/
 
 
 # for agents
