@@ -118,6 +118,24 @@ COMMENT_AFTER: "value" # comment here
   });
 });
 
+Deno.test("parseYamlConfig - handles falsy values", () => {
+  const yaml = `
+ZERO: 0
+FALSE: false
+EMPTY_STRING: ""
+NULL_STRING: null
+`;
+
+  const result = parseYamlConfig(yaml);
+
+  // All falsy values except empty string should be preserved
+  assertEquals(result, {
+    ZERO: "0",
+    FALSE: "false",
+    NULL_STRING: "null",
+  });
+});
+
 Deno.test("setEnvFromConfig - sets environment variables", () => {
   const config = {
     TEST_VAR_1: "value1",

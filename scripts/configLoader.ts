@@ -84,8 +84,8 @@ export function parseYamlConfig(content: string): Record<string, string> {
       value = value.substring(1, value.length - 1);
     }
 
-    // Only set non-empty values
-    if (value) {
+    // Only set non-empty values (but allow '0', 'false', etc.)
+    if (value !== "") {
       result[key] = value;
     }
   }
