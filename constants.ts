@@ -34,7 +34,8 @@ export const STORAGE_MAX_ATTACHMENT_DIMENSION = 480;
 // Logger
 export const LOGGER_TOPICS =
   (Deno.env.get("LOGGER_TOPICS") ?? "info,warn,error")
-    .split(",");
+    .split(/,\s*/)
+    .map((s) => s.trim());
 export const LOGGER_TRUNCATE_LENGTH = 100;
 
 // -- Actions --
@@ -58,12 +59,12 @@ export const RATE_LIMIT_VIDEOS = Number(
 
 // -- Services --
 
-export const ENABLED_SERVICES = (Deno.env.get("ENABLED_SERVICES") ?? "discord")
-  .split(",")
-  .map((s) => s.trim());
+export const ENABLED_SERVICES =
+  (Deno.env.get("ENABLED_SERVICES") ?? "main,discord")
+    .split(/,\s*/)
+    .map((s) => s.trim());
 
 export const DISCORD_TOKEN = Deno.env.get("DISCORD_TOKEN");
-export const DISCORD_MESSAGE_LIMIT = 2000;
 
 // -- Models --
 
