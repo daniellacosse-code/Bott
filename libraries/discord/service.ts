@@ -13,7 +13,6 @@ import { Buffer } from "node:buffer";
 import {
   AttachmentBuilder,
   ChannelType,
-  type ChatInputCommandInteraction,
   Client,
   Events as DiscordEvents,
   GatewayIntentBits,
@@ -32,7 +31,6 @@ import {
   type BottUser,
 } from "@bott/model";
 import { addEventListener, BottEvent } from "@bott/service";
-import { log } from "@bott/logger";
 
 import { resolveBottEventFromMessage } from "./message/event.ts";
 import { getCommandJson } from "./command/json.ts";

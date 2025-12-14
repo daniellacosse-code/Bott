@@ -16,7 +16,6 @@ import {
   type BottService,
 } from "@bott/model";
 import { BottEvent } from "@bott/service";
-import { addEvents } from "@bott/storage";
 import {
   ApplicationCommandOptionType,
   ChannelType,
@@ -24,7 +23,6 @@ import {
   type CommandInteractionOption,
   type GuildTextBasedChannel,
 } from "discord.js";
-import { log } from "@bott/logger";
 
 export function resolveCommandRequestEvent<
   O extends Record<string, unknown> = Record<string, unknown>,
