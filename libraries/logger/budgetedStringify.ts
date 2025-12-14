@@ -31,10 +31,15 @@ export function budgetedStringify(value: unknown, totalBudget: number): string {
 
     // Base case
     if (value === null) return { size: "null".length };
-    if (typeof value === "boolean") return { size: value ? "true".length : "false".length };
+    if (typeof value === "boolean") {
+      return { size: value ? "true".length : "false".length };
+    }
     if (typeof value === "number") return { size: String(value).length };
     if (typeof value === "string") return { size: `"${value}"`.length };
-    if (typeof value === undefined || typeof value === "function" || typeof value === "symbol") return { size: 0 };
+    if (
+      typeof value === undefined || typeof value === "function" ||
+      typeof value === "symbol"
+    ) return { size: 0 };
 
     let size = 0;
 
