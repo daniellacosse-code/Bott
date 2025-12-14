@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BOTT_NAME } from "../../constants.ts";
+import { BOTT_NAME } from "@bott/constants";
 import type { BottRatingScale } from "@bott/model";
 
 export const directedAt: BottRatingScale = {

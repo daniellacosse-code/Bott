@@ -12,7 +12,7 @@
 import ejs from "ejs";
 import { BottGlobalSettings } from "@bott/model";
 
-import { BOTT_NAME } from "../../constants.ts";
+import { BOTT_NAME } from "@bott/constants";
 
 import * as reasons from "./reasons.ts";
 

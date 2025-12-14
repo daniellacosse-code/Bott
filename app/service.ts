@@ -24,7 +24,7 @@ import { getEventIdsForChannel, getEvents } from "@bott/storage";
 import { createTask } from "@bott/task";
 import { generateEvents } from "@bott/gemini";
 
-import { BOTT_USER } from "../constants.ts";
+import { BOTT_USER } from "@bott/constants";
 import { taskManager } from "./tasks.ts";
 import { defaultSettings } from "./settings/main.ts";
 import {
