@@ -21,7 +21,8 @@ try {
   setEnvFromConfig(config);
   console.log(`✓ Loaded configuration from ${configPath}`);
 } catch (error) {
-  console.error(`Failed to load config from ${configPath}:`, error.message);
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`Failed to load config from ${configPath}:`, message);
   console.error(
     "Please copy config.example.yml to config.dev.yml and configure it.",
   );
