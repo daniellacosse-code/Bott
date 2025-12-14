@@ -51,14 +51,19 @@ export const startDiscordService: BottServiceFactory = async ({
   actions = {},
 }: { identityToken?: string; actions?: Record<string, BottAction> }) => {
   const client = new Client({ intents: REQUIRED_INTENTS });
-  const pendingInteractions = new Map<string, ChatInputCommandInteraction>();
 
   await client.login(token);
 
   if (!client.user) {
     throw new Error("Discord user is not set!");
   }
-  const serviceUser = client.user;
+
+  const localService: BottService = {
+    user: {
+      id: client.user.id,
+      name: client.user.username,
+    },
+  };
 
   client.on(DiscordEvents.MessageCreate, async (message) => {
     if (message.channel.type !== ChannelType.GuildText) return;
@@ -113,19 +118,12 @@ export const startDiscordService: BottServiceFactory = async ({
 
     if (!action) return;
 
-    await interaction.deferReply();
-
-    try {
-      const requestEvent = await resolveCommandRequestEvent(interaction);
-      // Track the interaction using the event ID so we can reply later
-      pendingInteractions.set(requestEvent.id, interaction);
-
-      globalThis.dispatchEvent(requestEvent);
-    } catch (error) {
-      log.error("Failed to resolve command request event", error);
-
-      // TODO: dispatch error event
-    }
+    globalThis.dispatchEvent(
+      await resolveCommandRequestEvent(
+        interaction,
+        localService,
+      ),
+    );
   });
 
   const forwardSystemEvent = async (
@@ -133,64 +131,57 @@ export const startDiscordService: BottServiceFactory = async ({
     service?: BottService,
   ) => {
     if (!event.channel) return;
-    if (service?.user?.id === serviceUser.id) return;
+    if (service?.user?.id === localService.user.id) return;
     if (!service) return;
 
-    try {
-      const channel = await client.channels.fetch(event.channel.id);
-      if (!channel || channel.type !== ChannelType.GuildText) return;
+    const channel = await client.channels.fetch(event.channel.id);
+    if (!channel || channel.type !== ChannelType.GuildText) return;
 
-      if (event.type === BottEventType.REACTION) {
-        try {
-          const message = await channel.messages.fetch(
-            event.parent!.id,
-          );
-          await message.react(event.detail.content as string);
-        } catch (e) {
-          log.warn("Failed to react", e);
-        }
-      } else {
-        // Message or Reply
-        const content = event.detail.content as string;
-        const attachments = event.attachments || [];
+    if (event.type === BottEventType.REACTION) {
+      const message = await channel.messages.fetch(
+        event.parent!.id,
+      );
 
-        if (!content && attachments.length === 0) return;
-
-        const files = [];
-
-        for (const attachment of attachments) {
-          if (!attachment.raw?.file) {
-            continue;
-          }
-
-          files.push(
-            new AttachmentBuilder(
-              Buffer.from(
-                new Uint8Array(await attachment.raw.file.arrayBuffer()),
-              ),
-              {
-                name: `${attachment.id}.${
-                  BOTT_ATTACHMENT_TYPE_LOOKUP[
-                    attachment.raw.file
-                      .type as keyof typeof BOTT_ATTACHMENT_TYPE_LOOKUP
-                  ].toLowerCase()
-                }`,
-              },
-            ),
-          );
-        }
-
-        const payload: MessageCreateOptions = { content, files };
-
-        if (event.type === BottEventType.REPLY && event.parent) {
-          payload.reply = { messageReference: event.parent.id };
-        }
-
-        await channel.send(payload);
-      }
-    } catch (error) {
-      log.error("Failed to send event to Discord", error);
+      return message.react(event.detail.content as string);
     }
+
+    // Message or Reply
+    const content = event.detail.content as string;
+    const attachments = event.attachments || [];
+
+    if (!content && attachments.length === 0) return;
+
+    const files = [];
+
+    for (const attachment of attachments) {
+      if (!attachment.raw?.file) {
+        continue;
+      }
+
+      files.push(
+        new AttachmentBuilder(
+          Buffer.from(
+            new Uint8Array(await attachment.raw.file.arrayBuffer()),
+          ),
+          {
+            name: `${attachment.id}.${
+              BOTT_ATTACHMENT_TYPE_LOOKUP[
+                attachment.raw.file
+                  .type as keyof typeof BOTT_ATTACHMENT_TYPE_LOOKUP
+              ].toLowerCase()
+            }`,
+          },
+        ),
+      );
+    }
+
+    const payload: MessageCreateOptions = { content, files };
+
+    if (event.type === BottEventType.REPLY && event.parent) {
+      payload.reply = { messageReference: event.parent.id };
+    }
+
+    return channel.send(payload);
   };
 
   addEventListener(BottEventType.MESSAGE, forwardSystemEvent);
@@ -201,10 +192,10 @@ export const startDiscordService: BottServiceFactory = async ({
     // Register actions as commands
     const body = Object.values(actions).map((cmd) => getCommandJson(cmd));
     await new REST({ version: "10" }).setToken(token).put(
-      Routes.applicationCommands(String(serviceUser.id)),
+      Routes.applicationCommands(String(localService.user.id)),
       { body },
     );
   }
 
-  return { user: { id: serviceUser.id, name: serviceUser.username } };
+  return localService;
 };

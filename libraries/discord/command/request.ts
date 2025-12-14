@@ -13,6 +13,7 @@ import {
   type BottActionCallEvent,
   type BottChannel,
   BottEventType,
+  type BottService,
 } from "@bott/model";
 import { BottEvent } from "@bott/service";
 import { addEvents } from "@bott/storage";
@@ -29,6 +30,7 @@ export function resolveCommandRequestEvent<
   O extends Record<string, unknown> = Record<string, unknown>,
 >(
   interaction: ChatInputCommandInteraction,
+  service: BottService,
 ): BottActionCallEvent<O> {
   let channel: BottChannel | undefined = undefined;
 
@@ -48,7 +50,7 @@ export function resolveCommandRequestEvent<
     };
   }
 
-  const event = new BottEvent(BottEventType.ACTION_CALL, {
+  return new BottEvent(BottEventType.ACTION_CALL, {
     detail: {
       name: interaction.commandName,
       options: extractResolvedOptions(
@@ -56,22 +58,9 @@ export function resolveCommandRequestEvent<
         interaction.options.data,
       ) as O,
     },
-    user: {
-      id: interaction.user.id,
-      name: interaction.user.username,
-    },
+    user: service.user,
     channel,
   }) as BottActionCallEvent<O>;
-
-  const result = addEvents(event);
-  if ("error" in result) {
-    log.error(
-      "Failed to resolve request event to database:",
-      result.error,
-    );
-  }
-
-  return event;
 }
 
 function extractResolvedOptions(

@@ -22,11 +22,11 @@ import {
 import { addEventListener, BottEvent } from "@bott/service";
 import { getEventIdsForChannel, getEvents } from "@bott/storage";
 import { createTask } from "@bott/task";
-import { generateErrorMessage, generateEvents } from "@bott/gemini";
-import { log } from "@bott/logger";
+import { generateEvents } from "@bott/gemini";
 
+import { BOTT_USER } from "../constants.ts";
 import { taskManager } from "./tasks.ts";
-import { getDefaultGlobalSettings } from "./defaultGlobalSettings/main.ts";
+import { defaultSettings } from "./settings/main.ts";
 import {
   generateMedia,
   GenerateMediaOptions,
@@ -36,6 +36,10 @@ const WORDS_PER_MINUTE = 200;
 const MS_IN_MINUTE = 60 * 1000;
 const MAX_TYPING_TIME_MS = 3000;
 const DEFAULT_RESPONSE_SWAPS = 6;
+
+const mainService: BottService = {
+  user: BOTT_USER,
+};
 
 export const startMainService: BottServiceFactory = ({
   actions = {},
@@ -64,10 +68,10 @@ export const startMainService: BottServiceFactory = ({
         );
         const channelHistory = await getEvents(...eventHistoryIds);
         const channelContext = {
-          user: service!.user,
+          user: mainService.user,
           channel: event.channel!,
           actions,
-          settings: getDefaultGlobalSettings(service!),
+          settings: defaultSettings,
           abortSignal,
         };
 
@@ -102,10 +106,15 @@ export const startMainService: BottServiceFactory = ({
   addEventListener(BottEventType.REPLY, evaluateAndRespond);
   addEventListener(BottEventType.REACTION, evaluateAndRespond);
 
+  // Handle action calls
   addEventListener(BottEventType.ACTION_CALL, async (
     event: BottActionCallEvent<GenerateMediaOptions>,
     service?: BottService,
   ) => {
+    if (!service) {
+      throw new Error("Action called without service");
+    }
+
     let responsePromise;
 
     switch (event.detail.name) {
@@ -115,45 +124,23 @@ export const startMainService: BottServiceFactory = ({
         break;
     }
 
-    if (!service) {
-      throw new Error("Failed to find service user.");
-    }
+    const responseEvent = await responsePromise;
+    responseEvent.parent = event;
 
-    try {
-      const responseEvent = await responsePromise;
-      responseEvent.parent = event;
-
-      globalThis.dispatchEvent(responseEvent);
-    } catch (error) {
-      log.warn("Failed to generate media:", error);
-
-      globalThis.dispatchEvent(
-        await generateErrorMessage(
-          error,
-          event,
-          {
-            user: service.user,
-            channel: event.channel!,
-            settings: getDefaultGlobalSettings(service),
-          },
-        ),
-      );
-    }
+    globalThis.dispatchEvent(responseEvent);
   });
 
+  // Forward action results back to the original channel
   addEventListener(BottEventType.ACTION_RESULT, (
     event: BottActionResultEvent,
     service?: BottService,
   ) => {
     if (!service) return;
 
-    // Convert to Message/Reply
     const replyEvent = new BottEvent(
       event.parent?.parent ? BottEventType.REPLY : BottEventType.MESSAGE,
       {
-        detail: {
-          content: event.detail.content || "",
-        },
+        detail: event.detail,
         attachments: event.attachments,
         user: service.user,
         channel: event.channel,
@@ -166,5 +153,5 @@ export const startMainService: BottServiceFactory = ({
     globalThis.dispatchEvent(replyEvent);
   });
 
-  return Promise.resolve({ user: { id: "system:main", name: "Main" } });
+  return Promise.resolve(mainService);
 };

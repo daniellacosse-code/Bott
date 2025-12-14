@@ -12,6 +12,7 @@
 import { STORAGE_DEPLOY_NONCE_PATH } from "@bott/constants";
 import type { BottEvent, BottEventType, BottService } from "@bott/model";
 import { serviceRegistry } from "./registry.ts";
+import { log } from "@bott/logger";
 
 const _getCurrentDeployNonce = () => {
   try {
@@ -26,13 +27,17 @@ const _getCurrentDeployNonce = () => {
 
 export const addEventListener = <E extends BottEvent>(
   eventType: BottEventType,
-  handler: (event: E, service?: BottService) => void,
+  handler: (event: E, service?: BottService) => unknown | Promise<unknown>,
 ): void => {
-  globalThis.addEventListener(eventType, (event) => {
+  globalThis.addEventListener(eventType, async (event) => {
     const bottEvent = event as E;
 
     if (serviceRegistry.nonce !== _getCurrentDeployNonce()) return;
 
-    handler(bottEvent, serviceRegistry.get(bottEvent.user?.id ?? ""));
+    try {
+      await handler(bottEvent, serviceRegistry.get(bottEvent.user?.id ?? ""));
+    } catch (error) {
+      log.warn("Failed to handle event", error);
+    }
   });
 };

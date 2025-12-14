@@ -127,6 +127,7 @@ export async function* generateEvents(
     }
   }
 
+  // Update input events with lastProcessedAt
   try {
     const processingTime = new Date();
 
