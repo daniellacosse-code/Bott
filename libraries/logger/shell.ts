@@ -23,10 +23,15 @@ const SCRIPT_DIR = new URL("../../scripts/utils/log.sh", import.meta.url)
 async function execLog(level: string, ...args: unknown[]): Promise<void> {
   const message = args.map((arg) => String(arg)).join(" ");
 
+  // Use separate arguments to avoid shell injection
   const command = new Deno.Command("bash", {
     args: [
       "-c",
-      `source ${SCRIPT_DIR} && log_${level} "${message.replace(/"/g, '\\"')}"`,
+      `source "$1" && shift && "log_$2" "$@"`,
+      "--",
+      SCRIPT_DIR,
+      level,
+      ...args.map((arg) => String(arg)),
     ],
     stdout: "piped",
     stderr: "piped",

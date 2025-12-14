@@ -19,7 +19,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Log file configuration
-LOG_FILE="${LOG_FILE:-/tmp/bott-script.log}"
+# Use process-specific log file to avoid race conditions between concurrent processes
+LOG_FILE="${LOG_FILE:-/tmp/bott-script-$$.log}"
 LOG_BUFFER=()
 LOG_DEBOUNCE_SECONDS="${LOG_DEBOUNCE_SECONDS:-2}"
 LAST_FLUSH_TIME=0
