@@ -10,6 +10,7 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
+import { stub } from "@std/testing/mock";
 
 import { BottEventType } from "@bott/model";
 import { BottEvent } from "@bott/service";
@@ -21,17 +22,6 @@ import { addEvents } from "./data/events/add.ts";
 import { getEvents } from "./data/events/get.ts";
 import { prepareHtmlAsMarkdown } from "./prepare/html.ts";
 import { startStorageService } from "./service.ts";
-
-// Initialize nonce to match file system state for tests
-try {
-  serviceRegistry.nonce = Deno.readTextFileSync(STORAGE_DEPLOY_NONCE_PATH);
-} catch (error) {
-  if (error instanceof Deno.errors.NotFound) {
-    serviceRegistry.nonce = null;
-  } else {
-    throw error;
-  }
-}
 
 Deno.test("Storage - addEventsData, getEvents", async () => {
   const tempDir = Deno.makeTempDirSync();
@@ -157,6 +147,19 @@ Deno.test("Storage - prepareHtml", async () => {
 Deno.test("Storage - Global Listener Persistence", async () => {
   const tempDir = Deno.makeTempDirSync();
   await startStorageService({ root: tempDir });
+
+  // Setup nonce to ensure listener fires
+  const nonce = "test-nonce";
+  serviceRegistry.nonce = nonce;
+
+  using _readStub = stub(
+    Deno,
+    "readTextFileSync",
+    (path: string | URL) => {
+      if (path === STORAGE_DEPLOY_NONCE_PATH) return nonce;
+      throw new Deno.errors.NotFound();
+    },
+  );
 
   const event = new BottEvent(BottEventType.MESSAGE, {
     detail: { content: "Global dispatch test" },

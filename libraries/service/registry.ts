@@ -25,10 +25,6 @@ export class BottServiceRegistry {
   get(id: string): BottService | undefined {
     return this.services.get(id);
   }
-
-  getAll(): Record<string, BottService> {
-    return Object.fromEntries(this.services);
-  }
 }
 
 export const serviceRegistry: BottServiceRegistry = new BottServiceRegistry();
