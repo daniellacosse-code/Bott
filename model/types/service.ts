@@ -9,5 +9,13 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-export * from "./bot/start.ts";
-export * from "./message/embed/info.ts";
+import type { AnyShape } from "./utility.ts";
+import type { BottUser } from "./entities.ts";
+
+export type BottService = {
+  user: BottUser;
+};
+
+export type BottServiceFactory = (
+  options: AnyShape,
+) => Promise<BottService>;

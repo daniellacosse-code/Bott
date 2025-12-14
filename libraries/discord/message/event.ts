@@ -11,9 +11,9 @@
 
 import type { Message } from "discord.js";
 
-import { BottEvent, BottEventType } from "@bott/model";
-import { addEvents, getEvents, prepareAttachmentFromUrl } from "@bott/storage";
-import { log } from "@bott/logger";
+import { BottEventType } from "@bott/model";
+import { BottEvent } from "@bott/service";
+import { getEvents, prepareAttachmentFromUrl } from "@bott/storage";
 
 import { getMarkdownLinks } from "./markdown.ts";
 
@@ -35,7 +35,7 @@ export const resolveBottEventFromMessage = async (
       parent = await resolveBottEventFromMessage(
         await message.channel.messages.fetch(message.reference.messageId),
       );
-    } catch (_) {
+    } catch {
       // If the parent message isn't available, we can't populate the parent event.
       // This can happen if the parent message was deleted or is otherwise inaccessible.
       // In this case, we'll just omit the parent event.
@@ -63,8 +63,6 @@ export const resolveBottEventFromMessage = async (
     parent,
   });
 
-  // Set ID and createdAt directly for hydration from Discord message.
-  // TODO: Refactor BottEvent to support hydration via constructor or static factory method.
   event.id = message.id;
   event.createdAt = new Date(message.createdTimestamp);
 
@@ -76,14 +74,6 @@ export const resolveBottEventFromMessage = async (
   if (urls.length) {
     event.attachments = await Promise.all(
       urls.map((url) => prepareAttachmentFromUrl(new URL(url), event)),
-    );
-  }
-
-  const result = await addEvents(event);
-  if ("error" in result) {
-    log.error(
-      "Failed to resolve message event to database:",
-      result.error,
     );
   }
 

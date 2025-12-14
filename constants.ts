@@ -12,6 +12,14 @@
 import { join } from "@std/path";
 
 // Application Constants
+export const BOTT_NAME = Deno.env.get("BOTT_NAME") ?? "Bott";
+export const BOTT_ID = Deno.env.get("BOTT_ID") ?? "system:bott";
+
+export const BOTT_USER = {
+  id: BOTT_ID,
+  name: BOTT_NAME,
+};
+
 export const DISCORD_MESSAGE_LIMIT = 2000;
 
 /** The port of the health check server required for GCP Cloud Run. */

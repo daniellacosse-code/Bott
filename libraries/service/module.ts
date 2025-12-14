@@ -9,9 +9,6 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-export * from "./events/generate.ts";
-export * from "./attachments/essay.ts";
-export * from "./attachments/movie.ts";
-export * from "./attachments/photo.ts";
-export * from "./attachments/song.ts";
-export * from "./errors/generateMessage.ts";
+export * from "./events.ts";
+export * from "./registry.ts";
+export * from "./listener.ts";

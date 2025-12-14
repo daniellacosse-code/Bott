@@ -9,28 +9,29 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottRatingScale, BottUser } from "@bott/model";
+import { BOTT_NAME } from "@bott/constants";
+import type { BottRatingScale } from "@bott/model";
 
-export const directedAt = (user: BottUser): BottRatingScale => ({
-  name: `directedAt${user.name}`,
+export const directedAt: BottRatingScale = {
+  name: `directedAt${BOTT_NAME}`,
   definition:
-    `Whether the message is directly addressed to "${user.name}". A high score indicates a direct request or question.`,
+    `Whether the message is directly addressed to "${BOTT_NAME}". A high score indicates a direct request or question.`,
   examples: {
     1: ["Hey other user, how are you this evening?"],
     3: [
-      `I wonder if ${user.name} has anything to say about this?`,
-      `lol ${user.name} would love this`,
+      `I wonder if ${BOTT_NAME} has anything to say about this?`,
+      `lol ${BOTT_NAME} would love this`,
     ],
     4: [
       "<message of an ongoing conversation with you>",
       "That makes sense, but what about the cost?",
     ],
     5: [
-      `Hey ${user.name.toLocaleLowerCase()}, do a dance for me.`,
-      `@${user.name}, can you write me a story?`,
+      `Hey ${BOTT_NAME.toLocaleLowerCase()}, do a dance for me.`,
+      `@${BOTT_NAME}, can you write me a story?`,
     ],
   },
-});
+};
 
 export const visibility: BottRatingScale = {
   name: "visibility",

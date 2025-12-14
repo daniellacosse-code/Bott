@@ -9,7 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BottReason, BottUser } from "@bott/model";
+import { BOTT_NAME } from "@bott/constants";
+import { BottReason } from "@bott/model";
 
 import {
   directedAt,
@@ -21,12 +22,12 @@ import {
   visibility,
 } from "./ratingScales.ts";
 
-export const whenAddressed: (user: BottUser) => BottReason = (user) => ({
+export const whenAddressed: BottReason = {
   name: "whenAddressed",
   description:
-    `You should respond to events that have a \`directedAt${user.name}\` rating of 5 or 4, or at 3 when \`visibility\` or \`urgency\` is also 4 or greater.`,
+    `You should respond to events that have a \`directedAt${BOTT_NAME}\` rating of 5 or 4, or at 3 when \`visibility\` or \`urgency\` is also 4 or greater.`,
   instruction: "You have been addressed. Reply to this message.",
-  ratingScales: [directedAt(user), visibility, urgency],
+  ratingScales: [directedAt, visibility, urgency],
   validator: (metadata) => {
     const ratings = metadata?.ratings;
 
@@ -34,7 +35,7 @@ export const whenAddressed: (user: BottUser) => BottReason = (user) => ({
       return false;
     }
 
-    const directedAtUser = ratings[`directedAt${user.name}`];
+    const directedAtUser = ratings[`directedAt${BOTT_NAME}`];
     const visibility = ratings.visibility;
     const urgency = ratings.urgency;
 
@@ -44,7 +45,7 @@ export const whenAddressed: (user: BottUser) => BottReason = (user) => ({
       (directedAtUser === 3 && (visibility >= 4 || urgency >= 4))
     );
   },
-});
+};
 
 export const checkFacts: BottReason = {
   name: "checkFacts",

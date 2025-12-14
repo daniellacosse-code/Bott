@@ -13,16 +13,9 @@ import { BottAttachmentType } from "./types/events.ts";
 
 export * from "./types/actions.ts";
 export * from "./types/entities.ts";
-
-export type {
-  BottActionCallEvent,
-  BottActionResultEvent,
-  BottEventAttachment,
-} from "./types/events.ts";
-export { BottAttachmentType, BottEventType } from "./types/events.ts";
-export * from "./events.ts";
-
+export * from "./types/events.ts";
 export * from "./types/reasons.ts";
+export * from "./types/service.ts";
 export * from "./types/settings.ts";
 export * from "./types/utility.ts";
 
