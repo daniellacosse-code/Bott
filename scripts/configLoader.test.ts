@@ -100,6 +100,24 @@ ANOTHER: value
   });
 });
 
+Deno.test("parseYamlConfig - handles # inside quoted strings", () => {
+  const yaml = `
+PASSWORD: "my#password"
+TOKEN: 'test#token#123'
+URL: "https://example.com#anchor"
+COMMENT_AFTER: "value" # comment here
+`;
+
+  const result = parseYamlConfig(yaml);
+
+  assertEquals(result, {
+    PASSWORD: "my#password",
+    TOKEN: "test#token#123",
+    URL: "https://example.com#anchor",
+    COMMENT_AFTER: "value",
+  });
+});
+
 Deno.test("setEnvFromConfig - sets environment variables", () => {
   const config = {
     TEST_VAR_1: "value1",

@@ -45,8 +45,28 @@ export function parseYamlConfig(content: string): Record<string, string> {
   const lines = content.split("\n");
 
   for (const line of lines) {
-    // Remove comments
-    const withoutComment = line.split("#")[0].trim();
+    const trimmedLine = line.trim();
+    if (!trimmedLine) continue;
+
+    // Handle comments - but respect quotes to avoid splitting on # inside strings
+    let withoutComment = trimmedLine;
+    let inQuotes = false;
+    let quoteChar = "";
+
+    for (let i = 0; i < trimmedLine.length; i++) {
+      const char = trimmedLine[i];
+      if ((char === '"' || char === "'") && !inQuotes) {
+        inQuotes = true;
+        quoteChar = char;
+      } else if (char === quoteChar && inQuotes) {
+        inQuotes = false;
+        quoteChar = "";
+      } else if (char === "#" && !inQuotes) {
+        withoutComment = trimmedLine.substring(0, i).trim();
+        break;
+      }
+    }
+
     if (!withoutComment) continue;
 
     // Parse key: value

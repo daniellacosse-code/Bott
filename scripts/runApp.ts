@@ -26,8 +26,10 @@ if (!envName) {
 const containerName = `bott_${envName}`;
 const configPath = `config.${envName}.yml`;
 
+// Load config once and use it for both environment setup and container args
+let config: Record<string, string>;
 try {
-  const config = await loadConfig({
+  config = await loadConfig({
     configPath,
     exampleConfigPath: "config.example.yml",
   });
@@ -90,11 +92,7 @@ const args = [
   `${port}:${port}`,
 ];
 
-// Add environment variables from config
-const config = await loadConfig({
-  configPath,
-  exampleConfigPath: "config.example.yml",
-});
+// Add environment variables from config (already loaded at the top)
 for (const [key, value] of Object.entries(config)) {
   args.push("-e", `${key}=${value}`);
 }
