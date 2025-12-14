@@ -66,6 +66,8 @@ export const startStorageService: BottServiceFactory = (
 
     if ("error" in result) {
       log.error("Failed to add event to database:", result);
+    } else {
+      log.info("Event added to database:", result);
     }
   };
 
