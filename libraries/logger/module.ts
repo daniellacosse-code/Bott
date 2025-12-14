@@ -79,7 +79,6 @@ type Logger = {
 };
 
 // Helper function to format log arguments similar to console methods
-// Helper function to format log arguments similar to console methods
 function formatArgs(...args: unknown[]): string {
   return args.map((arg) => {
     if (typeof arg === "string") {
