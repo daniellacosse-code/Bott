@@ -14,7 +14,7 @@ import { LOGGER_MAX_CHARACTER_LENGTH, LOGGER_TOPICS } from "@bott/constants";
 import { budgetedStringify } from "./budgetedStringify.ts";
 
 // Parse LOGGER_TOPICS environment variable
-export const allowedTopics = new Set(LOGGER_TOPICS);
+export const allowedTopics: Set<string> = new Set(LOGGER_TOPICS);
 
 // Setup logger - allow all levels at handler/logger level since filtering is done in wrapper
 try {
