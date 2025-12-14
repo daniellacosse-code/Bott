@@ -12,7 +12,7 @@
 import type { BottService } from "@bott/model";
 
 export class BottServiceRegistry {
-  services = new Map<string, BottService>();
+  services: Map<string, BottService> = new Map();
   nonce?: string | null;
 
   register(service: BottService): void {
