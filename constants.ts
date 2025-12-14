@@ -92,7 +92,7 @@ const isGeminiAvailable = ["gemini", "auto"].includes(MODEL_PROVIDER) &&
 export const ERROR_MODEL = Deno.env.get("ERROR_MODEL") ??
   (isGeminiAvailable ? "gemini-2.5-flash" : "not_available");
 
-export const EVENT_MODEL = Deno.env.get("EVENTS_MODEL") ??
+export const EVENT_MODEL = Deno.env.get("EVENT_MODEL") ??
   (isGeminiAvailable ? "gemini-2.5-flash" : "not_available");
 
 export const RATING_MODEL = Deno.env.get("RATING_MODEL") ??
