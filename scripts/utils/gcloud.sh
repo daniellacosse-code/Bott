@@ -8,7 +8,15 @@
 #
 # Copyright (C) 2025 DanielLaCos.se
 
-# GCloud utility functions for Bott scripts
+# Dependency utility functions for Bott scripts
+
+# Check if Homebrew is installed
+check_homebrew() {
+  if ! command -v brew &> /dev/null; then
+    return 1
+  fi
+  return 0
+}
 
 # Check if gcloud is installed
 check_gcloud() {

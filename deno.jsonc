@@ -31,7 +31,7 @@
   "tasks": {
     "reset": "rm -rf ./.output",
     "setup": "./scripts/setup",
-    "deploy": "ENV=production ./scripts/deploy_gcp",
+    "deploy:gcp": "ENV=production ./scripts/deploy_gcp",
     "logs": "./scripts/logs"
   },
   "workspace": [

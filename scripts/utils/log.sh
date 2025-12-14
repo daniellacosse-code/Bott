@@ -18,25 +18,34 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Base logging function that all other log functions call
+# Usage: log "LEVEL" "color" "message parts..."
+log() {
+  local level="$1"
+  local color="$2"
+  shift 2
+  echo -e "${color}${level}${NC} $*"
+}
+
 # Logging functions matching application logger API
 # Usage: log_info "message" or log_info "message" "with" "multiple" "parts"
 
 # DEBUG: Detailed diagnostic information for troubleshooting
 log_debug() {
-  echo -e "${BLUE}DEBUG${NC} $*"
+  log "DEBUG" "$BLUE" "$@"
 }
 
 # INFO: General informational messages about script progress
 log_info() {
-  echo -e "${GREEN}INFO${NC} $*"
+  log "INFO" "$GREEN" "$@"
 }
 
 # WARN: Warning messages about potential issues that don't prevent execution
 log_warn() {
-  echo -e "${YELLOW}WARN${NC} $*"
+  log "WARN" "$YELLOW" "$@"
 }
 
 # ERROR: Error messages indicating failures that may stop execution
 log_error() {
-  echo -e "${RED}ERROR${NC} $*"
+  log "ERROR" "$RED" "$@"
 }

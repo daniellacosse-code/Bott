@@ -24,24 +24,72 @@ please open an issue to discuss it!
 
 #### Prerequisites
 
-- Homebrew ([https://brew.sh/](https://brew.sh/))
-- A GCP Project
-  ([https://developers.google.com/workspace/guides/create-project](https://developers.google.com/workspace/guides/create-project))
+- Homebrew ([https://brew.sh/](https://brew.sh/)) - for macOS users (the setup script can install this for you)
+- A GCP Project (the setup script can help create this)
 - A Registered Discord Application
   ([https://discord.com/developers/applications](https://discord.com/developers/applications))
 
 #### Instructions
 
-1. Copy `.env.example` to `.env.test`:
+1. **Run Setup**: The setup script will install dependencies and authenticate:
 
 ```sh
-cp .env.example .env.test
+./scripts/setup
+# Or using deno task
+deno task setup
 ```
 
-3. Get your GCP information and add it to `.env.test`.
-4. Get your Discord information and add it to `.env.test`.
-5. Set up the environment with `deno task setup`.
-6. Start the bot with `deno task runApp test`.
+The setup script will:
+- Install Homebrew (on macOS, with your permission)
+- Install dependencies via Homebrew (on macOS) or guide you through manual installation (on Linux)
+- Authenticate with Google Cloud
+- Create `.env.devcontainer` from `.env.example`
+- Optionally open the env file in your editor
+
+2. **Configure Environment**: Edit `.env.devcontainer` with your configuration:
+   - Get your GCP information and add it to the file
+   - Get your Discord information and add it to the file
+
+3. **Start the bot**:
+
+```sh
+deno task runApp test
+```
+
+#### Deploying to Production
+
+To deploy Bott to Google Cloud Run:
+
+1. **Create production environment file**:
+
+```sh
+ENV=production ./scripts/setup
+```
+
+This will create `.env.production` from `.env.example`.
+
+2. **Deploy**:
+
+```sh
+ENV=production ./scripts/deploy_gcp
+# Or using deno task
+deno task deploy:gcp
+```
+
+The deployment script will automatically:
+- Create or verify your GCP project (with auto-generated project ID if needed)
+- Enable required APIs (Vertex AI, Cloud Storage, Cloud Run, etc.)
+- Configure service account permissions
+- Deploy your application to Cloud Run
+- Provide you with the service URL
+
+3. **View Logs**:
+
+```sh
+ENV=production ./scripts/logs
+# Or using deno task
+deno task logs
+```
 
 ### Pull Requests
 
@@ -54,51 +102,4 @@ signing a CLA, you (or your employer) grant us the rights necessary to use and
 distribute your contributions under our [dual-licensing model](./LICENSE). This
 helps protect both you as a contributor and the project.
 
-### Deploying Bott
 
-Deploying Bott to Google Cloud Run is fully automated.
-
-1. **Run Setup**: First, run the setup script to install dependencies and authenticate:
-
-```sh
-./scripts/setup
-# Or using deno task
-deno task setup
-```
-
-The setup script will:
-- Install dependencies via Homebrew (on macOS)
-- Authenticate with Google Cloud
-- Guide you through initial configuration
-
-2. **Create a `.env.production` file**: Create a `.env.production` file from the
-   provided `.env.example` file and fill in your configuration values.
-
-```sh
-cp .env.example .env.production
-# Edit .env.production with your configuration
-```
-
-3. **Deploy**: Run the deployment script. It will guide you through any
-   remaining setup steps.
-
-```sh
-./scripts/deploy_gcp
-# Or using deno task
-deno task deploy
-```
-
-The script will automatically:
-- Create or verify your GCP project (with auto-generated project ID if needed)
-- Enable required APIs (Vertex AI, Cloud Storage, Cloud Run, etc.)
-- Configure service account permissions
-- Deploy your application to Cloud Run
-- Provide you with the service URL
-
-4. **View Logs**: After deployment, you can view your application logs:
-
-```sh
-./scripts/logs
-# Or using deno task
-deno task logs
-```
