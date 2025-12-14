@@ -11,7 +11,7 @@
 
 import { ConsoleHandler, getLogger, setup } from "@std/log";
 import { LOGGER_MAX_CHARACTER_LENGTH, LOGGER_TOPICS } from "@bott/constants";
-import { smartTruncate } from "./smartTruncate.ts";
+import { smartlySerialize } from "./smartlySerialize.ts";
 
 // Parse LOGGER_TOPICS environment variable
 export const allowedTopics = new Set(LOGGER_TOPICS);
@@ -45,32 +45,7 @@ export type Logger = {
  * Helper function to format log arguments similar to console methods
  */
 export function formatArgs(...args: unknown[]): string {
-  const result = args.map((arg) => {
-    if (typeof arg === "string") {
-      return smartTruncate(arg, LOGGER_MAX_CHARACTER_LENGTH);
-    }
-    if (arg === null) {
-      return "null";
-    }
-    if (arg === undefined) {
-      return "undefined";
-    }
-
-    // Use smart truncate on the object first
-    const truncated = smartTruncate(arg, LOGGER_MAX_CHARACTER_LENGTH);
-
-    try {
-      return JSON.stringify(truncated);
-    } catch {
-      return String(truncated);
-    }
-  }).join(" ");
-
-  // Final safety truncation of the entire message line
-  if (result.length > LOGGER_MAX_CHARACTER_LENGTH) {
-    return result.substring(0, LOGGER_MAX_CHARACTER_LENGTH) + "…";
-  }
-  return result;
+  return smartlySerialize(args, LOGGER_MAX_CHARACTER_LENGTH);
 }
 
 // Map to track performance timers (label -> start time)
