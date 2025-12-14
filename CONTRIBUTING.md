@@ -32,16 +32,17 @@ please open an issue to discuss it!
 
 #### Instructions
 
-1. Copy `.env.example` to `.env.test`:
+1. Copy `.env.example.yml` to `.env.dev.yml`:
 
 ```sh
-cp .env.example .env.test
+cp .env.example.yml .env.dev.yml
 ```
 
-3. Get your GCP information and add it to `.env.test`.
-4. Get your Discord information and add it to `.env.test`.
-5. Set up the environment with `deno task setup`.
-6. Start the bot with `deno task runApp test`.
+2. Get your GCP information and add it to `.env.dev.yml`.
+3. Get your Discord information and add it to `.env.dev.yml`.
+4. Set up the environment with `deno task setup`.
+5. Open the project in VS Code with the devcontainer. The bot will start
+   automatically.
 
 ### Pull Requests
 
