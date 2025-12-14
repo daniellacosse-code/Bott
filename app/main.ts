@@ -14,6 +14,7 @@ import { startStorageService } from "@bott/storage";
 import { startDiscordService } from "@bott/discord";
 import {
   DISCORD_TOKEN,
+  ENABLED_SERVICES,
   PORT,
   STORAGE_DEPLOY_NONCE_PATH,
   STORAGE_ROOT,
@@ -21,30 +22,34 @@ import {
 import * as actions from "./actions/main.ts";
 import { startMainService } from "./service.ts";
 
-const deploymentNonce = crypto.randomUUID();
-Deno.writeTextFileSync(STORAGE_DEPLOY_NONCE_PATH, deploymentNonce);
+if (import.meta.main) {
+  // Prevent multiple deployments from conflicting with each other.
+  const deploymentNonce = crypto.randomUUID();
+  Deno.mkdirSync(STORAGE_ROOT, { recursive: true });
+  Deno.writeTextFileSync(STORAGE_DEPLOY_NONCE_PATH, deploymentNonce);
 
-serviceRegistry.nonce = deploymentNonce;
+  serviceRegistry.nonce = deploymentNonce;
 
-serviceRegistry.register(
-  await startStorageService({
-    root: STORAGE_ROOT,
-  }),
-);
-
-if (DISCORD_TOKEN) {
   serviceRegistry.register(
-    await startDiscordService({
-      // TODO(#64): Unify action infrastructure
-      actions: { help: actions.help },
-      identityToken: DISCORD_TOKEN,
+    await startStorageService({
+      root: STORAGE_ROOT,
     }),
   );
-}
 
-serviceRegistry.register(
-  await startMainService({ actions }),
-);
+  if (ENABLED_SERVICES.includes("discord") && DISCORD_TOKEN) {
+    serviceRegistry.register(
+      await startDiscordService({
+        // TODO(#64): Unify action infrastructure
+        actions: { help: actions.help },
+        identityToken: DISCORD_TOKEN,
+      }),
+    );
+  }
+
+  serviceRegistry.register(
+    await startMainService({ actions }),
+  );
+}
 
 // Need to respond to GCP health probe:
 Deno.serve(

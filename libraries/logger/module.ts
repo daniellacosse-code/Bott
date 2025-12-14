@@ -13,11 +13,10 @@ import { BaseHandler, ConsoleHandler, getLogger, setup } from "@std/log";
 import { LOG_TOPICS } from "@bott/constants";
 
 // Parse LOG_TOPICS environment variable
+// Parse LOG_TOPICS environment variable
 const allowedTopics = new Set(
   LOG_TOPICS
-    .toLowerCase()
-    .split(",")
-    .map((topic) => topic.trim())
+    .map((topic) => topic.trim().toLowerCase())
     .filter((topic) => topic.length > 0),
 );
 
