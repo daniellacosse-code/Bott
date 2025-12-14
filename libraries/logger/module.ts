@@ -10,7 +10,7 @@
  */
 
 import { BaseHandler, ConsoleHandler, getLogger, setup } from "@std/log";
-import { LOG_TOPICS } from "@bott/constants";
+import { LOG_TOPICS, LOGGER_TRUNCATE_LENGTH } from "@bott/constants";
 
 // Parse LOG_TOPICS environment variable
 // Parse LOG_TOPICS environment variable
@@ -84,6 +84,7 @@ type Logger = {
 };
 
 // Helper function to format log arguments similar to console methods
+// Helper function to format log arguments similar to console methods
 function formatArgs(...args: unknown[]): string {
   return args.map((arg) => {
     if (typeof arg === "string") {
@@ -95,14 +96,18 @@ function formatArgs(...args: unknown[]): string {
     if (arg === undefined) {
       return "undefined";
     }
-    if (typeof arg === "object") {
-      try {
-        return JSON.stringify(arg);
-      } catch {
-        return String(arg);
-      }
+    try {
+      return JSON.stringify(arg, (_key, value) => {
+        if (
+          typeof value === "string" && value.length > LOGGER_TRUNCATE_LENGTH
+        ) {
+          return value.substring(0, LOGGER_TRUNCATE_LENGTH) + "…";
+        }
+        return value;
+      });
+    } catch {
+      return String(arg);
     }
-    return String(arg);
   }).join(" ");
 }
 
