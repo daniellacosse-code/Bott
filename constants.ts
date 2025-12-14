@@ -13,24 +13,28 @@ import { join } from "@std/path";
 
 // -- Infrastructure & Environment --
 export const PORT = Number(Deno.env.get("PORT") ?? 8080);
-export const LOG_TOPICS = (Deno.env.get("LOG_TOPICS") ?? "info,warn,error")
-  .split(",");
 export const OUTPUT_ROOT = Deno.env.get("OUTPUT_ROOT") ?? "./.output";
+
+// Storage
 export const STORAGE_ROOT = Deno.env.get("FILE_SYSTEM_ROOT") ??
   join(OUTPUT_ROOT, "fs_root");
 export const STORAGE_DEPLOY_NONCE_PATH = join(
   STORAGE_ROOT,
   ".deploy-nonce",
 );
-
-// Storage & Processing
-export const STORAGE_MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-export const STORAGE_FETCH_TIMEOUT_MS = 30 * 1000;
+const MEGABYTE = 1024 * 1024;
+const SECOND_TO_MS = 1000;
+const MINUTE_TO_MS = 60 * SECOND_TO_MS;
+export const STORAGE_MAX_FILE_SIZE = 50 * MEGABYTE;
+export const STORAGE_FETCH_TIMEOUT_MS = 30 * SECOND_TO_MS;
 export const STORAGE_MAX_TEXT_FILE_WORDS = 600;
-export const STORAGE_FFMPEG_TIMEOUT_MS = 5 * 60 * 1000;
+export const STORAGE_FFMPEG_TIMEOUT_MS = 5 * MINUTE_TO_MS;
 export const STORAGE_MAX_ATTACHMENT_DIMENSION = 480;
 
 // Logger
+export const LOGGER_TOPICS =
+  (Deno.env.get("LOGGER_TOPICS") ?? "info,warn,error")
+    .split(",");
 export const LOGGER_TRUNCATE_LENGTH = 100;
 
 // -- Actions --
@@ -38,7 +42,7 @@ export const ACTION_DEFAULT_RESPONSE_SWAPS = 6;
 export const ACTION_MAX_PROMPT_LENGTH = 10000;
 
 // Rate Limits
-const DAY_MS = 24 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * MINUTE_TO_MS;
 const FOUR_WEEKS_MS = 4 * 7 * DAY_MS;
 export const RATE_LIMIT_WINDOW_MS = FOUR_WEEKS_MS;
 
@@ -54,10 +58,6 @@ export const RATE_LIMIT_VIDEOS = Number(
 
 // -- Services --
 
-/**
- * A comma-separated list of enabled services.
- * Currently supported: "discord".
- */
 export const ENABLED_SERVICES = (Deno.env.get("ENABLED_SERVICES") ?? "discord")
   .split(",")
   .map((s) => s.trim());
@@ -136,4 +136,4 @@ export const BOTT_SERVICE = {
 };
 
 export const TYPING_WORDS_PER_MINUTE = 200;
-export const TYPING_MAX_TIME_MS = 3000;
+export const TYPING_MAX_TIME_MS = 3 * SECOND_TO_MS;

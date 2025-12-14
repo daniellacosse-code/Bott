@@ -10,15 +10,10 @@
  */
 
 import { BaseHandler, ConsoleHandler, getLogger, setup } from "@std/log";
-import { LOG_TOPICS, LOGGER_TRUNCATE_LENGTH } from "@bott/constants";
+import { LOGGER_TOPICS, LOGGER_TRUNCATE_LENGTH } from "@bott/constants";
 
-// Parse LOG_TOPICS environment variable
-// Parse LOG_TOPICS environment variable
-const allowedTopics = new Set(
-  LOG_TOPICS
-    .map((topic) => topic.trim().toLowerCase())
-    .filter((topic) => topic.length > 0),
-);
+// Parse LOGGER_TOPICS environment variable
+const allowedTopics = new Set(LOGGER_TOPICS);
 
 // Simple log record for testing (we can't use LogRecord directly as it has private fields)
 export interface TestLogRecord {
@@ -64,7 +59,7 @@ try {
     },
     loggers: {
       default: {
-        level: "DEBUG", // Allow all levels; filtering based on LOG_TOPICS happens in wrapper
+        level: "DEBUG", // Allow all levels; filtering based on LOGGER_TOPICS happens in wrapper
         handlers: ["console", "test"],
       },
     },
