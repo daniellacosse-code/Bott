@@ -56,7 +56,7 @@ The setup script will:
 deno task runApp test
 ```
 
-#### Deploying to Production
+#### Deploying
 
 To deploy Bott to Google Cloud Run:
 

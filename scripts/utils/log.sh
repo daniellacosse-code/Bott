@@ -18,13 +18,51 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Log file configuration
+LOG_FILE="${LOG_FILE:-/tmp/bott-script.log}"
+LOG_BUFFER=()
+LOG_DEBOUNCE_SECONDS="${LOG_DEBOUNCE_SECONDS:-2}"
+LAST_FLUSH_TIME=0
+
+# Flush log buffer to file
+flush_logs() {
+  if [ ${#LOG_BUFFER[@]} -gt 0 ]; then
+    printf "%s\n" "${LOG_BUFFER[@]}" >> "$LOG_FILE"
+    LOG_BUFFER=()
+  fi
+}
+
+# Schedule flush after debounce period
+schedule_flush() {
+  local current_time=$(date +%s)
+  local time_since_flush=$((current_time - LAST_FLUSH_TIME))
+  
+  if [ $time_since_flush -ge $LOG_DEBOUNCE_SECONDS ]; then
+    flush_logs
+    LAST_FLUSH_TIME=$current_time
+  fi
+}
+
+# Trap to flush logs on exit
+trap flush_logs EXIT
+
 # Base logging function that all other log functions call
 # Usage: log "LEVEL" "color" "message parts..."
 log() {
   local level="$1"
   local color="$2"
   shift 2
-  echo -e "${color}${level}${NC} $*"
+  local message="$*"
+  local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  
+  # Output to console with color
+  echo -e "${color}${level}${NC} ${message}"
+  
+  # Append to buffer without color codes
+  LOG_BUFFER+=("${timestamp} ${level} ${message}")
+  
+  # Schedule flush
+  schedule_flush
 }
 
 # Logging functions matching application logger API
