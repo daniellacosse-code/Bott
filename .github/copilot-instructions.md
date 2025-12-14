@@ -22,10 +22,22 @@ content generation capabilities.
   - `GOOGLE_ACCESS_TOKEN` - GCP access token
   - `DISCORD_TOKEN` - Discord bot token
 
+### Initial Setup
+
+- Install Deno runtime:
+  `curl -Lo deno.zip https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip && unzip deno.zip && sudo mv deno /usr/local/bin/`
+- Install dependencies: `sudo apt-get install -y ffmpeg docker.io`
+- Copy configuration template: `cp config.example.yml config.test.yml`
+- Configure settings in `config.test.yml`:
+  - `GOOGLE_PROJECT_ID` - GCP project ID
+  - `GOOGLE_PROJECT_LOCATION` - GCP region (e.g., us-central1)
+  - `GOOGLE_ACCESS_TOKEN` - GCP access token
+  - `DISCORD_TOKEN` - Discord bot token
+
 ### Development Workflow
 
 - Start development server: `deno task runApp test` -- requires configured
-  environment variables. NEVER CANCEL initial startup - dependency downloads
+  settings. NEVER CANCEL initial startup - dependency downloads
   take 2-5 minutes.
 - Start production server: `deno task runApp prod`
 - Build and run with Docker: `deno task runApp` -- combines Docker build and run
@@ -77,7 +89,7 @@ content generation capabilities.
 ├── deno.json             # Deno configuration and tasks
 ├── Dockerfile            # Container build instructions
 ├── Brewfile              # macOS dependencies via Homebrew
-├── .env.example          # Environment template
+├── config.example.yml    # Configuration template
 ├── app/                  # Main application
 │   ├── README.md        # Application layer documentation
 │   ├── main.ts          # Entry point
@@ -106,8 +118,8 @@ content generation capabilities.
 
 ### Debugging
 
-- Check logs via console output when running `deno task start:dev`
-- Verify environment variables are set correctly in `.env.development`
+- Check logs via console output when running `deno task runApp test`
+- Verify configuration is set correctly in `config.test.yml`
 - Test network connectivity to Discord API and Google Cloud APIs
 - Validate file permissions for `FILE_SYSTEM_ROOT` directory (default:
   `./fs_root`)

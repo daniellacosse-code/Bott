@@ -32,14 +32,14 @@ please open an issue to discuss it!
 
 #### Instructions
 
-1. Copy `.env.example` to `.env.test`:
+1. Copy `config.example.yml` to `config.test.yml`:
 
 ```sh
-cp .env.example .env.test
+cp config.example.yml config.test.yml
 ```
 
-3. Get your GCP information and add it to `.env.test`.
-4. Get your Discord information and add it to `.env.test`.
+3. Get your GCP information and add it to `config.test.yml`.
+4. Get your Discord information and add it to `config.test.yml`.
 5. Set up the environment with `deno task setup`.
 6. Start the bot with `deno task runApp test`.
 
@@ -108,22 +108,30 @@ gcloud projects add-iam-policy-binding <YOUR_PROJECT_ID> \
   --role="roles/storage.objectAdmin"
 ```
 
-5. **Create a `.env.production` file**: As [above](#instructions), create an
-   `.env.production` file from the provided `.env.example` file and fill it out.
+5. **Create a `config.production.yml` file**: As [above](#instructions), create a
+   `config.production.yml` file from the provided `config.example.yml` file and fill it out.
 
 ```sh
-cp .env.example .env.production
+cp config.example.yml config.production.yml
 ```
 
 6. **Deploy the Service**: Deploy the application to Cloud Run from the source
    repository. You will be prompted to set the region.
 
+> [!NOTE]
+> Cloud Run requires environment variables to be set via `--set-env-vars` or `--env-vars-file` flags.
+> The YAML config format is for local development. For deployment, convert your config to env vars:
+
 ```sh
+# Convert YAML to env vars format for deployment
+# Create an env vars file from your config.production.yml
+grep -v '^#' config.production.yml | grep -v '^$' | sed 's/: /=/' > .env.production
+
 gcloud run deploy bott-service \
   --source . \
   --allow-unauthenticated \
   --region <YOUR_REGION> \
-  --env-file .env.production
+  --env-vars-file .env.production
 ```
 
 9. **Verify Deployment**: Bott should now be running correctly.

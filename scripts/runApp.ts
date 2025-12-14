@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { load } from "@std/dotenv";
+import { loadConfig, setEnvFromConfig } from "./configLoader.ts";
 
 const testEnv = "test";
 const defaultPort = "8080";
@@ -24,9 +24,18 @@ if (!envName) {
 }
 
 const containerName = `bott_${envName}`;
-const envPath = `.env.${envName}`;
+const configPath = `config.${envName}.yml`;
 
-await load({ envPath });
+try {
+  const config = await loadConfig({
+    configPath,
+    exampleConfigPath: "config.example.yml",
+  });
+  setEnvFromConfig(config);
+} catch (error) {
+  console.error(`Failed to load config from ${configPath}:`, error.message);
+  Deno.exit(1);
+}
 
 // Ensure previous container is removed
 try {
@@ -77,11 +86,18 @@ const args = [
   "--name",
   containerName,
   "--rm",
-  "--env-file",
-  envPath,
   "-p",
   `${port}:${port}`,
 ];
+
+// Add environment variables from config
+const config = await loadConfig({
+  configPath,
+  exampleConfigPath: "config.example.yml",
+});
+for (const [key, value] of Object.entries(config)) {
+  args.push("-e", `${key}=${value}`);
+}
 
 // Add volume if we are in test mode
 if (envName === testEnv) {
@@ -93,7 +109,7 @@ if (envName === testEnv) {
   );
 }
 
-console.log(`Running container with ${envPath} on port ${port}...`);
+console.log(`Running container with ${configPath} on port ${port}...`);
 const process = new Deno.Command("podman", {
   args: [...args, "bott"],
   stdout: "inherit",
