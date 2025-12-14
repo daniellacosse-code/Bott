@@ -15,13 +15,20 @@ import { join } from "@std/path";
 export const PORT = Number(Deno.env.get("PORT") ?? 8080);
 export const LOG_TOPICS = (Deno.env.get("LOG_TOPICS") ?? "info,warn,error")
   .split(",");
-export const STORAGE_ROOT = Deno.env.get("FILE_SYSTEM_ROOT") ?? "./fs_root";
+export const OUTPUT_ROOT = Deno.env.get("OUTPUT_ROOT") ?? "./.output";
+export const STORAGE_ROOT = Deno.env.get("FILE_SYSTEM_ROOT") ??
+  join(OUTPUT_ROOT, "fs_root");
 export const STORAGE_DEPLOY_NONCE_PATH = join(
   STORAGE_ROOT,
   ".deploy-nonce",
 );
 
 // Services
+
+/**
+ * A comma-separated list of enabled services.
+ * Currently supported: "discord".
+ */
 export const ENABLED_SERVICES = (Deno.env.get("ENABLED_SERVICES") ?? "discord")
   .split(",");
 
@@ -29,6 +36,12 @@ export const DISCORD_TOKEN = Deno.env.get("DISCORD_TOKEN");
 export const DISCORD_MESSAGE_LIMIT = 2000;
 
 // Model Configuration
+
+/**
+ * The AI model provider to use.
+ * - "gemini": Use Gemini if GCP credentials are present.
+ * - "auto": Use Gemini if GCP credentials are present.
+ */
 export const MODEL_PROVIDER = Deno.env.get("MODEL_PROVIDER") ?? "auto";
 
 export const GOOGLE_PROJECT_ID = Deno.env.get("GOOGLE_PROJECT_ID") ??
@@ -64,10 +77,9 @@ export const MOVIE_MODEL = Deno.env.get("CONFIG_MOVIE_MODEL") ??
 
 // App Configuration
 export const BOTT_NAME = Deno.env.get("BOTT_NAME") ?? "Bott";
-export const BOTT_ID = Deno.env.get("BOTT_ID") ?? "system:bott";
 export const BOTT_SERVICE = {
   user: {
-    id: BOTT_ID,
+    id: Deno.env.get("BOTT_ID") ?? "system:bott",
     name: BOTT_NAME,
   },
 };
