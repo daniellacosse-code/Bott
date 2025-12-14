@@ -40,8 +40,11 @@ export const DISCORD_MESSAGE_LIMIT = 2000;
 
 /**
  * The AI model provider to use.
- * - "gemini": Use Gemini if GCP credentials are present.
- * - "auto": Use Gemini if GCP credentials are present.
+ * - "gemini": Explicitly select Gemini (requires GCP credentials).
+ * - "auto": Automatically select the best available provider (currently behaves the same as "gemini" and uses Gemini if GCP credentials are present).
+ *
+ * Note: Both "gemini" and "auto" currently use Gemini if GCP credentials are present.
+ * The "auto" option is reserved for future extensibility, where additional providers may be supported.
  */
 export const MODEL_PROVIDER = Deno.env.get("MODEL_PROVIDER") ?? "auto";
 
