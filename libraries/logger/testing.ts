@@ -9,23 +9,25 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BaseHandler, ConsoleHandler, getLogger } from "@std/log";
-import { allowedTopics } from "./logging.ts";
+import { formatArgs, allowedTopics, setLogInterceptor } from "./logger.ts";
 
 // Simple log record for testing
 export interface TestLogRecord {
   msg: string;
   datetime: Date;
+  level: string;
 }
 
 // Test handler for capturing logs during testing
-export class TestHandler extends BaseHandler {
+export class TestHandler {
   public logs: TestLogRecord[] = [];
 
-  override log(msg: string): void {
+  log(level: string, args: unknown[]): void {
+    const msg = formatArgs(...args);
     this.logs.push({
       msg,
       datetime: new Date(),
+      level,
     });
   }
 
@@ -34,7 +36,7 @@ export class TestHandler extends BaseHandler {
   }
 }
 
-export const testHandler: TestHandler = new TestHandler("NOTSET");
+export const testHandler: TestHandler = new TestHandler();
 
 export function addLogTopic(topic: string): void {
   allowedTopics.add(topic.toLowerCase().trim());
@@ -49,13 +51,25 @@ export function setupTestLogger(): void {
   addLogTopic("warn");
   addLogTopic("error");
 
-  // Manually attach test handler to default logger to avoid setup() conflicts
-  const logger = getLogger();
-  logger.levelName = "NOTSET";
+  // Set the interceptor to direct logs to testHandler
+  setLogInterceptor((level, args) => {
+    // Only log if topic is allowed (mimicking real logger behavior)
+    // Note: perf is handled inside logging.ts logic before calling interceptor for timing, 
+    // but we can check here too or assume logging.ts handles it.
+    // In logging.ts, interception check is inside the method, BEFORE allowedTopics check for debug/info/etc.
+    // So we should enforce topic check here if we want to simulate filtering.
+    // However, logging.ts implementation:
+    /*
+      debug(...args) {
+        if (interceptor) { interceptor... return; }
+        if (allowedTopics...) { ... }
+      }
+    */
+    // So if interceptor is set, topic filtering is skipped in logging.ts.
+    // We should implement filtering here if we want accurate test simulation.
 
-  // Reset handlers to ensure clean state
-  logger.handlers = [
-    new ConsoleHandler("NOTSET"),
-    testHandler,
-  ];
+    if (allowedTopics.has(level === "perf" ? "perf" : level)) {
+      testHandler.log(level.toUpperCase(), args);
+    }
+  });
 }

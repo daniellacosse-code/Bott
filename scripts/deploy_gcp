@@ -18,7 +18,7 @@ source "$SCRIPT_DIR/utils/checks.sh"
 # Default values
 ENV="${ENV:-production}"
 GCP_SERVICE_NAME="${GCP_SERVICE_NAME:-bott-$ENV}"
-ENV_FILE="${ENV_FILE:-.env.$ENV}"
+ENV_FILE="${ENV_FILE:-.env.$ENV.yml}"
 ALLOW_UNAUTHENTICATED="${ALLOW_UNAUTHENTICATED:-true}"
 DEFAULT_REGION="us-central1"
 
@@ -103,12 +103,14 @@ enable_apis() {
     else
       info_log "Enabling API: $api"
       if ! gcloud services enable "$api" --project="$GOOGLE_PROJECT_ID" 2>&1; then
-        warn_log "Failed to enable $api"
-        warn_log "This may be due to:"
-        warn_log "  - Billing not enabled on the project"
-        warn_log "  - Insufficient permissions"
-        warn_log "  - API not available in your region"
-        warn_log "You may need to enable this manually in the GCP Console"
+        warn_log <<EOF
+Failed to enable $api
+This may be due to:
+  - Billing not enabled on the project
+  - Insufficient permissions
+  - API not available in your region
+You may need to enable this manually in the GCP Console
+EOF
       fi
     fi
   done
@@ -149,7 +151,7 @@ check_env_file() {
   if [ ! -f "$ENV_FILE" ]; then
     error_log "Environment file '$ENV_FILE' not found."
     info_log "Please create it from .env.example:"
-    info_log "  cp .env.example $ENV_FILE"
+    info_log "  cp .env.example.yml $ENV_FILE"
     exit 1
   fi
   info_log "Environment file '$ENV_FILE' found"
@@ -250,9 +252,9 @@ deploy() {
 
 # Main execution
 main() {
-  cat <<EOF
-$(info_log "Bott Deployment Script")
-$(info_log "======================")
+  info_log <<EOF
+Bott Deployment Script
+======================
 EOF
   
   check_gcloud
@@ -266,10 +268,10 @@ EOF
   get_region
   
   if deploy; then
-    cat <<EOF
+    info_log <<EOF
 
-$(info_log "Deployment complete!")
-$(info_log "To view logs, run: ./scripts/logs")
+Deployment complete!
+To view logs, run: ./scripts/logs
 EOF
     exit 0
   else

@@ -17,8 +17,10 @@ source "$SCRIPT_DIR/utils/checks.sh"
 
 # Main setup function
 main() {
-  info_log "Bott Setup Script"
-  info_log "================="
+  info_log <<EOF
+Bott Setup Script
+=================
+EOF
   
   # Default environment to devcontainer for setup
   local env="${ENV:-devcontainer}"
@@ -66,17 +68,21 @@ main() {
         info_log "Please add Deno to your PATH: export PATH=\"\$HOME/.deno/bin:\$PATH\""
       fi
     else
-      info_log "Please manually install the following:"
-      info_log "  - Google Cloud SDK (gcloud)"
-      info_log "  - Deno runtime"
-      info_log ""
-      info_log "For more info: https://cloud.google.com/sdk/docs/install"
+      info_log <<EOF
+Please manually install the following:
+  - Google Cloud SDK (gcloud)
+  - Deno runtime
+
+For more info: https://cloud.google.com/sdk/docs/install
+EOF
     fi
   else
     info_log "Detected other system: $OSTYPE"
-    warn_log "Please manually install dependencies:"
-    warn_log "  - Google Cloud SDK (gcloud)"
-    warn_log "  - Deno runtime"
+    warn_log <<EOF
+Please manually install dependencies:
+  - Google Cloud SDK (gcloud)
+  - Deno runtime
+EOF
   fi
   
   # Check if gcloud is installed

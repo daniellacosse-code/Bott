@@ -68,7 +68,15 @@ log() {
   local level="$1"
   local color="$2"
   shift 2
-  local message="$*"
+  
+  local message
+  if [ $# -gt 0 ]; then
+    message="$*"
+  else
+    # Read from stdin
+    message=$(cat)
+  fi
+  
   local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
   
   # Check if this log level is enabled
@@ -77,13 +85,22 @@ log() {
   fi
   
   # Output to console with color
-  echo -e "${color}${level}${NC} ${message}"
-  
-  # Append to buffer without color codes
-  LOGGER_BUFFER+=("${timestamp} ${level} ${message}")
-  
-  # Schedule flush
-  schedule_flush
+  # Use printf to handle multi-line messages correctly
+  if [ -n "$message" ]; then
+    if [ "$level" = "ERROR" ]; then
+      printf "${color}${level}${NC} %s\n" "$message" >&2
+    else
+      printf "${color}${level}${NC} %s\n" "$message"
+    fi
+    
+    # Append to buffer without color codes
+    # For multi-line messages, we might want to split them or store as is
+    # Here we store as is, assuming the consumer handles newlines
+    LOGGER_BUFFER+=("${timestamp} ${level} ${message}")
+    
+    # Schedule flush
+    schedule_flush
+  fi
 }
 
 # Logging functions matching application logger API

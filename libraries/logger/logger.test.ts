@@ -78,16 +78,15 @@ Deno.test("Logger perf works like console.time/timeEnd", async () => {
   log.perf("timer1");
 
   // Check that a timing message was logged
-  const messages = testHandler.logs.map((l) => l.msg);
-  const perfMessage = messages.find((msg) => msg.includes("timer1:"));
+  const perfLog = testHandler.logs.find((l) => l.level === "PERF" && l.msg.includes("timer1:"));
 
-  assert(perfMessage, "Should log timing message");
-  assert(perfMessage!.includes("PERF"), "Should include 'PERF' prefix");
-  assert(perfMessage!.includes("ms"), "Should include 'ms' in message");
+  assert(perfLog, "Should log timing message");
+  assert(perfLog!.msg.includes("ms"), "Should include 'ms' in message");
 
   // Extract the time value and verify it's reasonable
-  const timeMatch = perfMessage!.match(/PERF timer1: ([\d.]+)ms/);
-  assert(timeMatch, "Should match format 'PERF label: XXms'");
+  // Msg format: '["timer1: 123.45ms"]' (JSON array string)
+  const timeMatch = perfLog!.msg.match(/timer1: ([\d.]+)ms/);
+  assert(timeMatch, "Should match format 'timer1: XXms'");
 
   const elapsedTime = parseFloat(timeMatch![1]);
   assert(
@@ -111,13 +110,11 @@ Deno.test("Logger perf supports multiple concurrent timers", async () => {
   log.perf("timer-a");
 
   // Check that both timing messages were logged
-  const messages = testHandler.logs.map((l) => l.msg);
+  const perfMessageA = testHandler.logs.find((l) => l.level === "PERF" && l.msg.includes("timer-a:"));
+  const perfMessageB = testHandler.logs.find((l) => l.level === "PERF" && l.msg.includes("timer-b:"));
 
-  const perfMessageA = messages.find((msg) => msg.includes("PERF timer-a:"));
-  const perfMessageB = messages.find((msg) => msg.includes("PERF timer-b:"));
-
-  assert(perfMessageA, "Should log timer-a with PERF prefix");
-  assert(perfMessageB, "Should log timer-b with PERF prefix");
+  assert(perfMessageA, "Should log timer-a with PERF level");
+  assert(perfMessageB, "Should log timer-b with PERF level");
 });
 
 Deno.test("Logger perf uses default label when none provided", () => {
@@ -129,8 +126,7 @@ Deno.test("Logger perf uses default label when none provided", () => {
   log.perf();
 
   // Check that default label was used
-  const messages = testHandler.logs.map((l) => l.msg);
-  const perfMessage = messages.find((msg) => msg.includes("PERF default:"));
+  const perfMessage = testHandler.logs.find((l) => l.level === "PERF" && l.msg.includes("default:"));
 
-  assert(perfMessage, "Should log with 'default' label and PERF prefix");
+  assert(perfMessage, "Should log with 'default' label and PERF level");
 });
