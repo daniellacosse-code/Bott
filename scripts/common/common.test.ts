@@ -10,8 +10,8 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { describe, it, afterEach } from "@std/testing/bdd";
-import { stub, restore, spy, assertSpyCall } from "@std/testing/mock";
+import { afterEach, describe, it } from "@std/testing/bdd";
+import { assertSpyCall, restore, spy, stub } from "@std/testing/mock";
 import { loadEnv, updateEnv } from "./env.ts";
 import * as gcloud from "./gcloud.ts";
 
@@ -50,7 +50,9 @@ describe("env.ts", () => {
 
 describe("gcloud.ts", () => {
   it("auth.check returns true on success, false on failure", async () => {
-    const successClient = new gcloud.GCloudClient(() => Promise.resolve("active"));
+    const successClient = new gcloud.GCloudClient(() =>
+      Promise.resolve("active")
+    );
     assertEquals(await successClient.auth.check(), true);
 
     const failClient = new gcloud.GCloudClient(() => Promise.reject("error"));

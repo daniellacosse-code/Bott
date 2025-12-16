@@ -25,7 +25,10 @@ export async function loadEnv(envName: string) {
   }
 }
 
-export async function updateEnv(envName: string, updates: Record<string, string>) {
+export async function updateEnv(
+  envName: string,
+  updates: Record<string, string>,
+) {
   const path = `.env.${envName}.yml`;
   const data = parse(await Deno.readTextFile(path)) as AnyShape;
 

@@ -13,9 +13,9 @@ import { decodeBase64 } from "@std/encoding";
 
 import { BottAttachmentType } from "@bott/model";
 import {
-  GEMINI_ACCESS_TOKEN,
   GCP_PROJECT_ID,
   GCP_REGION,
+  GEMINI_ACCESS_TOKEN,
   SONG_MODEL,
 } from "@bott/constants";
 

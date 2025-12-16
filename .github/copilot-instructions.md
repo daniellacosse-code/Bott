@@ -51,8 +51,8 @@ content generation capabilities.
 
 ### CI/CD Validation
 
-- Always run `./exec fmt --check && ./exec lint` before committing - this matches
-  the GitHub Actions workflow
+- Always run `./exec fmt --check && ./exec lint` before committing - this
+  matches the GitHub Actions workflow
 - License header check: All `.ts` and `.sql` files must contain "This project is
   dual-licensed:" in their header
 - The CI workflow in `.github/workflows/qualityChecks.yml` runs: lint, unit

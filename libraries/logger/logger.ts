@@ -1,4 +1,3 @@
-
 /**
  * @license
  * This file is part of Bott.

@@ -12,7 +12,7 @@
 import { createExecutor, Executor, FlagRecord } from "./exec.ts";
 
 export class GCloudClient {
-  constructor(private readonly executor: Executor = createExecutor("gcloud")) { }
+  constructor(private readonly executor: Executor = createExecutor("gcloud")) {}
 
   readonly auth = {
     login: async () => {

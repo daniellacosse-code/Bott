@@ -27,7 +27,7 @@
     "mdast-util-from-markdown": "npm:mdast-util-from-markdown@^2.0.2",
     "mdast": "npm:mdast@^3",
     "turndown": "npm:turndown@^7.2.0",
-    "unist-util-visit": "npm:unist-util-visit@^5.0.0",
+    "unist-util-visit": "npm:unist-util-visit@^5.0.0"
   },
   "tasks": {
     "deploy_gcp": "deno run --allow-read --allow-write --allow-env --allow-run=gcloud ./scripts/deploy_gcp.ts",

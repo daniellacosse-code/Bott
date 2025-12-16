@@ -64,8 +64,6 @@ if (import.meta.main) {
 
 // ---
 
-
-
 export function createMockUser(name?: string): BottUser {
   return {
     id: faker.string.uuid(),
