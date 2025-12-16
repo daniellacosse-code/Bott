@@ -10,7 +10,7 @@
  */
 
 import { BaseHandler, ConsoleHandler, getLogger } from "@std/log";
-import { allowedTopics } from "./logging.ts";
+import { _setLoggerTopics } from "./logger.ts";
 
 // Simple log record for testing
 export interface TestLogRecord {
@@ -30,30 +30,23 @@ export class TestHandler extends BaseHandler {
   }
 
   clear(): void {
-    this.logs = [];
+    this.logs.length = 0;
   }
 }
 
 export const testHandler: TestHandler = new TestHandler("NOTSET");
+export const testLogs = testHandler.logs;
 
-export function addLogTopic(topic: string): void {
-  allowedTopics.add(topic.toLowerCase().trim());
+export function clearTestLogs(): void {
+  testHandler.clear();
 }
 
 export function setupTestLogger(): void {
-  allowedTopics.clear();
+  _setLoggerTopics(["debug", "info", "warn", "error", "perf"]);
 
-  // Enable standard log levels for tests
-  addLogTopic("debug");
-  addLogTopic("info");
-  addLogTopic("warn");
-  addLogTopic("error");
-
-  // Manually attach test handler to default logger to avoid setup() conflicts
   const logger = getLogger();
-  logger.levelName = "NOTSET";
 
-  // Reset handlers to ensure clean state
+  logger.levelName = "NOTSET";
   logger.handlers = [
     new ConsoleHandler("NOTSET"),
     testHandler,

@@ -10,13 +10,10 @@
  */
 
 import { assert } from "@std/assert";
-import { addLogTopic, log, setupTestLogger, testHandler } from "./module.ts";
+import { log, setupTestLogger, testHandler } from "./module.ts";
 
 // Setup test logger
 setupTestLogger();
-
-// Enable perf logging for tests
-addLogTopic("perf");
 
 Deno.test("Logger exports expected methods", () => {
   // Verify the logger exports the expected methods

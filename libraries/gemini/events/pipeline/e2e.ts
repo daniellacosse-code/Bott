@@ -55,38 +55,14 @@ if (import.meta.main) {
     throw new Error("NO DATA");
   }
 
-  log.debug("--- INPUT ---");
-  result.data.input.forEach(printEvent);
+  log.debug("--- INPUT ---", result.data.input);
 
-  log.debug("\n--- OUTPUT ---");
-  result.data.output.forEach(printEvent);
+  log.debug("--- OUTPUT ---", result.data.output);
 
   log.perf("pipeline");
 }
 
 // ---
-
-function printEvent(
-  event: BottEvent & { _pipelineEvaluationMetadata?: object },
-) {
-  const detail = event.detail as {
-    content?: string;
-  };
-
-  const parts = [
-    `[${event.type.padEnd(8)}]`,
-    `${(event.user?.name ?? "bott").padEnd(8)}:`,
-    detail.content ? `'${detail.content}'` : "(no content)",
-  ];
-
-  if (event._pipelineEvaluationMetadata) {
-    parts.push(
-      `pipeline: ${JSON.stringify(event._pipelineEvaluationMetadata)}`,
-    );
-  }
-
-  console.log(parts.join(" "));
-}
 
 export function createMockUser(name?: string): BottUser {
   return {

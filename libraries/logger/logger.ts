@@ -13,10 +13,6 @@ import { ConsoleHandler, getLogger, setup } from "@std/log";
 import { LOGGER_MAX_CHARACTER_LENGTH, LOGGER_TOPICS } from "@bott/constants";
 import { budgetedStringify } from "./budgetedStringify.ts";
 
-// Parse LOGGER_TOPICS environment variable
-export const allowedTopics: Set<string> = new Set(LOGGER_TOPICS);
-
-// Setup logger - allow all levels at handler/logger level since filtering is done in wrapper
 try {
   setup({
     handlers: {
@@ -24,61 +20,60 @@ try {
     },
     loggers: {
       default: {
-        level: "NOTSET", // Allow all levels; filtering based on LOGGER_TOPICS happens in wrapper
+        level: "NOTSET",
         handlers: ["console"],
       },
     },
   });
 } catch {
-  // Setup may have already been called, that's ok
+  // Setup already called
 }
 
-export type Logger = {
+/** @internal - for testing only*/
+let _loggerTopics = LOGGER_TOPICS;
+
+/** @internal - for testing only */
+export function _setLoggerTopics(topics: string[]) {
+  _loggerTopics = topics;
+}
+
+export interface Logger {
   debug(...args: unknown[]): void;
   info(...args: unknown[]): void;
   warn(...args: unknown[]): void;
   error(...args: unknown[]): void;
   perf(label?: string): void;
-};
-
-/**
- * Helper function to format log arguments similar to console methods
- */
-export function formatArgs(...args: unknown[]): string {
-  return budgetedStringify(args, LOGGER_MAX_CHARACTER_LENGTH);
 }
 
-// Map to track performance timers (label -> start time)
 const perfTimers = new Map<string, number>();
 
-// Export a logger object that maintains the same API
 export const log: Logger = {
   debug(...args: unknown[]): void {
-    if (allowedTopics.has("debug")) {
-      getLogger().debug(formatArgs(...args));
+    if (_loggerTopics.includes("debug")) {
+      getLogger().debug(budgetedStringify(args, LOGGER_MAX_CHARACTER_LENGTH));
     }
   },
 
   info(...args: unknown[]): void {
-    if (allowedTopics.has("info")) {
-      getLogger().info(formatArgs(...args));
+    if (_loggerTopics.includes("info")) {
+      getLogger().info(budgetedStringify(args, LOGGER_MAX_CHARACTER_LENGTH));
     }
   },
 
   warn(...args: unknown[]): void {
-    if (allowedTopics.has("warn")) {
-      getLogger().warn(formatArgs(...args));
+    if (_loggerTopics.includes("warn")) {
+      getLogger().warn(budgetedStringify(args, LOGGER_MAX_CHARACTER_LENGTH));
     }
   },
 
   error(...args: unknown[]): void {
-    if (allowedTopics.has("error")) {
-      getLogger().error(formatArgs(...args));
+    if (_loggerTopics.includes("error")) {
+      getLogger().error(budgetedStringify(args, LOGGER_MAX_CHARACTER_LENGTH));
     }
   },
 
   perf(label = "default"): void {
-    if (!allowedTopics.has("perf")) {
+    if (!_loggerTopics.includes("perf")) {
       return;
     }
 
