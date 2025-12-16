@@ -9,35 +9,42 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { _setLogWriter } from "./logger.ts";
+import { BaseHandler, ConsoleHandler, getLogger } from "@std/log";
 
-export interface LogTestRecord {
-  level: string;
+// Simple log record for testing
+export interface TestLogRecord {
   msg: string;
+  datetime: Date;
 }
 
-export let testLogs: LogTestRecord[] = [];
+// Test handler for capturing logs during testing
+export class TestHandler extends BaseHandler {
+  public logs: TestLogRecord[] = [];
 
-export function clearTestLogs(): void {
-  testLogs = [];
+  override log(msg: string): void {
+    this.logs.push({
+      msg,
+      datetime: new Date(),
+    });
+  }
+
+  clear(): void {
+    this.logs = [];
+  }
 }
+
+export const testHandler: TestHandler = new TestHandler("NOTSET");
 
 export function setupTestLogger(): void {
-  // Capture logs via a custom WritableStream
-  const logStream = new WritableStream<Uint8Array>({
-    write(chunk) {
-      const text = new TextDecoder().decode(chunk);
-      // Format is "fnName 'arg1' 'arg2' ..."
-      const parts = text.trim().match(/^(\w+) '(.*)'$/);
-      if (parts) {
-        const level = parts[1].replace("_log", "").toUpperCase();
-        // Simple unescape: replace ' with nothing since we want raw content, 
-        // or actually unescape bash single quotes: '\'' -> '
-        const msg = parts[2].replace(/'\\''/g, "'");
-        testLogs.push({ level, msg });
-      }
-    },
-  });
+  Deno.env.set("LOGGER_TOPICS", "debug,info,warn,error,perf");
 
-  _setLogWriter(logStream.getWriter());
+  // Manually attach test handler to default logger to avoid setup() conflicts
+  const logger = getLogger();
+  logger.levelName = "NOTSET";
+
+  // Reset handlers to ensure clean state
+  logger.handlers = [
+    new ConsoleHandler("NOTSET"),
+    testHandler,
+  ];
 }

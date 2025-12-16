@@ -22,67 +22,23 @@ please open an issue to discuss it!
 
 ### Getting started
 
+#### Prerequisites
+
+- Your container runtime of choice (Docker/Podman). For this guide, we'll use
+  Docker.
+
 #### Instructions
 
-1. **Run Setup**: The setup script will install dependencies and authenticate:
+1. Copy `.env.example.yml` to `.env.devcontainer.yml`:
 
 ```sh
-./scripts/setup
-# Or using deno task
-deno task setup
+cp .env.example.yml .env.devcontainer.yml
 ```
 
-The setup script will:
-- Install Homebrew (on macOS, with your permission)
-- Install dependencies via Homebrew (on macOS) or guide you through manual installation (on Linux)
-- Authenticate with Google Cloud
-- Create `.env.devcontainer` from `.env.example`
-- Optionally open the env file in your editor
-
-2. **Configure Environment**: Edit `.env.devcontainer` with your configuration:
-   - Get your GCP information and add it to the file
-   - Get your Discord information and add it to the file
-
-3. **Start the bot**:
-
-```sh
-deno task runApp test
-```
-
-#### Deploying
-
-To deploy Bott to Google Cloud Run:
-
-1. **Create production environment file**:
-
-```sh
-ENV=production ./scripts/setup
-```
-
-This will create `.env.production` from `.env.example`.
-
-2. **Deploy**:
-
-```sh
-ENV=production ./scripts/deploy_gcp
-# Or using deno task
-deno task deploy:gcp
-```
-
-The deployment script will automatically:
-- Create or verify your GCP project (with auto-generated project ID if needed)
-- Enable required APIs (Vertex AI, Cloud Storage, Cloud Run, etc.)
-- Configure service account permissions
-- Deploy your application to Cloud Run
-- Provide you with the service URL
-
-3. **View Logs**:
-
-```sh
-ENV=production ./scripts/logs
-# Or using deno task
-deno task logs
-```
+2. Get your GCP information and add it to `.env.devcontainer.yml`.
+3. Get your Discord information and add it to `.env.devcontainer.yml`.
+4. Open the project in VS Code with the devcontainer. Bott will start
+   automatically.
 
 ### Pull Requests
 
@@ -95,4 +51,6 @@ signing a CLA, you (or your employer) grant us the rights necessary to use and
 distribute your contributions under our [dual-licensing model](./LICENSE). This
 helps protect both you as a contributor and the project.
 
+### Deploying Bott
 
+TODO: update this section

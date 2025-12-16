@@ -26,14 +26,14 @@
     "turndown": "npm:turndown@^7.2.0",
     "unist-util-visit": "npm:unist-util-visit@^5.0.0",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.2",
-    "@bott/constants": "./constants.ts",
-    "logger.sh": "./libraries/logger/logger.sh"
+    "@std/yaml": "jsr:@std/yaml@^0.224.0",
+    "@std/flags": "jsr:@std/flags@^0.224.0",
+    "@bott/constants": "./constants.ts"
   },
   "tasks": {
     "reset": "rm -rf ./.output",
-    "setup": "./scripts/setup",
-    "deploy:gcp": "./scripts/deploy_gcp",
-    "logs": "./scripts/logs"
+    "deploy:gcp": "deno run --allow-all ./scripts/deploy_gcp.ts",
+    "logs": "deno run --allow-all ./scripts/logs.ts"
   },
   "workspace": [
     "./model",

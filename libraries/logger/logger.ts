@@ -1,13 +1,3 @@
-/**
- * @license
- * This file is part of Bott.
- *
- * This project is dual-licensed:
- * - Non-commercial use: AGPLv3 (see LICENSE file for full text).
- * - Commercial use: Proprietary License (contact D@nielLaCos.se for details).
- *
- * Copyright (C) 2025 DanielLaCos.se
- */
 
 /**
  * @license
@@ -20,76 +10,67 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { join, fromFileUrl, dirname } from "@std/path";
-import { LOGGER_MAX_CHARACTER_LENGTH } from "@bott/constants";
+import { ConsoleHandler, getLogger, setup } from "@std/log";
+import { LOGGER_MAX_CHARACTER_LENGTH, LOGGER_TOPICS } from "@bott/constants";
 import { budgetedStringify } from "./budgetedStringify.ts";
 
-const shellLogger = Deno.readTextFileSync(
-  join(dirname(fromFileUrl(import.meta.url)), "logger.sh")
-);
-
-const command = new Deno.Command("bash", {
-  stdin: "piped",
-  stdout: "inherit",
-  stderr: "inherit",
-});
-const process = command.spawn();
-let writer = process.stdin.getWriter();
-const encoder = new TextEncoder();
-
-// For testing
-export function _setLogWriter(newWriter: WritableStreamDefaultWriter<Uint8Array>) {
-  writer = newWriter;
-}
-
-// Initialize logger by writing the script content once
 try {
-  await writer.write(encoder.encode(shellLogger + "\n"));
-} catch (err) {
-  console.error("[CRITICAL] Failed to initialize logger script:", err);
+  setup({
+    handlers: {
+      console: new ConsoleHandler("NOTSET"),
+    },
+    loggers: {
+      default: {
+        level: "NOTSET",
+        handlers: ["console"],
+      },
+    },
+  });
+} catch {
+  // Setup already called
 }
 
-
-async function writeLog(fnName: string, ...args: unknown[]): Promise<void> {
-  const bundledArguments = budgetedStringify(args, LOGGER_MAX_CHARACTER_LENGTH)
-    .replace(/'/g, "'\\''");
-
-  try {
-    await writer.write(encoder.encode(`${fnName} '${bundledArguments}'\n`));
-  } catch (error) {
-    console.error("[CRITICAL] Logger pipe failed:", error);
-  }
-}
-
-const _perfTimers = new Map<string, number>();
+const perfTimers = new Map<string, number>();
 
 export const log = {
   debug(...args: unknown[]): void {
-    writeLog("debug_log", ...args);
+    if (LOGGER_TOPICS.includes("debug")) {
+      getLogger().debug(budgetedStringify(args, LOGGER_MAX_CHARACTER_LENGTH));
+    }
   },
 
   info(...args: unknown[]): void {
-    writeLog("info_log", ...args);
+    if (LOGGER_TOPICS.includes("info")) {
+      getLogger().info(budgetedStringify(args, LOGGER_MAX_CHARACTER_LENGTH));
+    }
   },
 
   warn(...args: unknown[]): void {
-    writeLog("warn_log", ...args);
+    if (LOGGER_TOPICS.includes("warn")) {
+      getLogger().warn(budgetedStringify(args, LOGGER_MAX_CHARACTER_LENGTH));
+    }
   },
 
   error(...args: unknown[]): void {
-    writeLog("error_log", ...args);
+    if (LOGGER_TOPICS.includes("error")) {
+      getLogger().error(budgetedStringify(args, LOGGER_MAX_CHARACTER_LENGTH));
+    }
   },
 
-  perf(id = "default"): void {
-    if (_perfTimers.has(id)) {
-      const startTime = _perfTimers.get(id)!;
-      const elapsed = performance.now() - startTime;
-      _perfTimers.delete(id);
+  perf(label = "default"): void {
+    if (!LOGGER_TOPICS.includes("perf")) {
+      return;
+    }
 
-      const message = `${id}: ${elapsed.toFixed(2)}ms`;
-      writeLog("perf_log", message);
+    // If timer exists, end it and log elapsed time
+    if (perfTimers.has(label)) {
+      const startTime = perfTimers.get(label)!;
+      const elapsed = performance.now() - startTime;
+      perfTimers.delete(label);
+      getLogger().info(`PERF ${label}: ${elapsed.toFixed(2)}ms`);
     } else {
-      _perfTimers.set(id, performance.now());
+      // Start a new timer
+      perfTimers.set(label, performance.now());
     }
   },
 };
