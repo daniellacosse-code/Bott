@@ -17,39 +17,59 @@ import {
 import { BottEvent } from "@bott/service";
 import { createInfoEmbed } from "@bott/discord";
 
-// Read version from app/deno.jsonc
-const appDenoConfig = JSON.parse(
-  await Deno.readTextFile(new URL("../deno.jsonc", import.meta.url)),
-);
-const version = appDenoConfig.version || "unknown";
+// Lazy-loaded version with caching
+let version: string | undefined;
+
+async function getVersion(): Promise<string> {
+  if (version !== undefined) {
+    return version;
+  }
+
+  try {
+    const configText = await Deno.readTextFile(
+      new URL("../deno.jsonc", import.meta.url),
+    );
+    // Simple JSONC parsing: strip comments before parsing
+    const jsonText = configText.split("\n")
+      .map((line) => line.replace(/\/\/.*$/, "")) // Remove line comments
+      .join("\n")
+      .replace(/\/\*[\s\S]*?\*\//g, ""); // Remove block comments
+    const appDenoConfig = JSON.parse(jsonText);
+    version = appDenoConfig.version || "unknown";
+  } catch (error) {
+    console.error("Failed to read version from deno.jsonc:", error);
+    version = "unknown";
+  }
+
+  return version;
+}
 
 export const help: BottAction = Object.assign(
-  function help() {
-    return Promise.resolve(
-      new BottEvent(BottEventType.ACTION_RESULT, {
-        detail: {
-          embeds: [
-            createInfoEmbed("Help Menu", {
-              fields: [
-                {
-                  name: "About",
-                  value:
-                    "@Bott (they/them) is a helpful agent that responds to your messages and generates media for you: essay, songs, photos and videos.",
-                },
-                {
-                  name: "Limitations",
-                  value:
-                    "Currently, @Bott can read urls and photos when responding. They may sometimes say things that are not correct.",
-                },
-                { name: "/help", value: "Display this help menu." },
-              ],
-              footer:
-                `v${version} ᛫ Under development ᛫ written by DanielLaCos.se`,
-            }),
-          ],
-        },
-      }) as BottActionResultEvent,
-    );
+  async function help() {
+    const currentVersion = await getVersion();
+    return new BottEvent(BottEventType.ACTION_RESULT, {
+      detail: {
+        embeds: [
+          createInfoEmbed("Help Menu", {
+            fields: [
+              {
+                name: "About",
+                value:
+                  "@Bott (they/them) is a helpful agent that responds to your messages and generates media for you: essay, songs, photos and videos.",
+              },
+              {
+                name: "Limitations",
+                value:
+                  "Currently, @Bott can read urls and photos when responding. They may sometimes say things that are not correct.",
+              },
+              { name: "/help", value: "Display this help menu." },
+            ],
+            footer:
+              `v${currentVersion} ᛫ Under development ᛫ written by DanielLaCos.se`,
+          }),
+        ],
+      },
+    }) as BottActionResultEvent;
   },
   {
     description: "Get help with @Bott.",
