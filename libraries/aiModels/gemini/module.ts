@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-export * from "./actions/response/action.ts";
+export * from "./actions/simulateResponse/action.ts";
 
 export * from "./actions/movie.ts";
 export * from "./actions/photo.ts";

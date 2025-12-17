@@ -9,12 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { RATING_MODEL } from "@bott/constants";
 
 import { log } from "@bott/log";
 
-import { BottEventType } from "@bott/model";
 import { type Schema, Type } from "@google/genai";
+import { GEMINI_RATING_MODEL } from "@bott/constants";
 import { queryGemini } from "../../common/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
@@ -22,24 +21,21 @@ const systemPrompt = await Deno.readTextFile(
   new URL("./systemPrompt.md", import.meta.url),
 );
 
-export const filterOutput: EventPipelineProcessor = async (context) => {
-  if (!context.data.output.length) {
-    return context;
-  }
-
-  const output = context.data.output;
-  const outputReasons = context.settings.reasons.output;
-  const outputRatingScales = [
-    ...new Set(outputReasons.flatMap((reason) => reason.ratingScales ?? [])),
+export const focusInput: EventPipelineProcessor = async (context) => {
+  const input = context.data.input;
+  const inputReasons = context.settings.reasons.input;
+  const inputRatingScales = [
+    ...new Set(inputReasons.flatMap((reason) => reason.ratingScales ?? [])),
   ];
 
-  if (!outputRatingScales.length) {
+  // If we have no way to determine focus, skip this step.
+  if (inputRatingScales.length === 0) {
     return context;
   }
 
   const responseSchema = {
     type: Type.OBJECT,
-    properties: outputRatingScales.reduce(
+    properties: inputRatingScales.reduce(
       (properties, ratingScale) => {
         properties[ratingScale.name] = {
           type: Type.OBJECT,
@@ -61,22 +57,21 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
       },
       {} as Record<string, Schema>,
     ),
-    required: outputRatingScales.map((ratingScale) => ratingScale.name),
+    required: inputRatingScales.map((ratingScale) => ratingScale.name),
   };
 
   const geminiCalls: Promise<void>[] = [];
 
   let pointer = 0;
-  while (pointer < output.length) {
-    const event = output[pointer];
+  while (pointer < input.length) {
+    const event = input[pointer];
 
     if (event.lastProcessedAt) {
       pointer++;
       continue;
     }
 
-    // No need to filter reactions, really.
-    if (event.type === BottEventType.REACTION) {
+    if (event.user?.id === context.user.id) {
       pointer++;
       continue;
     }
@@ -86,45 +81,41 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
         Record<string, { rating: string; rationale: string | undefined }>
       >(
         // Provide the current event and all subsequent events as context for scoring.
-        output.slice(pointer),
+        input.slice(pointer),
         {
           systemPrompt,
           responseSchema,
           context,
-          model: RATING_MODEL,
+          model: GEMINI_RATING_MODEL,
           useIdentity: false,
         },
       );
 
       const ratings: Record<string, number> = {};
-      let logMessage = `Message Candidate:\n`;
-
-      logMessage += `  Content: ${event.detail?.content ?? "n/a"}\n`;
-      logMessage += `  Name: ${event.detail?.name ?? "n/a"}\n`;
-
+      let logMessage = `Event ${event.id}:\n`;
       for (const ratingScale in scoresWithRationale) {
         const { rating, rationale } = scoresWithRationale[ratingScale];
         if (rationale) {
           logMessage +=
-            `    ${ratingScale}: ${rating}. Rationale: ${rationale}\n`;
+            `  ${ratingScale}: ${rating}. Rationale: ${rationale}\n`;
         }
 
         ratings[ratingScale] = Number(rating);
       }
 
       const metadata = { ratings };
-      const triggeredOutputReasons = Object.values(outputReasons)
+      const triggeredFocusReasons = Object.values(inputReasons)
         .filter((reason) => reason.validator(metadata));
 
       context.evaluationState.set(event, {
         ratings,
-        outputReasons: triggeredOutputReasons,
+        focusReasons: triggeredFocusReasons,
       });
 
       log.debug(
         logMessage +
-        (triggeredOutputReasons.length > 0
-          ? `    [TRIGGERED OUTPUT REASONS]: ${triggeredOutputReasons.map(({ name }) => name).join(", ")
+        (triggeredFocusReasons.length > 0
+          ? `    [TRIGGERED FOCUS REASONS]: ${triggeredFocusReasons.map(({ name }) => name).join(", ")
           }`
           : ""),
       );
@@ -135,7 +126,7 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
 
   await Promise.all(geminiCalls);
 
-  context.data.output = output;
+  context.data.input = input;
 
   return context;
 };

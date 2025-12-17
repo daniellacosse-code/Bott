@@ -10,7 +10,6 @@
  */
 
 import type {
-  AnyShape,
   BottAction,
   BottChannel,
   BottEvent,
@@ -39,7 +38,7 @@ export interface EventPipelineContext {
   abortSignal: AbortSignal;
   user: BottUser;
   channel: BottChannel;
-  actions: Record<string, BottAction<AnyShape, AnyShape>>;
+  actions: Record<string, BottAction>;
   settings: BottGlobalSettings;
 }
 

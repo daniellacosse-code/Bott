@@ -32,7 +32,7 @@ export type BottActionSettings = {
   }
 };
 
-type BottActionValue = string | number | boolean | File | BottDataEvent;
+export type BottActionValue = string | number | boolean | File | BottDataEvent;
 
 export type BottActionSchema = {
   name: string;
