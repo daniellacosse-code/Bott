@@ -20,6 +20,3 @@ threshold = 10
 
 [smells.nested_control_flow]
 threshold = 3
-
-[[plugin]]
-name = "semgrep"
