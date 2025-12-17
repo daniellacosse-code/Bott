@@ -13,7 +13,7 @@ import { decodeBase64 } from "@std/encoding";
 
 import { BottAttachmentType } from "@bott/model";
 import {
-  GCP_PROJECT_ID,
+  GCP_PROJECT,
   GCP_REGION,
   GEMINI_ACCESS_TOKEN,
   SONG_MODEL,
@@ -24,7 +24,7 @@ import type { BottAttachmentDataGenerator } from "./types.ts";
 const IS_CLOUD_RUN = Boolean(Deno.env.get("K_SERVICE"));
 
 const VERTEX_API_URL =
-  `https://${GCP_REGION}-aiplatform.googleapis.com/v1/projects/${GCP_PROJECT_ID}/locations/${GCP_REGION}/publishers/google/models/${SONG_MODEL}:predict`;
+  `https://${GCP_REGION}-aiplatform.googleapis.com/v1/projects/${GCP_PROJECT}/locations/${GCP_REGION}/publishers/google/models/${SONG_MODEL}:predict`;
 
 export const generateSongData: BottAttachmentDataGenerator = async (
   prompt,
@@ -82,7 +82,7 @@ async function getAccessToken(): Promise<string> {
       );
     }
   } else {
-    if (!GEMINI_ACCESS_TOKEN || GEMINI_ACCESS_TOKEN === "TOKEN_MISSING") {
+    if (!GEMINI_ACCESS_TOKEN) {
       throw new Error(
         "GEMINI_ACCESS_TOKEN is not set. Please set it for local development or ensure the app is running in Cloud Run.",
       );

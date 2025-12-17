@@ -11,12 +11,10 @@
 
 set -o pipefail
 
-RUNNER="${CONTAINER_RUNNER:-docker}"
+RUNNER="${RUNNER:-docker}"
 IMAGE="bott:latest"
 
-if [[ "$($RUNNER images -q $IMAGE 2> /dev/null)" == "" ]]; then
-  $RUNNER build -t $IMAGE .
-fi
+$RUNNER build -t $IMAGE .
 
 # If arguments are provided, prepend 'deno'
 CMD=""
