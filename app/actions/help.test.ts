@@ -34,14 +34,12 @@ Deno.test("help - embed includes version in footer", async () => {
 
   assertExists(embed.data.footer);
   assertExists(embed.data.footer.text);
+
+  // Check for version format pattern (e.g., "v1.0.0", "v0.0.0-alpha", "vunknown")
+  const versionPattern = /v[0-9]+\.[0-9]+\.[0-9]+(-[a-z]+)?|vunknown/;
   assert(
-    embed.data.footer.text.includes("v"),
-    "Footer should include version prefix",
-  );
-  assert(
-    embed.data.footer.text.includes("0.0.0-alpha") ||
-      embed.data.footer.text.includes("unknown"),
-    "Footer should include version number",
+    versionPattern.test(embed.data.footer.text),
+    `Footer should include version in format vX.Y.Z or vX.Y.Z-suffix, got: ${embed.data.footer.text}`,
   );
 });
 
