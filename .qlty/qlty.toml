@@ -20,3 +20,7 @@ threshold = 10
 
 [smells.nested_control_flow]
 threshold = 3
+
+[plugin.semgrep]
+enabled = true
+rulesets = ["security-audit", "javascript", "typescript"]
