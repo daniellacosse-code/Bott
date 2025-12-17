@@ -94,29 +94,24 @@ export const DISCORD_TOKEN = Deno.env.get("DISCORD_TOKEN");
  */
 export const MODEL_PROVIDER = Deno.env.get("MODEL_PROVIDER") ?? "auto";
 
+// Gemini Models
 export const GEMINI_ACCESS_TOKEN = Deno.env.get("GEMINI_ACCESS_TOKEN");
 const isGeminiAvailable = ["gemini", "auto"].includes(MODEL_PROVIDER) &&
   GCP_PROJECT;
 
-export const ERROR_MODEL = Deno.env.get("ERROR_MODEL") ??
+export const GEMINI_EVENT_MODEL = Deno.env.get("GEMINI_EVENT_MODEL") ??
   (isGeminiAvailable ? "gemini-2.5-flash" : "not_available");
 
-export const EVENT_MODEL = Deno.env.get("EVENT_MODEL") ??
-  (isGeminiAvailable ? "gemini-2.5-flash" : "not_available");
-
-export const RATING_MODEL = Deno.env.get("RATING_MODEL") ??
+export const GEMINI_RATING_MODEL = Deno.env.get("GEMINI_RATING_MODEL") ??
   (isGeminiAvailable ? "gemini-2.5-flash-lite" : "not_available");
 
-export const ESSAY_MODEL = Deno.env.get("ESSAY_MODEL") ??
-  (isGeminiAvailable ? "gemini-3-pro-preview" : "not_available");
-
-export const PHOTO_MODEL = Deno.env.get("PHOTO_MODEL") ??
+export const GEMINI_PHOTO_MODEL = Deno.env.get("GEMINI_PHOTO_MODEL") ??
   (isGeminiAvailable ? "gemini-3-pro-image-preview" : "not_available");
 
-export const SONG_MODEL = Deno.env.get("SONG_MODEL") ??
+export const GEMINI_SONG_MODEL = Deno.env.get("GEMINI_SONG_MODEL") ??
   (isGeminiAvailable ? "lyria-002" : "not_available");
 
-export const MOVIE_MODEL = Deno.env.get("MOVIE_MODEL") ??
+export const GEMINI_MOVIE_MODEL = Deno.env.get("GEMINI_MOVIE_MODEL") ??
   (isGeminiAvailable ? "veo-3.1-fast-generate-001" : "not_available");
 
 // Input processing limits

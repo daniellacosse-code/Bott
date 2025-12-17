@@ -9,14 +9,14 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottEvent, BottEventType } from "./events.ts";
+import type { BottEvent, BottEventType, BottDataEvent } from "./events.ts";
 
 export type BottAction = BottActionFunction & BottActionSettings;
 
 export type BottActionFunction = (
-  input: BottActionValue[],
+  input: BottActionValueEntry[],
   context: BottActionContext,
-) => Promise<BottActionValue[]>;
+) => Promise<BottActionValueEntry[]>;
 
 export type BottActionContext = {
   signal: AbortSignal;
@@ -32,24 +32,26 @@ export type BottActionSettings = {
   }
 };
 
+type BottActionValue = string | number | boolean | File | BottDataEvent;
+
 export type BottActionSchema = {
   name: string;
-  type: "string" | "number" | "boolean";
-  allowedValues?: (string | number | boolean)[];
+  type: "string" | "number" | "boolean" | "file" | "event";
+  allowedValues?: BottActionValue[];
   description?: string;
   required?: boolean;
 };
 
-type BottActionValue = {
+export type BottActionValueEntry = {
   name: string;
-  data: string | number | boolean;
+  value: BottActionValue;
 }
 
 export type BottActionCallEvent = BottEvent<
   BottEventType.ACTION_CALL,
   {
     name: string;
-    input: BottActionValue[];
+    input: BottActionValueEntry[];
   }
 >;
 
@@ -71,7 +73,8 @@ export type BottActionCancelEvent = BottEvent<
 export type BottActionResultEvent = BottEvent<
   BottEventType.ACTION_RESULT, {
     id: string;
-    output: BottActionValue[];
+    name: string;
+    output: BottActionValueEntry[];
   }
 >;
 

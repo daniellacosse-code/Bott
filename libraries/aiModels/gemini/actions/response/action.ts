@@ -18,30 +18,14 @@ import {
 } from "@bott/constants";
 import { log } from "@bott/log";
 import { BottAttachmentType } from "@bott/model";
-import type {
-  BottAction,
-  BottChannel,
-  BottGlobalSettings,
-  BottUser,
-} from "@bott/model";
 import { BottEvent } from "@bott/service";
 
 import { addEvents } from "@bott/storage";
 
-import { getEvents } from "@bott/storage";
-
 import pipeline, { type EventPipelineContext } from "./pipeline/main.ts";
+import { createAction } from "@bott/actions";
 
-export async function* generateEvents(
-  inputEvents: BottEvent[],
-  context: {
-    abortSignal: AbortSignal;
-    user: BottUser;
-    channel: BottChannel;
-    actions: Record<string, BottAction>;
-    settings: BottGlobalSettings;
-  },
-): AsyncGenerator<BottEvent> {
+export const responseAction = createAction((input, context) => {
   const prunedInput: BottEvent[] = [];
   const now = Date.now();
   const timeCutoff = now - INPUT_EVENT_TIME_LIMIT_MS;
@@ -156,4 +140,4 @@ export async function* generateEvents(
   }
 
   return;
-}
+}, {});

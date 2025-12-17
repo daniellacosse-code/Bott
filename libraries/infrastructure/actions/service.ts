@@ -9,32 +9,43 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BottServiceFactory, BottAction, BottActionCallEvent, BottActionCancelEvent, BottEventType } from "@bott/model";
+import { type BottServiceFactory, type BottAction, type BottActionCallEvent, type BottActionCancelEvent, BottEventType } from "@bott/model";
+import { BottEvent } from "@bott/service";
 
-export const startActionService: BottServiceFactory = ({ actions }: { actions: Record<string, BottAction> }) => {
-  const signalMap = new Map<string, AbortSignal>();
+export const startActionService: BottServiceFactory = (options) => {
+  const { actions } = options as { actions: Record<string, BottAction> };
+  const controllerMap = new Map<string, AbortController>();
 
-  addEventListener(BottEventType.ACTION_CALL, async (event: BottActionCallEvent) => {
-    const action = actions[event.detail.name];
+  addEventListener(BottEventType.ACTION_CALL, async (event: Event) => {
+    if (!(event instanceof BottEvent)) return;
+    const callEvent = event as BottActionCallEvent;
+
+    const action = actions[callEvent.detail.name];
     if (!action) {
-      throw new Error(`Action ${event.detail.name} not found`);
+      globalThis.dispatchEvent(new BottEvent(BottEventType.ACTION_ERROR, {
+        detail: {
+          id: callEvent.id,
+          error: new Error(`Action ${callEvent.detail.name} not found`),
+        },
+      }));
+      return;
     }
 
-    const signal = new AbortController().signal;
+    const controller = new AbortController();
     const id = crypto.randomUUID();
 
-    signalMap.set(id, signal);
+    controllerMap.set(id, controller);
 
     try {
-      const output = await action(event.detail.input, {
-        id,
-        signal,
-        settings: action.settings,
+      const output = await action(callEvent.detail.input, {
+        signal: controller.signal,
+        settings: action,
       });
 
       globalThis.dispatchEvent(new BottEvent(BottEventType.ACTION_RESULT, {
         detail: {
           id,
+          name: action.name,
           output,
         },
       }));
@@ -43,21 +54,24 @@ export const startActionService: BottServiceFactory = ({ actions }: { actions: R
       globalThis.dispatchEvent(new BottEvent(BottEventType.ACTION_ERROR, {
         detail: {
           id,
-          error,
+          error: error as Error,
         },
       }));
     }
   });
 
-  addEventListener(BottEventType.ACTION_CANCEL, async (event: BottActionCancelEvent) => {
-    signalMap.get(event.detail.id)?.abort();
-    signalMap.delete(event.detail.id);
+  addEventListener(BottEventType.ACTION_CANCEL, (event: Event) => {
+    if (!(event instanceof BottEvent)) return;
+    const cancelEvent = event as BottActionCancelEvent;
+
+    controllerMap.get(cancelEvent.detail.id)?.abort();
+    controllerMap.delete(cancelEvent.detail.id);
   });
 
-  return {
+  return Promise.resolve({
     user: {
       id: "system:actions",
       name: "Actions",
     }
-  }
+  })
 }

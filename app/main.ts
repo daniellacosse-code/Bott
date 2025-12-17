@@ -9,6 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { serviceRegistry } from "@bott/service";
 import {
   DISCORD_TOKEN,
   ENABLED_SERVICES,
@@ -16,11 +17,13 @@ import {
   STORAGE_DEPLOY_NONCE_LOCATION,
   STORAGE_ROOT,
 } from "@bott/constants";
+import { startStorageService } from "@bott/storage";
 import { startDiscordService } from "@bott/discord";
-import { serviceRegistry } from "@bott/service";
-import { startEventStorageService } from "@bott/storage";
-import * as actions from "./actions/main.ts";
+import { startActionService } from "@bott/actions";
+import { songAction, movieAction, photoAction, responseAction } from "@bott/gemini";
 import { startMainService } from "./service.ts";
+
+const actions = { songAction, movieAction, photoAction, responseAction };
 
 if (import.meta.main) {
   // Prevent multiple deployments from conflicting with each other.
@@ -41,10 +44,15 @@ if (import.meta.main) {
   if (ENABLED_SERVICES.includes("discord") && DISCORD_TOKEN) {
     serviceRegistry.register(
       await startDiscordService({
-        // TODO(#64): Unify action infrastructure
-        actions: { help: actions.help },
+        actions,
         identityToken: DISCORD_TOKEN,
       }),
+    );
+  }
+
+  if (ENABLED_SERVICES.includes("action")) {
+    serviceRegistry.register(
+      await startActionService({ actions }),
     );
   }
 

@@ -12,5 +12,11 @@
 import type { BottAction, BottActionFunction, BottActionSettings } from "@bott/model";
 
 export function createAction(fn: BottActionFunction, settings: BottActionSettings): BottAction {
-  return Object.assign(fn, settings);
+  const action = fn as unknown as BottAction;
+  const { name, ...otherSettings } = settings;
+
+  Object.defineProperty(action, "name", { value: name });
+  Object.assign(action, otherSettings);
+
+  return action;
 }

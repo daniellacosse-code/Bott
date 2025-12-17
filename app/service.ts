@@ -10,148 +10,86 @@
  */
 
 import {
-  ACTION_DEFAULT_RESPONSE_SWAPS,
   BOTT_SERVICE,
   TYPING_MAX_TIME_MS,
   TYPING_WORDS_PER_MINUTE,
 } from "@bott/constants";
 
-import { generateEvents } from "@bott/gemini";
 import {
-  type BottAction,
-  type BottActionCallEvent,
-  type BottActionResultEvent,
+  type BottActionValueEntry,
   BottEventType,
+  type BottActionErrorEvent,
   type BottService,
   type BottServiceFactory,
+  isBottDataEvent,
+  BottActionResultEvent,
 } from "@bott/model";
 import { addEventListener, BottEvent } from "@bott/service";
 import { getEventIdsForChannel, getEvents } from "@bott/storage";
-import { createTask } from "@bott/task";
 
 import { delay } from "@std/async";
 import {
-  generateMedia,
-  type GenerateMediaOptions,
-} from "./actions/generateMedia.ts";
-import { defaultSettings } from "./settings/main.ts";
-import { taskManager } from "./tasks.ts";
+  BOTT_SERVICE,
+  TYPING_MAX_TIME_MS,
+  TYPING_WORDS_PER_MINUTE,
+} from "@bott/constants";
 
 const MS_IN_MINUTE = 60 * 1000;
 
-export const startMainService: BottServiceFactory = ({
-  actions = {},
-}: { actions?: Record<string, BottAction> }) => {
-  const evaluateAndRespond = (event: BottEvent, service?: BottService) => {
+export const startMainService: BottServiceFactory = () => {
+  const triggerEventGenerationPipeline = async (event: BottEvent, service?: BottService) => {
     if (!event.channel) return;
     if (!event.user) return;
     if (service) return;
 
-    if (!taskManager.has(event.channel.name)) {
-      taskManager.add({
-        name: event.channel.name,
-        remainingSwaps: ACTION_DEFAULT_RESPONSE_SWAPS,
-        completions: [],
-        config: {
-          maximumSequentialSwaps: ACTION_DEFAULT_RESPONSE_SWAPS,
+    const eventHistoryIds = getEventIdsForChannel(
+      event.channel!.id,
+    );
+    const channelHistory = await getEvents(...eventHistoryIds);
+
+    globalThis.dispatchEvent(
+      new BottEvent(BottEventType.ACTION_CALL, {
+        detail: {
+          name: "message",
+          input: channelHistory.map(value => ({ value })),
         },
-      });
-    }
-
-    taskManager.push(
-      event.channel.name,
-      createTask(async (abortSignal: AbortSignal) => {
-        const eventHistoryIds = getEventIdsForChannel(
-          event.channel!.id,
-        );
-        const channelHistory = await getEvents(...eventHistoryIds);
-        const channelContext = {
-          user: BOTT_SERVICE.user,
-          channel: event.channel!,
-          actions,
-          settings: defaultSettings,
-          abortSignal,
-        };
-
-        for await (
-          const generatedEvent of generateEvents(
-            channelHistory,
-            channelContext,
-          )
-        ) {
-          if (abortSignal.aborted) {
-            throw new Error("Aborted task: before typing message");
-          }
-
-          // Typing simulation logic
-          const words =
-            (generatedEvent.detail.content as string).split(/\s+/).length;
-          const delayMs = (words / TYPING_WORDS_PER_MINUTE) * MS_IN_MINUTE;
-          const cappedDelayMs = Math.min(
-            delayMs,
-            TYPING_MAX_TIME_MS,
-          );
-          await delay(cappedDelayMs, { signal: abortSignal });
-
-          if (abortSignal.aborted) {
-            throw new Error("Aborted task: before dispatching event");
-          }
-
-          globalThis.dispatchEvent(generatedEvent);
-        }
+        user: BOTT_SERVICE.user,
+        channel: event.channel,
       }),
     );
   };
 
-  addEventListener(BottEventType.MESSAGE, evaluateAndRespond);
-  addEventListener(BottEventType.REPLY, evaluateAndRespond);
-  addEventListener(BottEventType.REACTION, evaluateAndRespond);
+  addEventListener(BottEventType.MESSAGE, triggerEventGenerationPipeline);
+  addEventListener(BottEventType.REPLY, triggerEventGenerationPipeline);
+  addEventListener(BottEventType.REACTION, triggerEventGenerationPipeline);
 
-  // Handle action calls
-  addEventListener(BottEventType.ACTION_CALL, async (
-    event: BottActionCallEvent,
-    service?: BottService,
-  ) => {
-    if (!service) {
-      throw new Error("Action called without service");
+  addEventListener(BottEventType.ACTION_RESULT, async (event: BottActionResultEvent) => {
+    if (event.detail.name !== "message") return;
+
+    for (
+      const { value } of event.detail.output as BottActionValueEntry[]
+    ) {
+      if (!isBottDataEvent(value)) continue;
+
+      // TODO: hoist into response generation action, I think.
+      // Typing simulation logic
+      const words =
+        (value.detail.content as string).split(/\s+/).length;
+      const delayMs = (words / TYPING_WORDS_PER_MINUTE) * MS_IN_MINUTE;
+      const cappedDelayMs = Math.min(
+        delayMs,
+        TYPING_MAX_TIME_MS,
+      );
+
+      await delay(cappedDelayMs);
+
+      globalThis.dispatchEvent(value);
     }
-
-    let responsePromise;
-
-    switch (event.detail.name) {
-      case "generateMedia":
-      default:
-        responsePromise = generateMedia(
-          event as BottActionCallEvent<GenerateMediaOptions>,
-        );
-        break;
-    }
-
-    const responseEvent = await responsePromise;
-    responseEvent.parent = event;
-
-    globalThis.dispatchEvent(responseEvent);
   });
 
-  // Forward action results back to the original channel
-  addEventListener(BottEventType.ACTION_RESULT, (
-    event: BottActionResultEvent,
-    service?: BottService,
-  ) => {
-    if (!service) return;
-
-    const replyEvent = new BottEvent(
-      event.parent?.parent ? BottEventType.REPLY : BottEventType.MESSAGE,
-      {
-        detail: event.detail,
-        attachments: event.attachments,
-        user: service.user,
-        channel: event.channel,
-        parent: event.parent?.parent,
-      },
-    );
-
-    globalThis.dispatchEvent(replyEvent);
+  // TODO: send message to user (probably via event generation action)
+  addEventListener(BottEventType.ACTION_ERROR, (event: BottActionErrorEvent) => {
+    console.error(event.detail.error);
   });
 
   return Promise.resolve(BOTT_SERVICE);

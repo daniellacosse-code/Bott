@@ -74,6 +74,16 @@ export type BottReactionEvent = BottEvent<BottEventType.REACTION, {
   content: string;
 }>;
 
+export type BottDataEvent = BottMessageEvent | BottReplyEvent | BottReactionEvent;
+
+export const isBottDataEvent = (value: unknown): value is BottDataEvent => {
+  return [
+    BottEventType.MESSAGE,
+    BottEventType.REPLY,
+    BottEventType.REACTION,
+  ].includes((value as BottEvent).type);
+};
+
 /**
  * Enumerates the different types of attachments that can be associated with a BottEvent.
  */
