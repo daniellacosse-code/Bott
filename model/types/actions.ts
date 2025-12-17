@@ -9,45 +9,77 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottActionCallEvent, BottActionResultEvent } from "./events.ts";
-import type { AnyShape } from "./utility.ts";
+import type { BottEvent, BottEventType } from "./events.ts";
 
-/**
- * Defines the signature for a handler function that processes `BottActionCallEvent`s.
- * @template O - Shape of the options for the incoming request.
- * @template D - Shape of the details for the outgoing response.
- */
-export type BottAction<
-  O extends AnyShape = AnyShape,
-  D extends AnyShape = AnyShape,
-> = {
-  (
-    request: BottActionCallEvent<O>,
-  ): Promise<BottActionResultEvent<D>>;
-  /** Optional description of what the action does. */
-  description?: string;
-  /** Optional array of options that this action accepts. */
-  options?: BottActionOption[];
+export type BottAction = BottActionFunction & BottActionSettings;
+
+export type BottActionFunction = (
+  input: BottActionValue[],
+  context: BottActionContext,
+) => Promise<BottActionValue[]>;
+
+export type BottActionContext = {
+  signal: AbortSignal;
+  settings: BottActionSettings;
 };
 
-/**
- * Enumerates the types for options in a `BottAction`.
- */
-export enum BottActionOptionType {
-  STRING = "string",
-  INTEGER = "integer",
-  BOOLEAN = "boolean",
-}
-
-/**
- * Defines the structure for an option within a `BottAction`.
- */
-export type BottActionOption = {
+export type BottActionSettings = {
   name: string;
-  type: BottActionOptionType;
-  allowedValues?: string[];
-  /** Optional description of the option. */
+  instructions: string;
+  schema: {
+    input: BottActionSchema[];
+    output: BottActionSchema[];
+  }
+};
+
+export type BottActionSchema = {
+  name: string;
+  type: "string" | "number" | "boolean";
+  allowedValues?: (string | number | boolean)[];
   description?: string;
-  /** Optional flag indicating if the option is required. */
   required?: boolean;
 };
+
+type BottActionValue = {
+  name: string;
+  data: string | number | boolean;
+}
+
+export type BottActionCallEvent = BottEvent<
+  BottEventType.ACTION_CALL,
+  {
+    name: string;
+    input: BottActionValue[];
+  }
+>;
+
+export type BottActionStartEvent = BottEvent<
+  BottEventType.ACTION_START,
+  {
+    id: string;
+    name: string;
+  }
+>;
+
+export type BottActionCancelEvent = BottEvent<
+  BottEventType.ACTION_CANCEL,
+  {
+    id: string;
+  }
+>;
+
+export type BottActionResultEvent = BottEvent<
+  BottEventType.ACTION_RESULT, {
+    id: string;
+    output: BottActionValue[];
+  }
+>;
+
+
+export type BottActionErrorEvent = BottEvent<
+  BottEventType.ACTION_ERROR,
+  {
+    id: string;
+    error: Error;
+  }
+>;

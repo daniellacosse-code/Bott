@@ -9,5 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-export { createTask } from "./create.ts";
-export { TaskManager } from "./manager.ts";
+import type { BottAction, BottActionFunction, BottActionSettings } from "@bott/model";
+
+export function createAction(fn: BottActionFunction, settings: BottActionSettings): BottAction {
+  return Object.assign(fn, settings);
+}

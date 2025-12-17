@@ -24,8 +24,14 @@ export enum BottEventType {
   REACTION = "reaction",
   /** An event representing a call for Bott to perform an action. */
   ACTION_CALL = "actionCall",
+  /** An event representing the start of an action. */
+  ACTION_START = "actionStart",
+  /** An event representing the cancellation of an action. */
+  ACTION_CANCEL = "actionCancel",
   /** An event representing the result of an action. */
   ACTION_RESULT = "actionResult",
+  /** An event representing an error that occurred during an action. */
+  ACTION_ERROR = "actionError",
 }
 
 /**
@@ -55,6 +61,18 @@ export interface BottEvent<
   /** Requires JSON.stringify support. */
   toJSON(): Record<string, unknown>;
 }
+
+export type BottMessageEvent = BottEvent<BottEventType.MESSAGE, {
+  content: string;
+}>;
+
+export type BottReplyEvent = BottEvent<BottEventType.REPLY, {
+  content: string;
+}>;
+
+export type BottReactionEvent = BottEvent<BottEventType.REACTION, {
+  content: string;
+}>;
 
 /**
  * Enumerates the different types of attachments that can be associated with a BottEvent.
@@ -91,16 +109,3 @@ export type BottEventAttachment = {
     file: File;
   };
 };
-
-export type BottActionCallEvent<O extends AnyShape = AnyShape> = BottEvent<
-  BottEventType.ACTION_CALL,
-  {
-    name: string;
-    options: O;
-  }
->;
-
-export type BottActionResultEvent<D extends AnyShape = AnyShape> = BottEvent<
-  BottEventType.ACTION_RESULT,
-  D
->;
