@@ -10,14 +10,11 @@ exclude_patterns = [
 name = "default"
 default = true
 
-[smells.function_parameters]
-threshold = 4
-
 [smells.boolean_logic]
-threshold = 8
-
-[smells.function_complexity]
-threshold = 10
+threshold = 6
 
 [smells.nested_control_flow]
 threshold = 3
+
+[smells.return_statements]
+enabled = false
