@@ -9,16 +9,20 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import type {
+  BottAction,
+  BottActionCallEvent,
+  BottActionCancelEvent as BottActionAbortEvent,
+} from "@bott/actions";
 import {
-  type BottAction,
-  type BottActionCallEvent,
-  type BottActionCancelEvent as BottActionAbortEvent,
   BottEventType,
   type BottGlobalSettings,
-  type BottServiceFactory,
 } from "@bott/model";
-import { BottEvent } from "@bott/service";
-import { addEventListener } from "@bott/service";
+import {
+  addEventListener,
+  BottEvent,
+  type BottServiceFactory,
+} from "@bott/service";
 import { commit, sql } from "@bott/storage";
 import { _validateParameters } from "./validation.ts";
 

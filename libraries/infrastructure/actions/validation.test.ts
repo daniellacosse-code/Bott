@@ -12,7 +12,7 @@
 import type {
   BottActionParameter,
   BottActionParameterEntry,
-} from "@bott/model";
+} from "@bott/actions";
 import { assertThrows } from "@std/assert";
 // Function to be tested
 import { _validateParameters } from "./validation.ts";

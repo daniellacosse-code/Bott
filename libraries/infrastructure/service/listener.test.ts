@@ -11,7 +11,7 @@
 
 import { STORAGE_DEPLOY_NONCE_LOCATION } from "@bott/constants";
 import { BottEventType } from "@bott/model";
-import type { BottService } from "@bott/model";
+import type { BottService } from "@bott/service";
 import { assert } from "@std/assert";
 import { assertSpyCall, assertSpyCalls, spy, stub } from "@std/testing/mock";
 import { BottEvent } from "./events.ts";

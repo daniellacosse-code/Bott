@@ -10,7 +10,7 @@
  */
 
 import type { BottChannel, BottUser } from "./entities.ts";
-import type { AnyShape } from "./utility.ts";
+import type { AnyShape } from "./common.ts";
 
 /**
  * Enumerates the different types of events that can occur in Bott.

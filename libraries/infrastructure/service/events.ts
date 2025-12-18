@@ -11,8 +11,6 @@
 
 import {
   type AnyShape,
-  type BottActionCallEvent,
-  type BottActionCompleteEvent,
   type BottChannel,
   type BottEvent as BottEventInterface,
   type BottEventAttachment,
@@ -68,14 +66,3 @@ export class BottEvent<
   }
 }
 
-export function isBottActionCallEvent(
-  event: BottEventInterface,
-): event is BottActionCallEvent {
-  return event.type === BottEventType.ACTION_CALL;
-}
-
-export function isBottActionCompleteEvent(
-  event: BottEventInterface,
-): event is BottActionCompleteEvent {
-  return event.type === BottEventType.ACTION_COMPLETE;
-}

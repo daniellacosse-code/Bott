@@ -10,7 +10,7 @@
  */
 
 import type { BottUser } from "./entities.ts";
-import type { AnyShape } from "./utility.ts";
+import type { AnyShape } from "./common.ts";
 
 export type BottService = {
   user: BottUser;

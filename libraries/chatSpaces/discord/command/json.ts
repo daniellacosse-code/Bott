@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottAction } from "@bott/model";
+import type { BottAction } from "@bott/actions";
 import { SlashCommandBuilder } from "discord.js";
 
 const COMMAND_DESCRIPTION_LIMIT = 100;

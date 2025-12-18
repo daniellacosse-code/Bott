@@ -9,9 +9,9 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottEvent, BottEventType } from "./events.ts";
-import type { BottGlobalSettings } from "./settings.ts";
-import type { NonEmptyArray } from "./utility.ts";
+import type { BottEvent, BottEventType } from "@bott/model";
+import type { BottGlobalSettings } from "@bott/model";
+import type { NonEmptyArray } from "@bott/model";
 
 export type BottAction = BottActionFunction & BottActionSettings;
 

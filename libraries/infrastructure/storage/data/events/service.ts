@@ -13,10 +13,12 @@ import { log } from "@bott/log";
 import {
   type BottEvent,
   BottEventType,
+} from "@bott/model";
+import {
+  addEventListener,
   type BottService,
   type BottServiceFactory,
-} from "@bott/model";
-import { addEventListener } from "@bott/service";
+} from "@bott/service";
 
 import { addEvents } from "./add.ts";
 

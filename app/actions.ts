@@ -9,6 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import type { BottAction } from "@bott/actions";
 import {
   GEMINI_EVENT_MODEL,
   GEMINI_MOVIE_MODEL,
@@ -23,7 +24,6 @@ import {
   responseAction,
   songAction,
 } from "@bott/gemini";
-import type { BottAction } from "@bott/model";
 
 const actions: Record<string, BottAction> = {};
 

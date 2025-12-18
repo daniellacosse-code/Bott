@@ -111,8 +111,6 @@ export const GEMINI_PHOTO_MODEL = Deno.env.get("GEMINI_PHOTO_MODEL") ??
 export const GEMINI_SONG_MODEL = Deno.env.get("GEMINI_SONG_MODEL") ??
   (isGeminiAvailable ? "lyria-realtime" : "not_available");
 
-export const SONG_GENERATION_DURATION_SECONDS = 15;
-
 export const GEMINI_MOVIE_MODEL = Deno.env.get("GEMINI_MOVIE_MODEL") ??
   (isGeminiAvailable ? "veo-3.1-fast-generate-001" : "not_available");
 
@@ -132,6 +130,9 @@ export const INPUT_EVENT_COUNT_LIMIT = Number(
 export const INPUT_EVENT_TIME_LIMIT_MS = Number(
   Deno.env.get("INPUT_EVENT_TIME_LIMIT_MS") ?? DAY_MS,
 );
+
+// -- Media --
+export const SONG_GENERATION_DURATION_SECONDS = 15;
 
 // -- App --
 export const BOTT_NAME = Deno.env.get("BOTT_NAME") ?? "Bott";

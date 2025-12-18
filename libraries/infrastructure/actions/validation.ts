@@ -12,7 +12,7 @@
 import type {
   BottActionParameter,
   BottActionParameterEntry,
-} from "@bott/model";
+} from "@bott/actions";
 
 export function _validateParameters(
   schema: BottActionParameter[],
@@ -44,6 +44,7 @@ export function _validateParameters(
         field.type === "number" ||
         field.type === "boolean"
       ) {
+        // deno-lint-ignore valid-typeof
         if (typeof param.value !== field.type) {
           throw new Error(
             `Parameter '${field.name}' must be of type ${field.type}`,

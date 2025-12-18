@@ -9,14 +9,14 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { createAction } from "@bott/actions";
+import { createAction, startActionService } from "@bott/actions";
 import { STORAGE_DEPLOY_NONCE_LOCATION } from "@bott/constants";
 import { BottEventType } from "@bott/model";
 import { BottEvent, serviceRegistry } from "@bott/service";
 import { addEvents, startEventStorageService } from "@bott/storage";
 import { assert } from "@std/assert";
 import { stub } from "@std/testing/mock";
-import { startActionService } from "./service.ts";
+
 
 Deno.test("Action Service - Rate Limiting", async () => {
   const tempDir = Deno.makeTempDirSync();

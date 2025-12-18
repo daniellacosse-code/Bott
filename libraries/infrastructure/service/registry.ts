@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottService } from "@bott/model";
+import type { BottService } from "@bott/service";
 
 export class BottServiceRegistry {
   services: Map<string, BottService> = new Map();

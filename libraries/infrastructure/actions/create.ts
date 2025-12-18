@@ -13,7 +13,7 @@ import type {
   BottAction,
   BottActionFunction,
   BottActionSettings,
-} from "@bott/model";
+} from "@bott/actions";
 
 export function createAction(
   fn: BottActionFunction,

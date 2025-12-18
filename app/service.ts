@@ -11,8 +11,12 @@
 
 import { BOTT_SERVICE } from "@bott/constants";
 
-import { BottEventType, type BottServiceFactory } from "@bott/model";
-import { addEventListener, BottEvent } from "@bott/service";
+import { BottEventType } from "@bott/model";
+import {
+  addEventListener,
+  BottEvent,
+  type BottServiceFactory,
+} from "@bott/service";
 
 export const startAppService: BottServiceFactory = () => {
   const triggerEventGenerationPipeline = (

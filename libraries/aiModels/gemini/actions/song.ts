@@ -12,13 +12,13 @@
 import { Buffer } from "node:buffer";
 
 import { createAction } from "@bott/actions";
+import type { BottAction, BottActionSettings } from "@bott/actions";
 import {
   GEMINI_SONG_MODEL,
   RATE_LIMIT_MUSIC,
   SONG_GENERATION_DURATION_SECONDS,
 } from "@bott/constants";
 import { BottEventType } from "@bott/model";
-import type { BottAction, BottActionSettings } from "@bott/model";
 import { BottEvent } from "@bott/service";
 import { prepareAttachmentFromFile } from "@bott/storage";
 

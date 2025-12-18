@@ -10,9 +10,9 @@
  */
 
 import { createAction } from "@bott/actions";
+import type { BottAction, BottActionSettings } from "@bott/actions";
 import { GEMINI_PHOTO_MODEL, RATE_LIMIT_PHOTOS } from "@bott/constants";
 import { BottEventType } from "@bott/model";
-import type { BottAction, BottActionSettings } from "@bott/model";
 import { BottEvent } from "@bott/service";
 import { prepareAttachmentFromFile } from "@bott/storage";
 import {
