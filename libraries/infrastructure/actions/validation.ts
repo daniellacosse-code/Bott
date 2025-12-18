@@ -14,6 +14,26 @@ import type {
   BottActionParameterEntry,
 } from "@bott/actions";
 
+export function applyParameterDefaults(
+  schema: BottActionParameter[],
+  parameters: BottActionParameterEntry[],
+): BottActionParameterEntry[] {
+  const mergedParameters = [...parameters];
+
+  for (const field of schema) {
+    const existingParam = parameters.find((p) => p.name === field.name);
+
+    if (existingParam === undefined && field.defaultValue !== undefined) {
+      mergedParameters.push({
+        name: field.name,
+        value: field.defaultValue,
+      });
+    }
+  }
+
+  return mergedParameters;
+}
+
 export function _validateParameters(
   schema: BottActionParameter[],
   parameters: BottActionParameterEntry[],
@@ -54,7 +74,8 @@ export function _validateParameters(
 
       if (field.allowedValues && !field.allowedValues.includes(param.value)) {
         throw new Error(
-          `Parameter '${field.name}' has invalid value '${param.value}'. Allowed values: ${field.allowedValues.join(", ")
+          `Parameter '${field.name}' has invalid value '${param.value}'. Allowed values: ${
+            field.allowedValues.join(", ")
           }`,
         );
       }

@@ -9,7 +9,10 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BottEventType, type BottEvent as BottEventInterface } from "@bott/model";
+import {
+  type BottEvent as BottEventInterface,
+  BottEventType,
+} from "@bott/model";
 import type { BottActionCallEvent, BottActionCompleteEvent } from "./types.ts";
 
 export function isBottActionCallEvent(

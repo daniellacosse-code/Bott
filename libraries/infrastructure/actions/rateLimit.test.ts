@@ -17,7 +17,6 @@ import { addEvents, startEventStorageService } from "@bott/storage";
 import { assert } from "@std/assert";
 import { stub } from "@std/testing/mock";
 
-
 Deno.test("Action Service - Rate Limiting", async () => {
   const tempDir = Deno.makeTempDirSync();
   await startEventStorageService({ root: tempDir });

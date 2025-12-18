@@ -25,17 +25,29 @@ export function getCommandJson({
 
   if (parameters && parameters.length) {
     for (
-      const { name, description, type, required, allowedValues } of parameters
+      const {
+        name,
+        description,
+        type,
+        required,
+        allowedValues,
+        defaultValue,
+      } of parameters
     ) {
       // deno-lint-ignore no-explicit-any
       const buildOption = (option: any) => {
         option.setName(name);
 
-        if (description) {
-          option.setDescription(description);
+        let finalDescription = description;
+        if (defaultValue !== undefined) {
+          finalDescription += ` (Default: ${defaultValue})`;
         }
 
-        if (required) {
+        if (finalDescription) {
+          option.setDescription(finalDescription);
+        }
+
+        if (required && defaultValue === undefined) {
           option.setRequired(required);
         }
 

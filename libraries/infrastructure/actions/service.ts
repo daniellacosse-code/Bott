@@ -14,17 +14,14 @@ import type {
   BottActionCallEvent,
   BottActionCancelEvent as BottActionAbortEvent,
 } from "@bott/actions";
-import {
-  BottEventType,
-  type BottGlobalSettings,
-} from "@bott/model";
+import { BottEventType, type BottGlobalSettings } from "@bott/model";
 import {
   addEventListener,
   BottEvent,
   type BottServiceFactory,
 } from "@bott/service";
 import { commit, sql } from "@bott/storage";
-import { _validateParameters } from "./validation.ts";
+import { _validateParameters, applyParameterDefaults } from "./validation.ts";
 
 export const startActionService: BottServiceFactory = (options) => {
   const { actions } = options as { actions: Record<string, BottAction> };
@@ -65,8 +62,14 @@ export const startActionService: BottServiceFactory = (options) => {
       controllerMap.set(event.detail.id, controller);
 
       try {
+        let parameters = event.detail.parameters;
+
         if (action.parameters) {
-          _validateParameters(action.parameters, event.detail.parameters);
+          parameters = applyParameterDefaults(
+            action.parameters,
+            event.detail.parameters,
+          );
+          _validateParameters(action.parameters, parameters);
         }
 
         if (action.limitPerMonth) {
@@ -104,7 +107,7 @@ export const startActionService: BottServiceFactory = (options) => {
           }),
         );
 
-        await action(event.detail.parameters, {
+        await action(parameters, {
           signal: controller.signal,
           settings: action,
           globalSettings: options as unknown as BottGlobalSettings, // TODO: Fix

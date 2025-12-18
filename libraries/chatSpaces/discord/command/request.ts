@@ -13,10 +13,7 @@ import type {
   BottActionCallEvent,
   BottActionParameterEntry,
 } from "@bott/actions";
-import {
-  type BottChannel,
-  BottEventType,
-} from "@bott/model";
+import { type BottChannel, BottEventType } from "@bott/model";
 import { BottEvent, type BottService } from "@bott/service";
 import {
   ApplicationCommandOptionType,

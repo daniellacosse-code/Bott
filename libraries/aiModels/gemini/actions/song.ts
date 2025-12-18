@@ -37,6 +37,7 @@ const settings: BottActionSettings = {
     name: "duration",
     type: "number",
     description: "Duration of the song in seconds",
+    defaultValue: SONG_GENERATION_DURATION_SECONDS,
     required: false,
   }],
 };
@@ -71,13 +72,8 @@ export function writeWavHeader(
 export const songAction: BottAction = createAction(
   async (parameters, _context) => {
     const prompt = parameters.find((p) => p.name === "prompt")?.value as string;
-    let duration = parameters.find((p) => p.name === "duration")?.value as
-      | number
-      | undefined;
-
-    if (!duration) {
-      duration = SONG_GENERATION_DURATION_SECONDS;
-    }
+    const duration = parameters.find((p) => p.name === "duration")
+      ?.value as number;
 
     if (!prompt) {
       throw new Error("Prompt is required");

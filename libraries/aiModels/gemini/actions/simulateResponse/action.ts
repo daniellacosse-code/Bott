@@ -10,10 +10,7 @@
  */
 
 import { createAction } from "@bott/actions";
-import type {
-  BottAction,
-  BottActionSettings,
-} from "@bott/actions";
+import type { BottAction, BottActionSettings } from "@bott/actions";
 import {
   BOTT_SERVICE,
   INPUT_EVENT_COUNT_LIMIT,

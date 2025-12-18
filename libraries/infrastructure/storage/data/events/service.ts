@@ -10,10 +10,7 @@
  */
 
 import { log } from "@bott/log";
-import {
-  type BottEvent,
-  BottEventType,
-} from "@bott/model";
+import { type BottEvent, BottEventType } from "@bott/model";
 import {
   addEventListener,
   type BottService,

@@ -41,6 +41,7 @@ export type BottActionParameter = {
   type: "string" | "number" | "boolean" | "file";
   allowedValues?: BottActionParameterValue[];
   description?: string;
+  defaultValue?: BottActionParameterValue;
   required?: boolean;
 };
 

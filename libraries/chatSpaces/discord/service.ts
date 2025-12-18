@@ -16,7 +16,12 @@ import {
   BottEventType,
   type BottUser,
 } from "@bott/model";
-import { addEventListener, BottEvent, type BottService, type BottServiceFactory } from "@bott/service";
+import {
+  addEventListener,
+  BottEvent,
+  type BottService,
+  type BottServiceFactory,
+} from "@bott/service";
 import {
   AttachmentBuilder,
   ChannelType,
@@ -161,11 +166,12 @@ export const startDiscordService: BottServiceFactory = async ({
             new Uint8Array(await attachment.raw.file.arrayBuffer()),
           ),
           {
-            name: `${attachment.id}.${BOTT_ATTACHMENT_TYPE_LOOKUP[
+            name: `${attachment.id}.${
+              BOTT_ATTACHMENT_TYPE_LOOKUP[
                 attachment.raw.file
                   .type as keyof typeof BOTT_ATTACHMENT_TYPE_LOOKUP
               ].toLowerCase()
-              }`,
+            }`,
           },
         ),
       );

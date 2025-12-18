@@ -9,13 +9,34 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { assertEquals, assertThrows } from "@std/assert";
 import type {
   BottActionParameter,
   BottActionParameterEntry,
 } from "@bott/actions";
-import { assertThrows } from "@std/assert";
-// Function to be tested
-import { _validateParameters } from "./validation.ts";
+import { _validateParameters, applyParameterDefaults } from "./validation.ts";
+
+Deno.test("applyParameterDefaults", () => {
+  const schema: BottActionParameter[] = [
+    { name: "p1", type: "string" },
+    { name: "p2", type: "number", defaultValue: 42 },
+    { name: "p3", type: "boolean", defaultValue: true },
+    { name: "p4", type: "string", defaultValue: "default" },
+  ];
+
+  const parameters: BottActionParameterEntry[] = [
+    { name: "p1", value: "value1" },
+    { name: "p4", value: "overridden" },
+  ];
+
+  const result = applyParameterDefaults(schema, parameters);
+
+  assertEquals(result.length, 4);
+  assertEquals(result.find((p) => p.name === "p1")?.value, "value1");
+  assertEquals(result.find((p) => p.name === "p2")?.value, 42);
+  assertEquals(result.find((p) => p.name === "p3")?.value, true);
+  assertEquals(result.find((p) => p.name === "p4")?.value, "overridden");
+});
 
 Deno.test("validateParameters - Valid parameters", () => {
   const schema: BottActionParameter[] = [
