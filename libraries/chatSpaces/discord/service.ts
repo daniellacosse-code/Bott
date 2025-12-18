@@ -11,6 +11,16 @@
 
 import { Buffer } from "node:buffer";
 import {
+  BOTT_ATTACHMENT_TYPE_LOOKUP,
+  type BottAction,
+  BottEventType,
+  type BottService,
+  type BottServiceFactory,
+  type BottUser,
+} from "@bott/model";
+
+import { addEventListener, BottEvent } from "@bott/service";
+import {
   AttachmentBuilder,
   ChannelType,
   Client,
@@ -23,19 +33,9 @@ import {
   Routes,
 } from "discord.js";
 
-import {
-  BOTT_ATTACHMENT_TYPE_LOOKUP,
-  type BottAction,
-  BottEventType,
-  type BottService,
-  type BottServiceFactory,
-  type BottUser,
-} from "@bott/model";
-import { addEventListener, BottEvent } from "@bott/service";
-
-import { resolveBottEventFromMessage } from "./message/event.ts";
 import { getCommandJson } from "./command/json.ts";
 import { resolveCommandRequestEvent } from "./command/request.ts";
+import { resolveBottEventFromMessage } from "./message/event.ts";
 
 const REQUIRED_INTENTS = [
   GatewayIntentBits.GuildMembers,

@@ -9,14 +9,14 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { STORAGE_DEPLOY_NONCE_PATH } from "@bott/constants";
+import { BottEventType } from "@bott/model";
+import type { BottService } from "@bott/model";
 import { assert } from "@std/assert";
 import { assertSpyCall, assertSpyCalls, spy, stub } from "@std/testing/mock";
-import { addEventListener } from "./listener.ts";
 import { BottEvent } from "./events.ts";
-import { BottEventType } from "@bott/model";
+import { addEventListener } from "./listener.ts";
 import { serviceRegistry } from "./registry.ts";
-import { STORAGE_DEPLOY_NONCE_PATH } from "@bott/constants";
-import type { BottService } from "@bott/model";
 
 Deno.test("addEventListener - calls handler when nonce matches", () => {
   const handler = spy();

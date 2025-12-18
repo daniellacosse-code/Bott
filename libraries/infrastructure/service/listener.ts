@@ -10,9 +10,9 @@
  */
 
 import { STORAGE_DEPLOY_NONCE_PATH } from "@bott/constants";
+import { log } from "@bott/log";
 import type { BottEvent, BottEventType, BottService } from "@bott/model";
 import { serviceRegistry } from "./registry.ts";
-import { log } from "@bott/log";
 
 const _getCurrentDeployNonce = () => {
   try {

@@ -1,6 +1,7 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@ayk/lint-import-order@*": "0.1.0",
     "jsr:@std/assert@^1.0.12": "1.0.12",
     "jsr:@std/async@^1.0.12": "1.0.12",
     "jsr:@std/encoding@^1.0.9": "1.0.10",
@@ -28,6 +29,9 @@
     "npm:unist-util-visit@5": "5.0.0"
   },
   "jsr": {
+    "@ayk/lint-import-order@0.1.0": {
+      "integrity": "be312f8269525055394118ac89d5a12dbb0bdc4a94d0ced4994b1823cc41c393"
+    },
     "@std/assert@1.0.12": {
       "integrity": "08009f0926dda9cbd8bef3a35d3b6a4b964b0ab5c3e140a4e0351fbf34af5b9a",
       "dependencies": [

@@ -9,15 +9,15 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { decodeBase64 } from "@std/encoding";
-
-import { BottAttachmentType } from "@bott/model";
 import {
   GCP_PROJECT,
   GCP_REGION,
   GEMINI_ACCESS_TOKEN,
   SONG_MODEL,
 } from "@bott/constants";
+
+import { BottAttachmentType } from "@bott/model";
+import { decodeBase64 } from "@std/encoding";
 
 import type { BottAttachmentDataGenerator } from "./types.ts";
 

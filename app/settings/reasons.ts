@@ -10,7 +10,7 @@
  */
 
 import { BOTT_NAME } from "@bott/constants";
-import { BottReason } from "@bott/model";
+import type { BottReason } from "@bott/model";
 
 import {
   directedAt,

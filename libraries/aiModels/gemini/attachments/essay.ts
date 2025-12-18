@@ -9,11 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import _gemini from "../client.ts";
-import type { BottAttachmentDataGenerator } from "./types.ts";
 import { ESSAY_MODEL } from "@bott/constants";
-
 import { BottAttachmentType } from "@bott/model";
+import _gemini from "../client.ts";
+
+import type { BottAttachmentDataGenerator } from "./types.ts";
 
 export const generateEssayData: BottAttachmentDataGenerator = async (
   prompt: string,

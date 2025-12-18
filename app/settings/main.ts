@@ -9,10 +9,10 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import ejs from "ejs";
-import { BottGlobalSettings } from "@bott/model";
-
 import { BOTT_NAME } from "@bott/constants";
+import type { BottGlobalSettings } from "@bott/model";
+
+import ejs from "ejs";
 
 import * as reasons from "./reasons.ts";
 

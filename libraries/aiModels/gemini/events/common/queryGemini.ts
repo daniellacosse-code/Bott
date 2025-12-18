@@ -9,19 +9,19 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { encodeBase64 } from "@std/encoding/base64";
-import ejs from "ejs";
+import { EVENT_MODEL } from "@bott/constants";
+import type { BottEvent } from "@bott/model";
 import type {
   Content,
   GenerateContentConfig,
   Part,
   Schema,
 } from "@google/genai";
-import type { BottEvent } from "@bott/model";
+import { encodeBase64 } from "@std/encoding/base64";
 
-import type { EventPipelineContext } from "../pipeline/types.ts";
+import ejs from "ejs";
 import gemini from "../../client.ts";
-import { EVENT_MODEL } from "@bott/constants";
+import type { EventPipelineContext } from "../pipeline/types.ts";
 
 const eventStructure = await Deno.readTextFile(
   new URL("./eventStructure.md.ejs", import.meta.url),

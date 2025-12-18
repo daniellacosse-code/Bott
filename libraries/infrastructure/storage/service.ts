@@ -9,8 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { join } from "@std/path";
 import { DatabaseSync } from "node:sqlite";
+import { log } from "@bott/log";
 
 import {
   type BottEvent,
@@ -18,8 +18,8 @@ import {
   type BottService,
   type BottServiceFactory,
 } from "@bott/model";
-import { log } from "@bott/log";
 import { addEventListener } from "@bott/service";
+import { join } from "@std/path";
 import { addEvents } from "./data/events/add.ts";
 
 const dbClientSchema = Deno.readTextFileSync(

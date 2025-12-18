@@ -10,15 +10,12 @@
  */
 
 import {
-  type BottAction,
-  type BottActionCallEvent,
-  BottActionOptionType,
-  type BottActionResultEvent,
-  BottEventType,
-} from "@bott/model";
-import { BottEvent } from "@bott/service";
-import { createTask } from "@bott/task";
-import { prepareAttachmentFromFile } from "@bott/storage";
+  ACTION_MAX_PROMPT_LENGTH,
+  RATE_LIMIT_IMAGES,
+  RATE_LIMIT_MUSIC,
+  RATE_LIMIT_VIDEOS,
+  RATE_LIMIT_WINDOW_MS,
+} from "@bott/constants";
 import {
   generateEssayData,
   generateMovieData,
@@ -26,15 +23,18 @@ import {
   generateSongData,
 } from "@bott/gemini";
 import { log } from "@bott/log";
-
-import { taskManager } from "../tasks.ts";
 import {
-  ACTION_MAX_PROMPT_LENGTH,
-  RATE_LIMIT_IMAGES,
-  RATE_LIMIT_MUSIC,
-  RATE_LIMIT_VIDEOS,
-  RATE_LIMIT_WINDOW_MS,
-} from "@bott/constants";
+  type BottAction,
+  type BottActionCallEvent,
+  BottActionOptionType,
+  type BottActionResultEvent,
+  BottEventType,
+} from "@bott/model";
+import { BottEvent } from "@bott/service";
+import { prepareAttachmentFromFile } from "@bott/storage";
+
+import { createTask } from "@bott/task";
+import { taskManager } from "../tasks.ts";
 
 // Constants for AI prompt processing
 

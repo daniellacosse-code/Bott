@@ -9,11 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { MOVIE_MODEL } from "@bott/constants";
+import { BottAttachmentType } from "@bott/model";
+
 import { type GenerateVideosOperation, PersonGeneration } from "@google/genai";
 import { decodeBase64 } from "@std/encoding";
-
-import { BottAttachmentType } from "@bott/model";
-import { MOVIE_MODEL } from "@bott/constants";
 
 import _gemini from "../client.ts";
 import type { BottAttachmentDataGenerator } from "./types.ts";

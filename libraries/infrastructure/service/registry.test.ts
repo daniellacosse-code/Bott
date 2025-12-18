@@ -9,9 +9,9 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import type { BottService } from "@bott/model";
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import { BottServiceRegistry } from "./registry.ts";
-import type { BottService } from "@bott/model";
 
 Deno.test("BottServiceRegistry - register adds service", () => {
   const registry = new BottServiceRegistry();

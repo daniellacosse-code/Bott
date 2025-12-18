@@ -9,8 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { AnyShape } from "./utility.ts";
 import type { BottActionCallEvent, BottActionResultEvent } from "./events.ts";
+import type { AnyShape } from "./utility.ts";
 
 /**
  * Defines the signature for a handler function that processes `BottActionCallEvent`s.

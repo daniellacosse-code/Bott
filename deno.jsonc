@@ -6,6 +6,11 @@
     "semiColons": true,
     "singleQuote": false
   },
+  "lint": {
+    "plugins": [
+      "jsr:@ayk/lint-import-order"
+    ]
+  },
   "imports": {
     "@bott/constants": "./constants.ts",
     "@extractus/article-extractor": "npm:@extractus/article-extractor@^8.0.19",

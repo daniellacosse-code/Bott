@@ -9,11 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { clearTestLogs, setupTestLogger, testLogs } from "@bott/log";
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { delay } from "@std/async/delay";
-import { clearTestLogs, setupTestLogger, testLogs } from "@bott/log";
-import { TaskManager } from "./manager.ts";
 import { createTask, type Task } from "./create.ts";
+import { TaskManager } from "./manager.ts";
 
 // Initialize test logger
 setupTestLogger();

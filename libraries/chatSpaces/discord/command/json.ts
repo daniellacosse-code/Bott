@@ -9,13 +9,13 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { SlashCommandBuilder } from "discord.js";
-
 import {
   type AnyShape,
   type BottAction,
   BottActionOptionType,
 } from "@bott/model";
+
+import { SlashCommandBuilder } from "discord.js";
 
 const COMMAND_DESCRIPTION_LIMIT = 100;
 

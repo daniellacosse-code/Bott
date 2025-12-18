@@ -9,8 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { AnyShape } from "./utility.ts";
 import type { BottUser } from "./entities.ts";
+import type { AnyShape } from "./utility.ts";
 
 export type BottService = {
   user: BottUser;

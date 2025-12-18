@@ -9,14 +9,14 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { type Schema, Type } from "@google/genai";
+import { RATING_MODEL } from "@bott/constants";
 
 import { log } from "@bott/log";
 
-import { RATING_MODEL } from "@bott/constants";
+import { BottEventType } from "@bott/model";
+import { type Schema, Type } from "@google/genai";
 import { queryGemini } from "../../common/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
-import { BottEventType } from "@bott/model";
 
 const systemPrompt = await Deno.readTextFile(
   new URL("./systemPrompt.md", import.meta.url),

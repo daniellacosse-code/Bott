@@ -9,14 +9,14 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { BottEventType } from "@bott/model";
+import { BottEvent } from "@bott/service";
 import { assertEquals } from "@std/assert/equals";
+import { createMockContext, createMockUser } from "../pipeline/e2e.ts";
 import {
   _formatTimestampAsRelative,
   _transformBottEventToContent,
 } from "./queryGemini.ts";
-import { createMockContext, createMockUser } from "../pipeline/e2e.ts";
-import { BottEventType } from "@bott/model";
-import { BottEvent } from "@bott/service";
 
 Deno.test("_formatTimestampAsRelative - just now", () => {
   const now = new Date();

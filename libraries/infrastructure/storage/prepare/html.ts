@@ -9,9 +9,9 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { BottAttachmentType } from "@bott/model";
 import { extractFromHtml } from "@extractus/article-extractor";
 import TurndownService from "turndown";
-import { BottAttachmentType } from "@bott/model";
 
 import { STORAGE_FILE_SIZE_CAUTION } from "../service.ts";
 

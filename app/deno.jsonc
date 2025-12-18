@@ -1,5 +1,5 @@
 {
   "name": "Bott",
   "version": "0.0.0-alpha",
-  "main": "./main.ts"
+  "exports": "./main.ts"
 }

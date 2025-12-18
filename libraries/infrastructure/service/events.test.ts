@@ -9,10 +9,10 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { assert, assertEquals, assertExists } from "@std/assert";
-import { BottEvent } from "./events.ts";
 import { BottEventType } from "@bott/model";
 import type { BottChannel, BottUser } from "@bott/model";
+import { assert, assertEquals, assertExists } from "@std/assert";
+import { BottEvent } from "./events.ts";
 
 Deno.test("BottEvent - constructor initializes required properties", () => {
   const event = new BottEvent(BottEventType.MESSAGE);

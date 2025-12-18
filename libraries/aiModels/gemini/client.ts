@@ -9,8 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { GoogleGenAI } from "@google/genai";
 import { GCP_PROJECT, GCP_REGION, GEMINI_ACCESS_TOKEN } from "@bott/constants";
+import { GoogleGenAI } from "@google/genai";
 
 export default makeLazyObject(() => {
   if (GCP_PROJECT) {

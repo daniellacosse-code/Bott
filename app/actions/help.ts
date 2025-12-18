@@ -9,14 +9,14 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { createInfoEmbed } from "@bott/discord";
+import { log } from "@bott/log";
 import {
   type BottAction,
   type BottActionResultEvent,
   BottEventType,
 } from "@bott/model";
 import { BottEvent } from "@bott/service";
-import { createInfoEmbed } from "@bott/discord";
-import { log } from "@bott/log";
 
 // Lazy-loaded version with caching
 let appVersion: string | undefined;

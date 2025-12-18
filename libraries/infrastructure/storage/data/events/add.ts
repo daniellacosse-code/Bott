@@ -17,8 +17,8 @@ import type {
   BottUser,
 } from "@bott/model";
 
-import { sql } from "../sql.ts";
 import { commit, type TransactionResults } from "../commit.ts";
+import { sql } from "../sql.ts";
 
 const getAddChannelsSql = (
   ...channels: BottChannel[]

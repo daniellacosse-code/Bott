@@ -9,8 +9,14 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { delay } from "@std/async";
+import {
+  ACTION_DEFAULT_RESPONSE_SWAPS,
+  BOTT_SERVICE,
+  TYPING_MAX_TIME_MS,
+  TYPING_WORDS_PER_MINUTE,
+} from "@bott/constants";
 
+import { generateEvents } from "@bott/gemini";
 import {
   type BottAction,
   type BottActionCallEvent,
@@ -22,20 +28,14 @@ import {
 import { addEventListener, BottEvent } from "@bott/service";
 import { getEventIdsForChannel, getEvents } from "@bott/storage";
 import { createTask } from "@bott/task";
-import { generateEvents } from "@bott/gemini";
 
-import {
-  ACTION_DEFAULT_RESPONSE_SWAPS,
-  BOTT_SERVICE,
-  TYPING_MAX_TIME_MS,
-  TYPING_WORDS_PER_MINUTE,
-} from "@bott/constants";
-import { taskManager } from "./tasks.ts";
-import { defaultSettings } from "./settings/main.ts";
+import { delay } from "@std/async";
 import {
   generateMedia,
-  GenerateMediaOptions,
+  type GenerateMediaOptions,
 } from "./actions/generateMedia.ts";
+import { defaultSettings } from "./settings/main.ts";
+import { taskManager } from "./tasks.ts";
 
 const MS_IN_MINUTE = 60 * 1000;
 

@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { faker } from "@faker-js/faker";
+import { log } from "@bott/log";
 import {
   type AnyShape,
   type BottAction,
@@ -21,16 +21,16 @@ import {
   type BottUser,
 } from "@bott/model";
 import { BottEvent } from "@bott/service";
-import { log } from "@bott/log";
+import { faker } from "@faker-js/faker";
 
-import type { EventPipelineContext, EventPipelineProcessor } from "./types.ts";
+import { focusInput } from "./01_focusInput/main.ts";
 
 // Import the processor to test
-import { focusInput } from "./01_focusInput/main.ts";
 import { generateOutput } from "./02_generateOutput/main.ts";
 import { segmentOutput } from "./03_segmentOutput/main.ts";
 import { filterOutput } from "./04_filterOutput/main.ts";
 import { patchOutput } from "./05_patchOutput/main.ts";
+import type { EventPipelineContext, EventPipelineProcessor } from "./types.ts";
 
 if (import.meta.main) {
   log.perf("pipeline");

@@ -9,14 +9,14 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { loadEnv } from "./common/env.ts";
-import { gcloud } from "./common/gcloud.ts";
 import {
   ENV,
   GCP_PROJECT,
   GCP_REGION,
   GCP_SERVICE_NAME,
 } from "@bott/constants";
+import { loadEnv } from "./common/env.ts";
+import { gcloud } from "./common/gcloud.ts";
 
 await loadEnv(ENV);
 await gcloud.auth.ensure();

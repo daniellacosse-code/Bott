@@ -13,23 +13,23 @@ import {
   STORAGE_FETCH_TIMEOUT_MS,
   STORAGE_MAX_TEXT_FILE_WORDS,
 } from "@bott/constants";
-import { join } from "@std/path";
+import { log } from "@bott/log";
 import {
   BOTT_ATTACHMENT_TYPE_LOOKUP,
   BottAttachmentType,
   type BottEvent,
   type BottEventAttachment,
 } from "@bott/model";
-import { throwIfUnsafeFileSize, throwIfUnsafeUrl } from "../validation.ts";
-import { log } from "@bott/log";
-
+import { join } from "@std/path";
 import { STORAGE_FILE_ROOT } from "../service.ts";
-import { prepareHtmlAsMarkdown } from "./html.ts";
+
+import { throwIfUnsafeFileSize, throwIfUnsafeUrl } from "../validation.ts";
 import {
   prepareAudioAsOpus,
   prepareDynamicImageAsMp4,
   prepareStaticImageAsWebp,
 } from "./ffmpeg.ts";
+import { prepareHtmlAsMarkdown } from "./html.ts";
 
 /**
  * Prepares an attachment from a remote URL by downloading, storing raw, and compressing.

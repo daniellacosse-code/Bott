@@ -9,10 +9,10 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottEvent } from "@bott/model";
-
-import ejs from "ejs";
 import { log } from "@bott/log";
+
+import type { BottEvent } from "@bott/model";
+import ejs from "ejs";
 import { getEventSchema } from "../../common/getSchema.ts";
 import { queryGemini } from "../../common/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";

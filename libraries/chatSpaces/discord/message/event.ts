@@ -9,11 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { Message } from "discord.js";
-
 import { BottEventType } from "@bott/model";
+
 import { BottEvent } from "@bott/service";
 import { getEvents, prepareAttachmentFromUrl } from "@bott/storage";
+import type { Message } from "discord.js";
 
 import { getMarkdownLinks } from "./markdown.ts";
 

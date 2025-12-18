@@ -9,8 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { ConsoleHandler, getLogger, setup } from "@std/log";
 import { LOGGER_MAX_CHARACTER_LENGTH, LOGGER_TOPICS } from "@bott/constants";
+import { ConsoleHandler, getLogger, setup } from "@std/log";
 import { budgetedStringify } from "./budgetedStringify.ts";
 
 try {

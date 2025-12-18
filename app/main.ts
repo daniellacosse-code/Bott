@@ -9,9 +9,6 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { serviceRegistry } from "@bott/service";
-import { startStorageService } from "@bott/storage";
-import { startDiscordService } from "@bott/discord";
 import {
   DISCORD_TOKEN,
   ENABLED_SERVICES,
@@ -19,6 +16,9 @@ import {
   STORAGE_DEPLOY_NONCE_PATH,
   STORAGE_ROOT,
 } from "@bott/constants";
+import { startDiscordService } from "@bott/discord";
+import { serviceRegistry } from "@bott/service";
+import { startStorageService } from "@bott/storage";
 import * as actions from "./actions/main.ts";
 import { startMainService } from "./service.ts";
 

@@ -9,8 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { parse, stringify } from "@std/yaml";
 import { AnyShape } from "@bott/model";
+import { parse, stringify } from "@std/yaml";
 
 export async function loadEnv(envName: string) {
   const text = await Deno.readTextFile(`.env.${envName}.yml`);

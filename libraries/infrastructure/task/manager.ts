@@ -9,8 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { Task } from "./create.ts";
 import { log } from "@bott/log";
+import type { Task } from "./create.ts";
 
 type TaskBucketName = string;
 

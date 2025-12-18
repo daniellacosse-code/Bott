@@ -9,10 +9,6 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { loadEnv, updateEnv } from "./common/env.ts";
-import { gcloud } from "./common/gcloud.ts";
-
-import { log } from "@bott/log";
 import {
   ENV,
   GCP_ALLOW_UNAUTHENTICATED,
@@ -20,6 +16,10 @@ import {
   GCP_REGION,
   GCP_SERVICE_NAME,
 } from "@bott/constants";
+import { log } from "@bott/log";
+
+import { loadEnv, updateEnv } from "./common/env.ts";
+import { gcloud } from "./common/gcloud.ts";
 
 await loadEnv(ENV);
 await gcloud.auth.ensure();

@@ -9,6 +9,14 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import {
+  INPUT_EVENT_COUNT_LIMIT,
+  INPUT_EVENT_TIME_LIMIT_MS,
+  INPUT_FILE_AUDIO_COUNT_LIMIT,
+  INPUT_FILE_TOKEN_LIMIT,
+  INPUT_FILE_VIDEO_COUNT_LIMIT,
+} from "@bott/constants";
+import { log } from "@bott/log";
 import { BottAttachmentType } from "@bott/model";
 import type {
   BottAction,
@@ -17,20 +25,12 @@ import type {
   BottUser,
 } from "@bott/model";
 import { BottEvent } from "@bott/service";
-import { addEvents } from "@bott/storage";
-import { log } from "@bott/log";
 
-import pipeline, { type EventPipelineContext } from "./pipeline/main.ts";
+import { addEvents } from "@bott/storage";
 
 import { getEvents } from "@bott/storage";
 
-import {
-  INPUT_EVENT_COUNT_LIMIT,
-  INPUT_EVENT_TIME_LIMIT_MS,
-  INPUT_FILE_AUDIO_COUNT_LIMIT,
-  INPUT_FILE_TOKEN_LIMIT,
-  INPUT_FILE_VIDEO_COUNT_LIMIT,
-} from "@bott/constants";
+import pipeline, { type EventPipelineContext } from "./pipeline/main.ts";
 
 export async function* generateEvents(
   inputEvents: BottEvent[],
