@@ -119,5 +119,5 @@ export const photoAction: BottAction = createAction(
 
     // TODO: Dispatch event with attachment
   },
-  settings
+  settings,
 );

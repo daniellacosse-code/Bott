@@ -9,9 +9,16 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottAction, BottActionFunction, BottActionSettings } from "@bott/model";
+import type {
+  BottAction,
+  BottActionFunction,
+  BottActionSettings,
+} from "@bott/model";
 
-export function createAction(fn: BottActionFunction, settings: BottActionSettings): BottAction {
+export function createAction(
+  fn: BottActionFunction,
+  settings: BottActionSettings,
+): BottAction {
   const action = fn as unknown as BottAction;
   const { name, ...otherSettings } = settings;
 

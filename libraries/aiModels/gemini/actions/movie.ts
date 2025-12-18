@@ -13,7 +13,12 @@ import { createAction } from "@bott/actions";
 import { GEMINI_MOVIE_MODEL, RATE_LIMIT_VIDEOS } from "@bott/constants";
 import type { BottAction, BottActionSettings } from "@bott/model";
 
-import { type GenerateVideosOperation, type GenerateVideosParameters, PersonGeneration, type Image } from "@google/genai";
+import {
+  type GenerateVideosOperation,
+  type GenerateVideosParameters,
+  type Image,
+  PersonGeneration,
+} from "@google/genai";
 import { encodeBase64 } from "@std/encoding/base64";
 
 import _gemini from "../client.ts";
@@ -68,7 +73,9 @@ export const movieAction: BottAction = createAction(
         },
       } as Image;
     } else if (media) {
-      throw new Error(`Unsupported media type: ${media.type}. Only images are supported.`);
+      throw new Error(
+        `Unsupported media type: ${media.type}. Only images are supported.`,
+      );
     }
 
     let operation = await _gemini.models.generateVideos(request);
@@ -110,7 +117,7 @@ export const movieAction: BottAction = createAction(
 
     // TODO: Dispatch event with attachment
   },
-  settings
+  settings,
 );
 
 function _doVideoJob(

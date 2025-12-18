@@ -69,7 +69,7 @@ export const songAction: BottAction = createAction(
 
     // TODO: Dispatch event with attachment
   },
-  settings
+  settings,
 );
 
 async function getAccessToken(): Promise<string> {

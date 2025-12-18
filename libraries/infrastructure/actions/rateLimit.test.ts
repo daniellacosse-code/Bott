@@ -1,3 +1,13 @@
+/**
+ * @license
+ * This file is part of Bott.
+ *
+ * This project is dual-licensed:
+ * - Non-commercial use: AGPLv3 (see LICENSE file for full text).
+ * - Commercial use: Proprietary License (contact D@nielLaCos.se for details).
+ *
+ * Copyright (C) 2025 DanielLaCos.se
+ */
 
 import { createAction } from "@bott/actions";
 import { STORAGE_DEPLOY_NONCE_LOCATION } from "@bott/constants";
@@ -18,7 +28,7 @@ Deno.test("Action Service - Rate Limiting", async () => {
       name: "limited-action",
       instructions: "Run me",
       limitPerMonth: 2,
-    }
+    },
   );
 
   await startActionService({
@@ -69,8 +79,10 @@ Deno.test("Action Service - Rate Limiting", async () => {
       ) {
         try {
           assert(
-            (bottEvent.detail.error as Error).message.includes("Rate limit exceeded"),
-            "Error message should mention rate limit exceeded"
+            (bottEvent.detail.error as Error).message.includes(
+              "Rate limit exceeded",
+            ),
+            "Error message should mention rate limit exceeded",
           );
           resolve();
         } catch (e) {

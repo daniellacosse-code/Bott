@@ -1,11 +1,19 @@
+/**
+ * @license
+ * This file is part of Bott.
+ *
+ * This project is dual-licensed:
+ * - Non-commercial use: AGPLv3 (see LICENSE file for full text).
+ * - Commercial use: Proprietary License (contact D@nielLaCos.se for details).
+ *
+ * Copyright (C) 2025 DanielLaCos.se
+ */
 
 import type {
   BottActionParameter,
   BottActionParameterEntry,
 } from "@bott/model";
-import {
-  assertThrows,
-} from "@std/assert";
+import { assertThrows } from "@std/assert";
 // Function to be tested
 import { _validateParameters } from "./validation.ts";
 
@@ -82,7 +90,7 @@ Deno.test("validateParameters - Unknown parameter", () => {
   ];
   // Assuming strict validation, unknown parameters might be ignored or error.
   // Let's implement strict validation for now, or just ignore unknown ones?
-  // Usually, extra parameters are just ignored in many systems, 
+  // Usually, extra parameters are just ignored in many systems,
   // but strict validation helps catch typos. Let's decide to ERROR on unknown parameters.
   assertThrows(
     () => _validateParameters(schema, params),

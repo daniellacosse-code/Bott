@@ -13,8 +13,8 @@ import {
   type BottAction,
   type BottActionCallEvent,
   type BottActionCancelEvent as BottActionAbortEvent,
-  type BottGlobalSettings,
   BottEventType,
+  type BottGlobalSettings,
   type BottServiceFactory,
 } from "@bott/model";
 import { BottEvent } from "@bott/service";
@@ -26,46 +26,50 @@ export const startActionService: BottServiceFactory = (options) => {
   const { actions } = options as { actions: Record<string, BottAction> };
   const controllerMap = new Map<string, AbortController>();
 
-  addEventListener(BottEventType.ACTION_CALL, async (event: BottActionCallEvent) => {
-    const controller = new AbortController();
+  addEventListener(
+    BottEventType.ACTION_CALL,
+    async (event: BottActionCallEvent) => {
+      const controller = new AbortController();
 
-    const action = actions[event.detail.name];
-    if (!action) {
-      globalThis.dispatchEvent(
-        new BottEvent(BottEventType.ACTION_ERROR, {
-          detail: {
-            id: event.detail.id,
-            error: new Error(`Action ${event.detail.name} not found`),
-          },
-        }),
-      );
-      return;
-    }
-
-    if (controllerMap.has(event.detail.id)) {
-      globalThis.dispatchEvent(
-        new BottEvent(BottEventType.ACTION_ERROR, {
-          detail: {
-            id: event.detail.id,
-            error: new Error(`Action ${event.detail.name} already in progress`),
-          },
-        }),
-      );
-      return;
-    }
-
-    controllerMap.set(event.detail.id, controller);
-
-    try {
-      if (action.parameters) {
-        _validateParameters(action.parameters, event.detail.parameters);
+      const action = actions[event.detail.name];
+      if (!action) {
+        globalThis.dispatchEvent(
+          new BottEvent(BottEventType.ACTION_ERROR, {
+            detail: {
+              id: event.detail.id,
+              error: new Error(`Action ${event.detail.name} not found`),
+            },
+          }),
+        );
+        return;
       }
 
-      if (action.limitPerMonth) {
-        const oneMonthAgo = new Date();
-        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      if (controllerMap.has(event.detail.id)) {
+        globalThis.dispatchEvent(
+          new BottEvent(BottEventType.ACTION_ERROR, {
+            detail: {
+              id: event.detail.id,
+              error: new Error(
+                `Action ${event.detail.name} already in progress`,
+              ),
+            },
+          }),
+        );
+        return;
+      }
 
-        const result = commit(sql`
+      controllerMap.set(event.detail.id, controller);
+
+      try {
+        if (action.parameters) {
+          _validateParameters(action.parameters, event.detail.parameters);
+        }
+
+        if (action.limitPerMonth) {
+          const oneMonthAgo = new Date();
+          oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+          const result = commit(sql`
           select count(*) as count
           from events
           where type = ${BottEventType.ACTION_START}
@@ -73,59 +77,62 @@ export const startActionService: BottServiceFactory = (options) => {
             and created_at > ${oneMonthAgo.toISOString()}
         `);
 
-        if ("error" in result) {
-          throw result.error;
+          if ("error" in result) {
+            throw result.error;
+          }
+
+          // deno-lint-ignore no-explicit-any
+          const count = (result.reads[0] as any).count;
+
+          if (count >= action.limitPerMonth) {
+            throw new Error(
+              `Rate limit exceeded for action '${action.name}'. Limit: ${action.limitPerMonth}/month. Usage: ${count}`,
+            );
+          }
         }
 
-        // deno-lint-ignore no-explicit-any
-        const count = (result.reads[0] as any).count;
+        globalThis.dispatchEvent(
+          new BottEvent(BottEventType.ACTION_START, {
+            detail: {
+              id: event.detail.id,
+              name: action.name,
+            },
+          }),
+        );
 
-        if (count >= action.limitPerMonth) {
-          throw new Error(
-            `Rate limit exceeded for action '${action.name}'. Limit: ${action.limitPerMonth}/month. Usage: ${count}`,
-          );
-        }
+        await action(event.detail.parameters, {
+          signal: controller.signal,
+          settings: action,
+          globalSettings: options as unknown as BottGlobalSettings, // TODO: Fix
+        });
+
+        globalThis.dispatchEvent(
+          new BottEvent(BottEventType.ACTION_COMPLETE, {
+            detail: {
+              id: event.detail.id,
+              name: action.name,
+            },
+          }),
+        );
+      } catch (error) {
+        globalThis.dispatchEvent(
+          new BottEvent(BottEventType.ACTION_ERROR, {
+            detail: {
+              id: event.detail.id,
+              error: error as Error,
+            },
+          }),
+        );
       }
 
-      globalThis.dispatchEvent(
-        new BottEvent(BottEventType.ACTION_START, {
-          detail: {
-            id: event.detail.id,
-            name: action.name,
-          },
-        }),
-      );
+      controllerMap.delete(event.detail.id);
+    },
+  );
 
-      await action(event.detail.parameters, {
-        signal: controller.signal,
-        settings: action,
-        globalSettings: options as unknown as BottGlobalSettings, // TODO: Fix
-      });
-
-      globalThis.dispatchEvent(
-        new BottEvent(BottEventType.ACTION_COMPLETE, {
-          detail: {
-            id: event.detail.id,
-            name: action.name,
-          },
-        }),
-      );
-    } catch (error) {
-      globalThis.dispatchEvent(
-        new BottEvent(BottEventType.ACTION_ERROR, {
-          detail: {
-            id: event.detail.id,
-            error: error as Error,
-          },
-        }),
-      );
-    }
-
-    controllerMap.delete(event.detail.id);
-  });
-
-  addEventListener(BottEventType.ACTION_ABORT, (event: BottActionAbortEvent) =>
-    controllerMap.get(event.detail.id)?.abort()
+  addEventListener(
+    BottEventType.ACTION_ABORT,
+    (event: BottActionAbortEvent) =>
+      controllerMap.get(event.detail.id)?.abort(),
   );
 
   return Promise.resolve({
@@ -135,4 +142,3 @@ export const startActionService: BottServiceFactory = (options) => {
     },
   });
 };
-

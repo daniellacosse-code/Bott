@@ -9,7 +9,6 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-
 import { GEMINI_RATING_MODEL } from "@bott/constants";
 
 import { log } from "@bott/log";

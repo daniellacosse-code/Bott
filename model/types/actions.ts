@@ -30,7 +30,7 @@ export type BottActionSettings = {
   name: string;
   instructions: string;
   limitPerMonth?: number;
-  parameters?: NonEmptyArray<BottActionParameter>
+  parameters?: NonEmptyArray<BottActionParameter>;
 };
 
 export type BottActionParameterValue = string | number | boolean | File;
@@ -46,7 +46,7 @@ export type BottActionParameter = {
 export type BottActionParameterEntry = {
   name: string;
   value: BottActionParameterValue;
-}
+};
 
 export type BottActionCallEvent = BottEvent<
   BottEventType.ACTION_CALL,

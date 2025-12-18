@@ -77,7 +77,7 @@ export const getEventSchema = (
 });
 
 export const getActionSchema = (
-  actions: Record<string, BottAction>
+  actions: Record<string, BottAction>,
 ): GeminiStructuredResponseSchema[] => {
   if (Object.keys(actions).length === 0) {
     return [];
