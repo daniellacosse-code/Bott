@@ -109,7 +109,9 @@ export const GEMINI_PHOTO_MODEL = Deno.env.get("GEMINI_PHOTO_MODEL") ??
   (isGeminiAvailable ? "gemini-3-pro-image-preview" : "not_available");
 
 export const GEMINI_SONG_MODEL = Deno.env.get("GEMINI_SONG_MODEL") ??
-  (isGeminiAvailable ? "lyria-002" : "not_available");
+  (isGeminiAvailable ? "lyria-realtime" : "not_available");
+
+export const SONG_GENERATION_DURATION_SECONDS = 15;
 
 export const GEMINI_MOVIE_MODEL = Deno.env.get("GEMINI_MOVIE_MODEL") ??
   (isGeminiAvailable ? "veo-3.1-fast-generate-001" : "not_available");

@@ -30,6 +30,8 @@ export enum BottEventType {
   ACTION_ABORT = "actionCancel",
   /** An event representing the completion of an action. */
   ACTION_COMPLETE = "actionComplete",
+  /** An event representing the result of an action. */
+  ACTION_RESULT = "actionResult",
   /** An event representing an error that occurred during an action. */
   ACTION_ERROR = "actionError",
 }

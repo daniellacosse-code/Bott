@@ -11,7 +11,10 @@
 
 import { createAction } from "@bott/actions";
 import { GEMINI_PHOTO_MODEL, RATE_LIMIT_PHOTOS } from "@bott/constants";
+import { BottEventType } from "@bott/model";
 import type { BottAction, BottActionSettings } from "@bott/model";
+import { BottEvent } from "@bott/service";
+import { prepareAttachmentFromFile } from "@bott/storage";
 import {
   type GenerateContentParameters,
   HarmBlockThreshold,
@@ -19,7 +22,7 @@ import {
   type Part,
 } from "@google/genai";
 
-import { encodeBase64 } from "@std/encoding/base64";
+import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
 
 import _gemini from "../client.ts";
 
@@ -41,7 +44,8 @@ const settings: BottActionSettings = {
 };
 
 export const photoAction: BottAction = createAction(
-  async (parameters, { signal }) => {
+  async (parameters, _context) => {
+    const { signal } = _context;
     const prompt = parameters.find((p) => p.name === "prompt")?.value as string;
     const media = parameters.find((p) => p.name === "media")?.value as
       | File
@@ -111,13 +115,30 @@ export const photoAction: BottAction = createAction(
       throw new Error("No image data found in response");
     }
 
-    // const file = new File(
-    //   [decodeBase64(imageData.image.imageBytes)],
-    //   "photo.png",
-    //   { type: BottAttachmentType.PNG },
-    // );
+    const file = new File(
+      [decodeBase64(imageBytes)],
+      "photo.png",
+      { type: _mimeType ?? "image/png" },
+    );
 
-    // TODO: Dispatch event with attachment
+    const attachment = await prepareAttachmentFromFile(
+      file,
+      _context.triggerEvent,
+    );
+
+    globalThis.dispatchEvent(
+      new BottEvent(BottEventType.ACTION_RESULT, {
+        detail: {
+          id: _context.triggerEvent.id,
+          name: "photo",
+          result: {
+            attachment,
+            prompt,
+          },
+        },
+        parent: _context.triggerEvent,
+      }),
+    );
   },
   settings,
 );

@@ -9,21 +9,20 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { Buffer } from "node:buffer";
+
 import { createAction } from "@bott/actions";
 import {
-  GCP_PROJECT,
-  GCP_REGION,
-  GEMINI_ACCESS_TOKEN,
   GEMINI_SONG_MODEL,
   RATE_LIMIT_MUSIC,
+  SONG_GENERATION_DURATION_SECONDS,
 } from "@bott/constants";
-
+import { BottEventType } from "@bott/model";
 import type { BottAction, BottActionSettings } from "@bott/model";
+import { BottEvent } from "@bott/service";
+import { prepareAttachmentFromFile } from "@bott/storage";
 
-const IS_CLOUD_RUN = Boolean(Deno.env.get("K_SERVICE"));
-
-const VERTEX_API_URL =
-  `https://${GCP_REGION}-aiplatform.googleapis.com/v1/projects/${GCP_PROJECT}/locations/${GCP_REGION}/publishers/google/models/${GEMINI_SONG_MODEL}:predict`;
+import _gemini from "../client.ts";
 
 const settings: BottActionSettings = {
   name: "song",
@@ -34,73 +33,115 @@ const settings: BottActionSettings = {
     type: "string",
     description: "Description of the music/song to generate",
     required: true,
+  }, {
+    name: "duration",
+    type: "number",
+    description: "Duration of the song in seconds",
+    required: false,
   }],
 };
 
+// Helper to write a WAV header for the raw PCM data
+export function writeWavHeader(
+  sampleRate: number,
+  numChannels: number,
+  bitsPerSample: number,
+  dataLength: number,
+): Buffer {
+  const buffer = Buffer.alloc(44);
+  // RIFF chunk descriptor
+  buffer.write("RIFF", 0);
+  buffer.writeUInt32LE(36 + dataLength, 4); // ChunkSize
+  buffer.write("WAVE", 8);
+  // fmt sub-chunk
+  buffer.write("fmt ", 12);
+  buffer.writeUInt32LE(16, 16); // Subchunk1Size (16 for PCM)
+  buffer.writeUInt16LE(1, 20); // AudioFormat (1 for PCM)
+  buffer.writeUInt16LE(numChannels, 22);
+  buffer.writeUInt32LE(sampleRate, 24);
+  buffer.writeUInt32LE(sampleRate * numChannels * (bitsPerSample / 8), 28); // ByteRate
+  buffer.writeUInt16LE(numChannels * (bitsPerSample / 8), 32); // BlockAlign
+  buffer.writeUInt16LE(bitsPerSample, 34);
+  // data sub-chunk
+  buffer.write("data", 36);
+  buffer.writeUInt32LE(dataLength, 40);
+  return buffer;
+}
+
 export const songAction: BottAction = createAction(
-  async (parameters, { signal }) => {
+  async (parameters, _context) => {
     const prompt = parameters.find((p) => p.name === "prompt")?.value as string;
+    let duration = parameters.find((p) => p.name === "duration")?.value as
+      | number
+      | undefined;
+
+    if (!duration) {
+      duration = SONG_GENERATION_DURATION_SECONDS;
+    }
 
     if (!prompt) {
       throw new Error("Prompt is required");
     }
 
-    const response = await fetch(VERTEX_API_URL, {
-      signal,
-      method: "POST",
-      body: JSON.stringify({
-        instances: [
-          { prompt },
-        ],
-      }),
-      headers: {
-        "Authorization": `Bearer ${await getAccessToken()}`,
-        "Content-Type": "application/json",
+    const audioBuffer: Buffer[] = [];
+
+    // 1. Initialize the Live Session for Music
+    // @ts-expect-error: Client type definition might not yet have deep property 'music'
+    const session = await _gemini.aio.live.music.connect({
+      model: GEMINI_SONG_MODEL,
+      config: {
+        responseModalities: ["AUDIO"],
       },
     });
 
-    if (!response.ok) {
-      throw new Error(
-        `Error generating music: ${response.status} ${await response.text()}`,
-      );
-    }
+    // 2. Set up the listener to collect chunks
+    session.on("audio", (chunk: { data: string }) => {
+      // chunk.data is usually a base64 string or buffer of raw PCM
+      const pcmData = Buffer.from(chunk.data, "base64");
+      audioBuffer.push(pcmData);
+    });
 
-    // const { predictions } = await response.json();
+    // 3. Send the Prompt to start the music
+    await session.setWeightedPrompts([{
+      text: prompt,
+      weight: 1.0,
+    }]);
 
-    // TODO: Dispatch event with attachment
+    // Start playback in the session
+    await session.play();
+
+    // 4. Wait for the desired duration, then stop
+    await new Promise((resolve) => setTimeout(resolve, duration * 1000));
+
+    // Stop and close
+    await session.pause();
+    session.disconnect();
+
+    // 5. Combine chunks and save as WAV
+    const allPcmData = Buffer.concat(audioBuffer);
+    const wavHeader = writeWavHeader(48000, 2, 16, allPcmData.length); // Lyria is 48kHz Stereo 16-bit
+    const finalWav = Buffer.concat([wavHeader, allPcmData]);
+
+    const file = new File([finalWav], "song.wav", { type: "audio/wav" });
+    const attachment = await prepareAttachmentFromFile(
+      file,
+      _context.triggerEvent,
+    );
+
+    globalThis.dispatchEvent(
+      new BottEvent(BottEventType.ACTION_RESULT, {
+        detail: {
+          id: _context.triggerEvent.id, // Group by original action ID or make new one? usually link by parent
+          name: "song",
+          result: {
+            attachment,
+            prompt,
+            duration,
+          },
+        },
+        parent: _context.triggerEvent,
+      }),
+    );
   },
   settings,
 );
-
-async function getAccessToken(): Promise<string> {
-  if (IS_CLOUD_RUN) {
-    const tokenUrl =
-      "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token";
-    try {
-      const response = await fetch(tokenUrl, {
-        headers: { "Metadata-Flavor": "Google" },
-      });
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch token from metadata server: ${response.status} ${await response
-            .text()}`,
-        );
-      }
-      const tokenData = await response.json();
-      return tokenData.access_token;
-    } catch (error) {
-      throw new Error(
-        `Could not obtain access token from Cloud Run metadata server.`,
-        { cause: error as Error },
-      );
-    }
-  } else {
-    if (!GEMINI_ACCESS_TOKEN) {
-      throw new Error(
-        "GEMINI_ACCESS_TOKEN is not set. Please set it for local development or ensure the app is running in Cloud Run.",
-      );
-    }
-
-    return GEMINI_ACCESS_TOKEN;
-  }
-}

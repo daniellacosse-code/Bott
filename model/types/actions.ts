@@ -24,6 +24,7 @@ export type BottActionContext = {
   signal: AbortSignal;
   settings: BottActionSettings;
   globalSettings: BottGlobalSettings;
+  triggerEvent: BottEvent;
 };
 
 export type BottActionSettings = {
@@ -78,6 +79,15 @@ export type BottActionCompleteEvent = BottEvent<
   {
     name: string;
     id: string;
+  }
+>;
+
+export type BottActionResultEvent = BottEvent<
+  BottEventType.ACTION_RESULT,
+  {
+    name: string;
+    id: string;
+    result: unknown;
   }
 >;
 

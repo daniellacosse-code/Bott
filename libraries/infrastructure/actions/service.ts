@@ -104,6 +104,7 @@ export const startActionService: BottServiceFactory = (options) => {
           signal: controller.signal,
           settings: action,
           globalSettings: options as unknown as BottGlobalSettings, // TODO: Fix
+          triggerEvent: event,
         });
 
         globalThis.dispatchEvent(

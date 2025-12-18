@@ -11,7 +11,10 @@
 
 import { createAction } from "@bott/actions";
 import { GEMINI_MOVIE_MODEL, RATE_LIMIT_VIDEOS } from "@bott/constants";
+import { BottEventType } from "@bott/model";
 import type { BottAction, BottActionSettings } from "@bott/model";
+import { BottEvent } from "@bott/service";
+import { prepareAttachmentFromFile } from "@bott/storage";
 
 import {
   type GenerateVideosOperation,
@@ -19,7 +22,7 @@ import {
   type Image,
   PersonGeneration,
 } from "@google/genai";
-import { encodeBase64 } from "@std/encoding/base64";
+import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
 
 import _gemini from "../client.ts";
 
@@ -41,7 +44,8 @@ const settings: BottActionSettings = {
 };
 
 export const movieAction: BottAction = createAction(
-  async (parameters, { signal }) => {
+  async (parameters, _context) => {
+    const { signal } = _context;
     const prompt = parameters.find((p) => p.name === "prompt")?.value as string;
     const media = parameters.find((p) => p.name === "media")?.value as
       | File
@@ -109,13 +113,30 @@ export const movieAction: BottAction = createAction(
       throw new Error("No video bytes");
     }
 
-    // const file = new File(
-    //   [decodeBase64(videoData.video.videoBytes)],
-    //   "movie.mp4",
-    //   { type: BottAttachmentType.MP4 },
-    // );
+    const file = new File(
+      [decodeBase64(videoData.video.videoBytes)],
+      "movie.mp4",
+      { type: "video/mp4" },
+    );
 
-    // TODO: Dispatch event with attachment
+    const attachment = await prepareAttachmentFromFile(
+      file,
+      _context.triggerEvent,
+    );
+
+    globalThis.dispatchEvent(
+      new BottEvent(BottEventType.ACTION_RESULT, {
+        detail: {
+          id: _context.triggerEvent.id,
+          name: "movie",
+          result: {
+            attachment,
+            prompt,
+          },
+        },
+        parent: _context.triggerEvent,
+      }),
+    );
   },
   settings,
 );
