@@ -75,7 +75,9 @@ export const movieAction: BottAction = createAction(
       } as Image;
     } else if (media) {
       throw new Error(
-        `Unsupported media type: ${(media as File)?.type}. Only images are supported.`,
+        `Unsupported media type: ${
+          (media as File)?.type
+        }. Only images are supported.`,
       );
     }
 

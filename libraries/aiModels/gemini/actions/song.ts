@@ -104,7 +104,9 @@ export const songAction: BottAction = createAction(
     await session.play();
 
     // 4. Wait for the desired duration, then stop
-    await new Promise((resolve) => setTimeout(resolve, duration as number * 1000));
+    await new Promise((resolve) =>
+      setTimeout(resolve, duration as number * 1000)
+    );
 
     // Stop and close
     await session.pause();

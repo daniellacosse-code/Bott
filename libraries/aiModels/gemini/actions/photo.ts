@@ -51,7 +51,9 @@ export const photoAction: BottAction = createAction(
 
     if (media && !((media as File)?.type.startsWith("image/"))) {
       throw new Error(
-        `Unsupported media type: ${(media as File)?.type}. Only images are supported.`,
+        `Unsupported media type: ${
+          (media as File)?.type
+        }. Only images are supported.`,
       );
     }
 
