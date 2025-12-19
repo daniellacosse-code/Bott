@@ -9,6 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { BottActionEventType } from "@bott/actions";
 import { log } from "@bott/log";
 import { type BottEvent, BottEventType } from "@bott/model";
 import {
@@ -36,23 +37,23 @@ export const startEventStorageService: BottServiceFactory = (): Promise<
   addEventListener(BottEventType.REPLY, saveEvent);
   addEventListener(BottEventType.REACTION, saveEvent);
   addEventListener(
-    BottEventType.ACTION_CALL,
+    BottActionEventType.ACTION_CALL,
     saveEvent,
   );
   addEventListener(
-    BottEventType.ACTION_START,
+    BottActionEventType.ACTION_START,
     saveEvent,
   );
   addEventListener(
-    BottEventType.ACTION_COMPLETE,
+    BottActionEventType.ACTION_COMPLETE,
     saveEvent,
   );
   addEventListener(
-    BottEventType.ACTION_ERROR,
+    BottActionEventType.ACTION_ERROR,
     saveEvent,
   );
   addEventListener(
-    BottEventType.ACTION_ABORT,
+    BottActionEventType.ACTION_ABORT,
     saveEvent,
   );
 

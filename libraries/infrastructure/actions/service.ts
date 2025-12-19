@@ -14,55 +14,54 @@ import type {
   BottActionCallEvent,
   BottActionCancelEvent as BottActionAbortEvent,
 } from "@bott/actions";
-import { BottEventType, type BottGlobalSettings } from "@bott/model";
+import { BottActionEventType } from "@bott/actions";
+import type { BottGlobalSettings } from "@bott/model";
 import {
   addEventListener,
-  dispatchEvent,
-  BottEvent,
+  BottServiceEvent,
   type BottServiceFactory,
+  dispatchEvent,
 } from "@bott/service";
 import { commit, sql } from "@bott/storage";
-import { validateParameters, applyParameterDefaults } from "./validation.ts";
+import { applyParameterDefaults, validateParameters } from "./validation.ts";
 
 export const startActionService: BottServiceFactory = (options) => {
   const { actions } = options as { actions: Record<string, BottAction> };
   const controllerMap = new Map<string, AbortController>();
 
   addEventListener(
-    BottEventType.ACTION_CALL,
+    BottActionEventType.ACTION_CALL,
     async (event: BottActionCallEvent) => {
       const controller = new AbortController();
 
       const action = actions[event.detail.name];
       if (!action) {
         return dispatchEvent(
-          BottEventType.ACTION_ERROR,
-          {
-            id: event.detail.id,
-            name: event.detail.name,
-            error: new Error(`Action ${event.detail.name} not found`),
-          },
-          {
+          new BottServiceEvent(BottActionEventType.ACTION_ERROR, {
+            detail: {
+              id: event.detail.id,
+              name: event.detail.name,
+              error: new Error(`Action ${event.detail.name} not found`),
+            },
             user: event.user,
             channel: event.channel,
-          },
+          }),
         );
       }
 
       if (controllerMap.has(event.detail.id)) {
         return dispatchEvent(
-          BottEventType.ACTION_ERROR,
-          {
-            id: event.detail.id,
-            name: event.detail.name,
-            error: new Error(
-              `Action ${event.detail.name} already in progress`,
-            ),
-          },
-          {
+          new BottServiceEvent(BottActionEventType.ACTION_ERROR, {
+            detail: {
+              id: event.detail.id,
+              name: event.detail.name,
+              error: new Error(
+                `Action ${event.detail.name} already in progress`,
+              ),
+            },
             user: event.user,
             channel: event.channel,
-          },
+          }),
         );
       }
 
@@ -86,7 +85,7 @@ export const startActionService: BottServiceFactory = (options) => {
           const result = commit(sql`
           select count(*) as count
           from events
-          where type = ${BottEventType.ACTION_START}
+          where type = ${BottActionEventType.ACTION_START}
             and json_extract(detail, '$.name') = ${action.name}
             and created_at > ${oneMonthAgo.toISOString()}
         `);
@@ -106,47 +105,47 @@ export const startActionService: BottServiceFactory = (options) => {
         }
 
         dispatchEvent(
-          BottEventType.ACTION_START,
-          {
-            id: event.detail.id,
-            name: action.name,
-          },
-          {
+          new BottServiceEvent(BottActionEventType.ACTION_START, {
+            detail: {
+              id: event.detail.id,
+              name: action.name,
+            },
             user: event.user,
             channel: event.channel,
-          },
+          }),
         );
 
-        await action(parameters, {
-          id: event.detail.id,
-          signal: controller.signal,
-          settings: action,
-          globalSettings: options as unknown as BottGlobalSettings, // TODO: Fix
-        });
-
-        dispatchEvent(
-          BottEventType.ACTION_COMPLETE,
+        await action.call(
           {
             id: event.detail.id,
-            name: action.name,
+            signal: controller.signal,
+            settings: action,
+            globalSettings: options as unknown as BottGlobalSettings, // TODO: Fix
           },
-          {
+          parameters,
+        );
+
+        dispatchEvent(
+          new BottServiceEvent(BottActionEventType.ACTION_COMPLETE, {
+            detail: {
+              id: event.detail.id,
+              name: action.name,
+            },
             user: event.user,
             channel: event.channel,
-          },
+          }),
         );
       } catch (error) {
         dispatchEvent(
-          BottEventType.ACTION_ERROR,
-          {
-            id: event.detail.id,
-            name: event.detail.name,
-            error: error as Error,
-          },
-          {
+          new BottServiceEvent(BottActionEventType.ACTION_ERROR, {
+            detail: {
+              id: event.detail.id,
+              name: event.detail.name,
+              error: error as Error,
+            },
             user: event.user,
             channel: event.channel,
-          },
+          }),
         );
       }
 
@@ -155,7 +154,7 @@ export const startActionService: BottServiceFactory = (options) => {
   );
 
   addEventListener(
-    BottEventType.ACTION_ABORT,
+    BottActionEventType.ACTION_ABORT,
     (event: BottActionAbortEvent) =>
       controllerMap.get(event.detail.id)?.abort(),
   );
@@ -165,5 +164,6 @@ export const startActionService: BottServiceFactory = (options) => {
       id: "system:actions",
       name: "Actions",
     },
+    events: Object.values(BottActionEventType),
   });
 };

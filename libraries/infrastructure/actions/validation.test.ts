@@ -9,12 +9,12 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { assertEquals, assertThrows } from "@std/assert";
 import type {
   BottActionParameter,
   BottActionParameterEntry,
 } from "@bott/actions";
-import { validateParameters, applyParameterDefaults } from "./validation.ts";
+import { assertEquals, assertThrows } from "@std/assert";
+import { applyParameterDefaults, validateParameters } from "./validation.ts";
 
 Deno.test("applyParameterDefaults", () => {
   const schema: BottActionParameter[] = [

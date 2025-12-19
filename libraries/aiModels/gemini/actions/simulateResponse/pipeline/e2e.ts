@@ -13,12 +13,13 @@ import { log } from "@bott/log";
 import {
   type AnyShape,
   type BottChannel,
+  type BottEvent as BottEventInterface,
   BottEventType,
   type BottRatingScale,
   type BottReason,
   type BottUser,
 } from "@bott/model";
-import { BottEvent } from "@bott/service";
+import { BottServiceEvent } from "@bott/service";
 import { faker } from "@faker-js/faker";
 
 import { focusInput } from "./01_focusInput/main.ts";
@@ -85,9 +86,9 @@ function createMockEvent(
   channel: BottChannel,
   type: BottEventType,
   details?: AnyShape,
-  parent?: BottEvent,
-): BottEvent {
-  return new BottEvent(type, {
+  parent?: BottEventInterface,
+): BottEventInterface {
+  return new BottServiceEvent(type, {
     detail: details ?? { content: faker.lorem.sentence() },
     user: user,
     channel: channel,

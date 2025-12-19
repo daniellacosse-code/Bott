@@ -9,29 +9,29 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BOTT_SERVICE } from "@bott/constants";
-
+import { BottActionEventType } from "@bott/actions";
+import { BOTT_USER } from "@bott/constants";
 import { BottEventType } from "@bott/model";
 import {
   addEventListener,
-  type BottEvent,
-  dispatchEvent,
+  type BottServiceEvent,
   type BottServiceFactory,
+  dispatchEvent,
 } from "@bott/service";
 
 export const startAppService: BottServiceFactory = () => {
   const triggerEventGenerationPipeline = (
-    event: BottEvent,
+    event: BottServiceEvent,
   ) => {
     if (!event.channel) return;
     if (!event.user) return;
     if (
-      event.type === BottEventType.ACTION_COMPLETE &&
+      event.type === BottActionEventType.ACTION_COMPLETE &&
       event.detail.name === "simulateResponseForChannel"
     ) return;
 
     dispatchEvent(
-      BottEventType.ACTION_CALL,
+      BottActionEventType.ACTION_CALL,
       {
         id: crypto.randomUUID(),
         name: "simulateResponseForChannel",
@@ -51,10 +51,16 @@ export const startAppService: BottServiceFactory = () => {
   addEventListener(BottEventType.REPLY, triggerEventGenerationPipeline);
   addEventListener(BottEventType.REACTION, triggerEventGenerationPipeline);
   addEventListener(
-    BottEventType.ACTION_COMPLETE,
+    BottActionEventType.ACTION_COMPLETE,
     triggerEventGenerationPipeline,
   );
-  addEventListener(BottEventType.ACTION_ERROR, triggerEventGenerationPipeline);
+  addEventListener(
+    BottActionEventType.ACTION_ERROR,
+    triggerEventGenerationPipeline,
+  );
 
-  return Promise.resolve(BOTT_SERVICE);
+  return Promise.resolve({
+    user: BOTT_USER,
+    events: [BottActionEventType.ACTION_CALL],
+  });
 };

@@ -9,14 +9,14 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BottEvent } from "@bott/service";
+import { BottServiceEvent } from "@bott/service";
 
 import { commit } from "../commit.ts";
 import { sql } from "../sql.ts";
 
 export const getEvents = async (
   ...ids: string[]
-): Promise<BottEvent[]> => {
+): Promise<BottServiceEvent[]> => {
   const result = commit(
     sql`
       select
@@ -53,7 +53,7 @@ export const getEvents = async (
     throw result.error;
   }
 
-  const events = new Map<string, BottEvent>();
+  const events = new Map<string, BottServiceEvent>();
 
   for (
     const {
@@ -69,7 +69,7 @@ export const getEvents = async (
       continue;
     }
 
-    const event = new BottEvent(type, {
+    const event = new BottServiceEvent(type, {
       detail: JSON.parse(detail),
     });
 

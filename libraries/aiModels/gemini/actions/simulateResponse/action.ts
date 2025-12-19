@@ -12,7 +12,7 @@
 import { createAction } from "@bott/actions";
 import type { BottAction, BottActionSettings } from "@bott/actions";
 import {
-  BOTT_SERVICE,
+  BOTT_USER,
   INPUT_EVENT_COUNT_LIMIT,
   INPUT_EVENT_TIME_LIMIT_MS,
   INPUT_FILE_AUDIO_COUNT_LIMIT,
@@ -22,8 +22,8 @@ import {
   TYPING_WORDS_PER_MINUTE,
 } from "@bott/constants";
 import { log } from "@bott/log";
-import { BottAttachmentType } from "@bott/model";
-import { BottEvent } from "@bott/service";
+import { BottAttachmentType, type BottEvent } from "@bott/model";
+import { BottServiceEvent, dispatchEvent } from "@bott/service";
 import { addEvents, getEventIdsForChannel, getEvents } from "@bott/storage";
 
 import { delay } from "@std/async";
@@ -46,11 +46,9 @@ const settings: BottActionSettings = {
 };
 
 export const responseAction: BottAction = createAction(
-  async (parameters, _context) => {
-    const channelId = parameters.find((p) => p.name === "channelId")
-      ?.value as string;
+  async function ({ channelId }) {
     const eventHistoryIds = getEventIdsForChannel(
-      channelId,
+      channelId as string,
     );
     const channelHistory = await getEvents(...eventHistoryIds);
 
@@ -124,7 +122,7 @@ export const responseAction: BottAction = createAction(
     const channel = latestEvent?.channel;
 
     // Use bot user as the actor
-    const user = BOTT_SERVICE.user;
+    const user = BOTT_USER;
 
     if (!channel) {
       throw new Error("Could not derive channel from input history");
@@ -140,8 +138,8 @@ export const responseAction: BottAction = createAction(
       user,
       channel,
       actions: {},
-      settings: _context.globalSettings,
-      abortSignal: _context.signal,
+      settings: this.globalSettings,
+      abortSignal: this.signal,
     };
 
     for (const processor of pipeline) {
@@ -174,8 +172,9 @@ export const responseAction: BottAction = createAction(
         continue;
       }
 
-      const content =
-        typeof event.detail?.content === "string" ? event.detail.content : "";
+      const content = typeof event.detail?.content === "string"
+        ? event.detail.content
+        : "";
       const words = content.split(/\s+/).length;
       const delayMs = (words / TYPING_WORDS_PER_MINUTE) * MS_IN_MINUTE;
       const cappedDelayMs = Math.min(
@@ -185,8 +184,8 @@ export const responseAction: BottAction = createAction(
 
       await delay(cappedDelayMs);
 
-      globalThis.dispatchEvent(
-        new BottEvent(event.type, {
+      dispatchEvent(
+        new BottServiceEvent(event.type, {
           detail: event.detail,
           // Gemini does not return the full parent event
           parent: event.parent

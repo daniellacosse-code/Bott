@@ -10,7 +10,7 @@
  */
 
 import { BottEventType } from "@bott/model";
-import { BottEvent } from "@bott/service";
+import { BottServiceEvent } from "@bott/service";
 import { assertEquals } from "@std/assert/equals";
 import { createMockContext, createMockUser } from "../pipeline/e2e.ts";
 import {
@@ -74,7 +74,7 @@ Deno.test("_formatTimestampAsRelative - ISO string format", () => {
 
 Deno.test("_transformBottEventToContent - basic event", async () => {
   const context = createMockContext();
-  const event = new BottEvent(BottEventType.MESSAGE, {
+  const event = new BottServiceEvent(BottEventType.MESSAGE, {
     user: createMockUser(),
     channel: context.channel,
     detail: { content: "test" },

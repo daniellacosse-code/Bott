@@ -41,7 +41,7 @@ export const queryGemini = async <O>(
     systemPrompt,
     responseSchema,
     context,
-    model = GEMINI_EVENT_MODEL,
+    model = GEMINI_EVENT_MODEL ?? "gemini-2.5-flash",
     useIdentity = true,
   }: QueryGeminiOptions,
 ): Promise<O> => {

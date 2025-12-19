@@ -9,8 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottChannel, BottUser } from "./entities.ts";
 import type { AnyShape } from "./common.ts";
+import type { BottChannel, BottUser } from "./entities.ts";
 
 /**
  * Enumerates the different types of events that can occur in Bott.
@@ -22,25 +22,13 @@ export enum BottEventType {
   REPLY = "reply",
   /** A reaction (e.g., emoji) to a previous message. */
   REACTION = "reaction",
-  /** An event representing a call for Bott to perform an action. */
-  ACTION_CALL = "actionCall",
-  /** An event representing the start of an action. */
-  ACTION_START = "actionStart",
-  /** An event representing the cancellation of an action. */
-  ACTION_ABORT = "actionCancel",
-  /** An event representing the completion of an action. */
-  ACTION_COMPLETE = "actionComplete",
-  /** An event representing the result of an action. */
-  ACTION_RESULT = "actionResult",
-  /** An event representing an error that occurred during an action. */
-  ACTION_ERROR = "actionError",
 }
 
 /**
  * Represents a generic event in Bott.
  */
 export interface BottEvent<
-  T extends BottEventType = BottEventType,
+  T extends string = string,
   D extends AnyShape = AnyShape,
 > extends CustomEvent<D> {
   /** The type of the event. */

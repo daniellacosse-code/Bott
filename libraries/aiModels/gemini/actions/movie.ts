@@ -9,13 +9,15 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { createAction } from "@bott/actions";
-import type { BottAction, BottActionSettings } from "@bott/actions";
+import {
+  type BottAction,
+  BottActionEventType,
+  type BottActionSettings,
+  createAction,
+} from "@bott/actions";
 import { GEMINI_MOVIE_MODEL, RATE_LIMIT_VIDEOS } from "@bott/constants";
-import { BottEventType } from "@bott/model";
-import { dispatchEvent } from "@bott/service";
+import { BottServiceEvent, dispatchEvent } from "@bott/service";
 import { prepareAttachmentFromFile } from "@bott/storage";
-
 import {
   type GenerateVideosOperation,
   type GenerateVideosParameters,
@@ -40,26 +42,21 @@ const settings: BottActionSettings = {
     type: "file",
     description: "Optional reference media for the video generation",
     required: false,
+    // ...
   }],
 };
 
 export const movieAction: BottAction = createAction(
-  async (parameters, _context) => {
-    const { signal } = _context;
-    const prompt = parameters.find((p) => p.name === "prompt")?.value as string;
-    const media = parameters.find((p) => p.name === "media")?.value as
-      | File
-      | undefined;
-
-    if (!prompt) {
-      throw new Error("Prompt is required");
+  async function ({ prompt, media }) {
+    if (!GEMINI_MOVIE_MODEL) {
+      throw new Error("Gemini movie model is not configured");
     }
 
     const request: GenerateVideosParameters = {
       model: GEMINI_MOVIE_MODEL,
-      prompt,
+      prompt: prompt as string,
       config: {
-        abortSignal: signal,
+        abortSignal: this.signal,
         aspectRatio: "16:9",
         enhancePrompt: true,
         fps: 24,
@@ -69,16 +66,16 @@ export const movieAction: BottAction = createAction(
       },
     };
 
-    if (media?.type.startsWith("image/")) {
+    if ((media as File)?.type.startsWith("image/")) {
       request.image = {
         inlineData: {
-          data: encodeBase64(await media.arrayBuffer()),
-          mimeType: media.type,
+          data: encodeBase64(await (media as File).arrayBuffer()),
+          mimeType: (media as File).type,
         },
       } as Image;
     } else if (media) {
       throw new Error(
-        `Unsupported media type: ${media.type}. Only images are supported.`,
+        `Unsupported media type: ${(media as File)?.type}. Only images are supported.`,
       );
     }
 
@@ -119,23 +116,31 @@ export const movieAction: BottAction = createAction(
       { type: "video/mp4" },
     );
 
-    // TODO: create result event, attach file, then dispatch
-    const attachment = await prepareAttachmentFromFile(
-      file,
-      _context.id,
-    );
-
-    dispatchEvent(
-      BottEventType.ACTION_RESULT,
+    // Create the event first
+    const resultEvent = new BottServiceEvent(
+      BottActionEventType.ACTION_RESULT,
       {
-        id: _context.id,
-        name: "movie",
-        result: {
-          attachment,
-          prompt,
+        detail: {
+          id: this.id,
+          name: "movie",
+          result: {
+            prompt,
+          } as Record<string, unknown>,
         },
       },
     );
+
+    // Prepare attachment with the event as parent
+    const attachment = await prepareAttachmentFromFile(
+      file,
+      resultEvent,
+    );
+
+    // Add attachment to result
+    resultEvent.detail.result.attachment = attachment;
+
+    // Dispatch the fully constructed event
+    dispatchEvent(resultEvent);
   },
   settings,
 );

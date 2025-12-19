@@ -14,15 +14,14 @@ import type {
   BottChannel,
   BottEvent as BottEventInterface,
   BottEventAttachment,
-  BottEventType,
   BottUser,
 } from "@bott/model";
 
 /**
  * Represents a generic event in Bott.
  */
-export class BottEvent<
-  T extends BottEventType = BottEventType,
+export class BottServiceEvent<
+  T extends string = string,
   D extends AnyShape = AnyShape,
 > extends CustomEvent<D> implements BottEventInterface<T, D> {
   override type: T;
@@ -30,14 +29,14 @@ export class BottEvent<
   createdAt: Date;
   lastProcessedAt?: Date;
   channel?: BottChannel;
-  parent?: BottEvent;
+  parent?: BottEventInterface;
   user?: BottUser;
   attachments?: BottEventAttachment[];
 
   constructor(type: T, eventInitDict?: {
     detail?: D;
     channel?: BottChannel;
-    parent?: BottEvent;
+    parent?: BottEventInterface;
     user?: BottUser;
     attachments?: BottEventAttachment[];
   }) {

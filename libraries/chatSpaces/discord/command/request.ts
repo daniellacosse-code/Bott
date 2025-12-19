@@ -13,8 +13,9 @@ import type {
   BottActionCallEvent,
   BottActionParameterEntry,
 } from "@bott/actions";
-import { type BottChannel, BottEventType } from "@bott/model";
-import { BottEvent, type BottService } from "@bott/service";
+import { BottActionEventType } from "@bott/actions";
+import type { BottChannel } from "@bott/model";
+import { type BottService, BottServiceEvent } from "@bott/service";
 import {
   ApplicationCommandOptionType,
   ChannelType,
@@ -45,7 +46,7 @@ export async function resolveCommandRequestEvent(
     };
   }
 
-  return new BottEvent(BottEventType.ACTION_CALL, {
+  return new BottServiceEvent(BottActionEventType.ACTION_CALL, {
     detail: {
       id: crypto.randomUUID(),
       name: interaction.commandName,

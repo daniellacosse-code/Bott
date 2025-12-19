@@ -9,17 +9,17 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BottEventType } from "@bott/model";
+import { type BottEvent, BottEventType } from "@bott/model";
 
-import { BottEvent } from "@bott/service";
+import { BottServiceEvent } from "@bott/service";
 import { getEvents, prepareAttachmentFromUrl } from "@bott/storage";
 import type { Message } from "discord.js";
 
 import { getMarkdownLinks } from "./markdown.ts";
 
-export const resolveBottEventFromMessage = async (
+export const resolveEventFromMessage = async (
   message: Message<true>,
-): Promise<BottEvent> => {
+): Promise<BottServiceEvent> => {
   const [possibleEvent] = await getEvents(message.id);
 
   if (possibleEvent) {
@@ -32,7 +32,7 @@ export const resolveBottEventFromMessage = async (
   if (message.reference?.messageId) {
     type = BottEventType.REPLY;
     try {
-      parent = await resolveBottEventFromMessage(
+      parent = await resolveEventFromMessage(
         await message.channel.messages.fetch(message.reference.messageId),
       );
     } catch {
@@ -42,7 +42,7 @@ export const resolveBottEventFromMessage = async (
     }
   }
 
-  const event = new BottEvent(type, {
+  const event = new BottServiceEvent(type, {
     detail: {
       content: (message.content || message.embeds.at(0)?.description) ?? "",
     },

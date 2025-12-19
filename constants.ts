@@ -137,11 +137,9 @@ export const SONG_GENERATION_DURATION_SECONDS = 15;
 // -- App --
 export const BOTT_NAME = Deno.env.get("BOTT_NAME") ?? "Bott";
 const BOTT_ID = Deno.env.get("BOTT_ID") ?? "system:bott";
-export const BOTT_SERVICE = {
-  user: {
-    id: BOTT_ID,
-    name: BOTT_NAME,
-  },
+export const BOTT_USER = {
+  id: BOTT_ID,
+  name: BOTT_NAME,
 };
 
 export const TYPING_WORDS_PER_MINUTE = 200;

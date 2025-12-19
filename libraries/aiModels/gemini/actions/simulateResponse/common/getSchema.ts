@@ -10,6 +10,7 @@
  */
 
 import type { BottAction } from "@bott/actions";
+import { BottActionEventType } from "@bott/actions";
 import {
   type BottChannel,
   BottEventType,
@@ -95,7 +96,7 @@ export const getActionSchema = (
       properties: {
         type: {
           type: GeminiStructuredResponseType.STRING,
-          enum: [BottEventType.ACTION_CALL],
+          enum: [BottActionEventType.ACTION_CALL],
         },
         detail: {
           type: GeminiStructuredResponseType.OBJECT,

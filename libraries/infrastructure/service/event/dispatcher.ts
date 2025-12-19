@@ -9,19 +9,16 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { AnyShape, BottChannel, BottEventType, BottUser } from "@bott/model";
-import { BottEvent } from "@bott/service";
+import { type BottServiceEvent, serviceRegistry } from "@bott/service";
 
-export const dispatchEvent = (
-  type: BottEventType,
-  detail: AnyShape | undefined,
-  context?: { user?: BottUser; channel?: BottChannel },
-) => {
-  globalThis.dispatchEvent(
-    new BottEvent(type, {
-      detail,
-      user: context?.user,
-      channel: context?.channel,
-    }),
-  );
-};
+export function dispatchEvent(event: BottServiceEvent): void {
+  const type = event.type;
+
+  if (!serviceRegistry.isEventProvided(type)) {
+    throw new Error(
+      `Event type "${type}" is not provided by any registered service.`,
+    );
+  }
+
+  globalThis.dispatchEvent(event);
+}

@@ -11,15 +11,30 @@
 
 import type {
   BottAction,
+  BottActionContext,
   BottActionFunction,
+  BottActionHandler,
+  BottActionParameterEntry,
   BottActionSettings,
 } from "@bott/actions";
 
 export function createAction(
-  fn: BottActionFunction,
+  fn: BottActionHandler,
   settings: BottActionSettings,
 ): BottAction {
-  const action = fn as unknown as BottAction;
+  const wrapper: BottActionFunction = async function (
+    this: BottActionContext,
+    parameters: BottActionParameterEntry[],
+  ) {
+    const paramsObject = parameters.reduce(
+      (acc, p) => ({ ...acc, [p.name]: p.value }),
+      {},
+    );
+    const boundFn = fn.bind(this);
+    return await boundFn(paramsObject);
+  };
+
+  const action = wrapper as unknown as BottAction;
   const { name, ...otherSettings } = settings;
 
   Object.defineProperty(action, "name", { value: name });

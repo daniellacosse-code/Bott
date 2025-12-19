@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-export * from "./event/main.ts";
+export { BottServiceEvent } from "./event/main.ts";
 export * from "./event/dispatcher.ts";
 export * from "./event/listener.ts";
 export * from "./registry.ts";

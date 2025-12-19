@@ -10,9 +10,10 @@
  */
 
 import { createAction, startActionService } from "@bott/actions";
+import { BottActionEventType } from "@bott/actions";
 import { STORAGE_DEPLOY_NONCE_LOCATION } from "@bott/constants";
-import { BottEventType } from "@bott/model";
-import { BottEvent, serviceRegistry } from "@bott/service";
+import type { BottEvent as BottEventInterface } from "@bott/model";
+import { BottServiceEvent, serviceRegistry } from "@bott/service";
 import { addEvents, startEventStorageService } from "@bott/storage";
 import { assert } from "@std/assert";
 import { stub } from "@std/testing/mock";
@@ -36,10 +37,10 @@ Deno.test("Action Service - Rate Limiting", async () => {
 
   // Seed the database with 2 ACTION_START events for this action
   // effectively using up the quota
-  const seedEvent1 = new BottEvent(BottEventType.ACTION_START, {
+  const seedEvent1 = new BottServiceEvent(BottActionEventType.ACTION_START, {
     detail: { name: "limited-action", id: "1" },
   });
-  const seedEvent2 = new BottEvent(BottEventType.ACTION_START, {
+  const seedEvent2 = new BottServiceEvent(BottActionEventType.ACTION_START, {
     detail: { name: "limited-action", id: "2" },
   });
 
@@ -60,7 +61,7 @@ Deno.test("Action Service - Rate Limiting", async () => {
 
   // Now try to call the action again
   const callEventId = crypto.randomUUID();
-  const callEvent = new BottEvent(BottEventType.ACTION_CALL, {
+  const callEvent = new BottServiceEvent(BottActionEventType.ACTION_CALL, {
     detail: {
       id: callEventId,
       name: "limited-action",
@@ -71,9 +72,9 @@ Deno.test("Action Service - Rate Limiting", async () => {
   // We need to listen for the ACTION_ERROR event
   const errorPromise = new Promise<void>((resolve, reject) => {
     const handler = (event: Event) => {
-      const bottEvent = event as BottEvent;
+      const bottEvent = event as BottEventInterface;
       if (
-        bottEvent.type === BottEventType.ACTION_ERROR &&
+        bottEvent.type === BottActionEventType.ACTION_ERROR &&
         bottEvent.detail.id === callEventId
       ) {
         try {
@@ -87,11 +88,14 @@ Deno.test("Action Service - Rate Limiting", async () => {
         } catch (e) {
           reject(e);
         } finally {
-          globalThis.removeEventListener(BottEventType.ACTION_ERROR, handler);
+          globalThis.removeEventListener(
+            BottActionEventType.ACTION_ERROR,
+            handler,
+          );
         }
       }
     };
-    globalThis.addEventListener(BottEventType.ACTION_ERROR, handler);
+    globalThis.addEventListener(BottActionEventType.ACTION_ERROR, handler);
   });
 
   globalThis.dispatchEvent(callEvent);

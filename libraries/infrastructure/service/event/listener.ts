@@ -11,7 +11,7 @@
 
 import { STORAGE_DEPLOY_NONCE_LOCATION } from "@bott/constants";
 import { log } from "@bott/log";
-import type { BottEvent, BottEventType } from "@bott/model";
+import type { BottEvent } from "@bott/model";
 import type { BottService } from "@bott/service";
 import { serviceRegistry } from "../registry.ts";
 
@@ -27,9 +27,15 @@ const _getCurrentDeployNonce = () => {
 };
 
 export const addEventListener = <E extends BottEvent>(
-  eventType: BottEventType,
+  eventType: string,
   handler: (event: E, service?: BottService) => unknown | Promise<unknown>,
 ): void => {
+  if (!serviceRegistry.isEventProvided(eventType)) {
+    log.warn(
+      `Event type "${eventType}" is not provided by any registered service.`,
+    );
+  }
+
   globalThis.addEventListener(eventType, async (event) => {
     const bottEvent = event as E;
 

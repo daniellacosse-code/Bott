@@ -9,15 +9,34 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottEvent, BottEventType } from "@bott/model";
+import type { BottEvent } from "@bott/model";
 import type { BottGlobalSettings } from "@bott/model";
 import type { NonEmptyArray } from "@bott/model";
+
+export enum BottActionEventType {
+  ACTION_CALL = "action:call",
+  ACTION_START = "action:start",
+  ACTION_ABORT = "action:abort",
+  ACTION_COMPLETE = "action:complete",
+  ACTION_RESULT = "action:result",
+  ACTION_ERROR = "action:error",
+}
 
 export type BottAction = BottActionFunction & BottActionSettings;
 
 export type BottActionFunction = (
+  this: BottActionContext,
   parameters: BottActionParameterEntry[],
-  context: BottActionContext,
+) => Promise<void>;
+
+export type BottActionParams = Record<
+  string,
+  BottActionParameterValue | undefined
+>;
+
+export type BottActionHandler = (
+  this: BottActionContext,
+  params: BottActionParams,
 ) => Promise<void>;
 
 export type BottActionContext = {
@@ -51,7 +70,7 @@ export type BottActionParameterEntry = {
 };
 
 export type BottActionCallEvent = BottEvent<
-  BottEventType.ACTION_CALL,
+  BottActionEventType.ACTION_CALL,
   {
     id: string;
     name: string;
@@ -60,7 +79,7 @@ export type BottActionCallEvent = BottEvent<
 >;
 
 export type BottActionStartEvent = BottEvent<
-  BottEventType.ACTION_START,
+  BottActionEventType.ACTION_START,
   {
     name: string;
     id: string;
@@ -68,7 +87,7 @@ export type BottActionStartEvent = BottEvent<
 >;
 
 export type BottActionCancelEvent = BottEvent<
-  BottEventType.ACTION_ABORT,
+  BottActionEventType.ACTION_ABORT,
   {
     name: string;
     id: string;
@@ -76,7 +95,7 @@ export type BottActionCancelEvent = BottEvent<
 >;
 
 export type BottActionCompleteEvent = BottEvent<
-  BottEventType.ACTION_COMPLETE,
+  BottActionEventType.ACTION_COMPLETE,
   {
     name: string;
     id: string;
@@ -84,7 +103,7 @@ export type BottActionCompleteEvent = BottEvent<
 >;
 
 export type BottActionResultEvent = BottEvent<
-  BottEventType.ACTION_RESULT,
+  BottActionEventType.ACTION_RESULT,
   {
     name: string;
     id: string;
@@ -93,7 +112,7 @@ export type BottActionResultEvent = BottEvent<
 >;
 
 export type BottActionErrorEvent = BottEvent<
-  BottEventType.ACTION_ERROR,
+  BottActionEventType.ACTION_ERROR,
   {
     name: string;
     id: string;

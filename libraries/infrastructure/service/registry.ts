@@ -13,6 +13,7 @@ import type { BottService } from "@bott/service";
 
 export class BottServiceRegistry {
   services: Map<string, BottService> = new Map();
+  providedEvents: Set<string> = new Set();
   nonce?: string | null;
 
   register(service: BottService): void {
@@ -20,10 +21,19 @@ export class BottServiceRegistry {
       throw new Error(`Service "${service.user.id}" is already registered.`);
     }
     this.services.set(service.user.id, service);
+    if (service.events) {
+      for (const event of service.events) {
+        this.providedEvents.add(event);
+      }
+    }
   }
 
   get(id: string): BottService | undefined {
     return this.services.get(id);
+  }
+
+  isEventProvided(type: string): boolean {
+    return this.providedEvents.has(type);
   }
 }
 

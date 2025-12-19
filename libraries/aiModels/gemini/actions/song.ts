@@ -13,13 +13,14 @@ import { Buffer } from "node:buffer";
 
 import { createAction } from "@bott/actions";
 import type { BottAction, BottActionSettings } from "@bott/actions";
+import { BottActionEventType } from "@bott/actions";
 import {
   GEMINI_SONG_MODEL,
   RATE_LIMIT_MUSIC,
   SONG_GENERATION_DURATION_SECONDS,
 } from "@bott/constants";
-import { BottEventType } from "@bott/model";
-import { dispatchEvent } from "@bott/service";
+import type { BottEventAttachment } from "@bott/model";
+import { BottServiceEvent, dispatchEvent } from "@bott/service";
 import { prepareAttachmentFromFile } from "@bott/storage";
 
 import _gemini from "../client.ts";
@@ -70,13 +71,9 @@ export function writeWavHeader(
 }
 
 export const songAction: BottAction = createAction(
-  async (parameters, _context) => {
-    const prompt = parameters.find((p) => p.name === "prompt")?.value as string;
-    const duration = parameters.find((p) => p.name === "duration")
-      ?.value as number;
-
-    if (!prompt) {
-      throw new Error("Prompt is required");
+  async function ({ prompt, duration }) {
+    if (!GEMINI_SONG_MODEL) {
+      throw new Error("Gemini song model is not configured");
     }
 
     const audioBuffer: Buffer[] = [];
@@ -107,7 +104,7 @@ export const songAction: BottAction = createAction(
     await session.play();
 
     // 4. Wait for the desired duration, then stop
-    await new Promise((resolve) => setTimeout(resolve, duration * 1000));
+    await new Promise((resolve) => setTimeout(resolve, duration as number * 1000));
 
     // Stop and close
     await session.pause();
@@ -120,24 +117,33 @@ export const songAction: BottAction = createAction(
 
     const file = new File([finalWav], "song.wav", { type: "audio/wav" });
 
-    // TODO: create result event, attach file, then dispatch
-    const attachment = await prepareAttachmentFromFile(
-      file,
-      _context.id,
-    );
-
-    dispatchEvent(
-      BottEventType.ACTION_RESULT,
+    // Create the event first
+    const resultEvent = new BottServiceEvent(
+      BottActionEventType.ACTION_RESULT,
       {
-        id: _context.id,
-        name: "song",
-        result: {
-          attachment,
-          prompt,
-          duration,
+        detail: {
+          id: this.id,
+          name: "song",
+          result: {
+            prompt,
+            duration,
+            attachment: undefined as BottEventAttachment | undefined,
+          },
         },
       },
     );
+
+    // Prepare attachment with the event as parent
+    const attachment = await prepareAttachmentFromFile(
+      file,
+      resultEvent,
+    );
+
+    // Add attachment to result
+    resultEvent.detail.result.attachment = attachment;
+
+    // Dispatch the fully constructed event
+    dispatchEvent(resultEvent);
   },
   settings,
 );

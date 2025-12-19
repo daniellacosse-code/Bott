@@ -9,17 +9,19 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { BottActionEventType } from "@bott/actions";
+import { STORAGE_DEPLOY_NONCE_LOCATION } from "@bott/constants";
 import { BottEventType } from "@bott/model";
 import type { BottChannel, BottUser } from "@bott/model";
 import { assert, assertEquals, assertExists } from "@std/assert";
-import { BottEvent } from "./main.ts";
 import { assertSpyCall, assertSpyCalls, spy, stub } from "@std/testing/mock";
 import { serviceRegistry } from "../registry.ts";
-import { STORAGE_DEPLOY_NONCE_LOCATION } from "@bott/constants";
 import type { BottService } from "../types.ts";
+import { addEventListener } from "./listener.ts";
+import { BottServiceEvent } from "./main.ts";
 
-Deno.test("BottEvent - constructor initializes required properties", () => {
-  const event = new BottEvent(BottEventType.MESSAGE);
+Deno.test("BottServiceEvent - constructor initializes required properties", () => {
+  const event = new BottServiceEvent(BottEventType.MESSAGE);
 
   // Verify required properties are initialized
   assertEquals(event.type, BottEventType.MESSAGE);
@@ -29,51 +31,51 @@ Deno.test("BottEvent - constructor initializes required properties", () => {
   assert(event.id.length > 0, "id should not be empty");
 });
 
-Deno.test("BottEvent - constructor generates unique IDs", () => {
-  const event1 = new BottEvent(BottEventType.MESSAGE);
-  const event2 = new BottEvent(BottEventType.MESSAGE);
+Deno.test("BottServiceEvent - constructor generates unique IDs", () => {
+  const event1 = new BottServiceEvent(BottEventType.MESSAGE);
+  const event2 = new BottServiceEvent(BottEventType.MESSAGE);
 
   assert(event1.id !== event2.id, "Each event should have a unique id");
 });
 
-Deno.test("BottEvent - constructor accepts detail in eventInitDict", () => {
+Deno.test("BottServiceEvent - constructor accepts detail in eventInitDict", () => {
   const detail = { content: "Hello, world!" };
-  const event = new BottEvent(BottEventType.MESSAGE, { detail });
+  const event = new BottServiceEvent(BottEventType.MESSAGE, { detail });
 
   assertEquals(event.detail, detail);
   assertEquals(event.detail.content, "Hello, world!");
 });
 
-Deno.test("BottEvent - constructor accepts optional channel", () => {
+Deno.test("BottServiceEvent - constructor accepts optional channel", () => {
   const channel: BottChannel = {
     id: "channel-123",
     name: "general",
     space: { id: "space-1", name: "Test Space" },
   };
-  const event = new BottEvent(BottEventType.MESSAGE, { channel });
+  const event = new BottServiceEvent(BottEventType.MESSAGE, { channel });
 
   assertEquals(event.channel, channel);
   assertEquals(event.channel?.id, "channel-123");
   assertEquals(event.channel?.name, "general");
 });
 
-Deno.test("BottEvent - constructor accepts optional user", () => {
+Deno.test("BottServiceEvent - constructor accepts optional user", () => {
   const user: BottUser = {
     id: "user-456",
     name: "Alice",
   };
-  const event = new BottEvent(BottEventType.MESSAGE, { user });
+  const event = new BottServiceEvent(BottEventType.MESSAGE, { user });
 
   assertEquals(event.user, user);
   assertEquals(event.user?.id, "user-456");
   assertEquals(event.user?.name, "Alice");
 });
 
-Deno.test("BottEvent - constructor accepts optional parent", () => {
-  const parentEvent = new BottEvent(BottEventType.MESSAGE, {
+Deno.test("BottServiceEvent - constructor accepts optional parent", () => {
+  const parentEvent = new BottServiceEvent(BottEventType.MESSAGE, {
     detail: { content: "Original message" },
   });
-  const replyEvent = new BottEvent(BottEventType.REPLY, {
+  const replyEvent = new BottServiceEvent(BottEventType.REPLY, {
     detail: { content: "Reply message" },
     parent: parentEvent,
   });
@@ -82,8 +84,8 @@ Deno.test("BottEvent - constructor accepts optional parent", () => {
   assertEquals(replyEvent.parent?.type, BottEventType.MESSAGE);
 });
 
-Deno.test("BottEvent - constructor accepts optional attachments", () => {
-  const parentEvent = new BottEvent(BottEventType.MESSAGE);
+Deno.test("BottServiceEvent - constructor accepts optional attachments", () => {
+  const parentEvent = new BottServiceEvent(BottEventType.MESSAGE);
   const attachments = [
     {
       id: "attachment-1",
@@ -101,15 +103,15 @@ Deno.test("BottEvent - constructor accepts optional attachments", () => {
       },
     },
   ];
-  const event = new BottEvent(BottEventType.MESSAGE, { attachments });
+  const event = new BottServiceEvent(BottEventType.MESSAGE, { attachments });
 
   assertEquals(event.attachments, attachments);
   assertEquals(event.attachments?.length, 1);
   assertEquals(event.attachments?.[0].id, "attachment-1");
 });
 
-Deno.test("BottEvent - constructor without eventInitDict works", () => {
-  const event = new BottEvent(BottEventType.MESSAGE);
+Deno.test("BottServiceEvent - constructor without eventInitDict works", () => {
+  const event = new BottServiceEvent(BottEventType.MESSAGE);
 
   assertEquals(event.channel, undefined);
   assertEquals(event.parent, undefined);
@@ -118,16 +120,19 @@ Deno.test("BottEvent - constructor without eventInitDict works", () => {
   assertEquals(event.detail, undefined);
 });
 
-Deno.test("BottEvent - extends CustomEvent", () => {
-  const event = new BottEvent(BottEventType.MESSAGE);
+Deno.test("BottServiceEvent - extends CustomEvent", () => {
+  const event = new BottServiceEvent(BottEventType.MESSAGE);
 
-  assert(event instanceof CustomEvent, "BottEvent should extend CustomEvent");
-  assert(event instanceof Event, "BottEvent should be an Event");
+  assert(
+    event instanceof CustomEvent,
+    "BottServiceEvent should extend CustomEvent",
+  );
+  assert(event instanceof Event, "BottServiceEvent should be an Event");
 });
 
-Deno.test("BottEvent - CustomEvent properties are accessible", () => {
+Deno.test("BottServiceEvent - CustomEvent properties are accessible", () => {
   const detail = { content: "Test message" };
-  const event = new BottEvent(BottEventType.MESSAGE, { detail });
+  const event = new BottServiceEvent(BottEventType.MESSAGE, { detail });
 
   assertEquals(event.type, BottEventType.MESSAGE);
   assertEquals(event.detail, detail);
@@ -135,7 +140,7 @@ Deno.test("BottEvent - CustomEvent properties are accessible", () => {
   assertEquals(event.cancelable, false); // Default CustomEvent behavior
 });
 
-Deno.test("BottEvent - toJSON includes all properties", () => {
+Deno.test("BottServiceEvent - toJSON includes all properties", () => {
   const channel: BottChannel = {
     id: "channel-123",
     name: "general",
@@ -145,7 +150,7 @@ Deno.test("BottEvent - toJSON includes all properties", () => {
     id: "user-456",
     name: "Bob",
   };
-  const parentEvent = new BottEvent(BottEventType.MESSAGE);
+  const parentEvent = new BottServiceEvent(BottEventType.MESSAGE);
   const detail = { content: "Test content" };
   const attachments = [
     {
@@ -165,7 +170,7 @@ Deno.test("BottEvent - toJSON includes all properties", () => {
     },
   ];
 
-  const event = new BottEvent(BottEventType.REPLY, {
+  const event = new BottServiceEvent(BottEventType.REPLY, {
     detail,
     channel,
     user,
@@ -185,8 +190,8 @@ Deno.test("BottEvent - toJSON includes all properties", () => {
   assertEquals(json.attachments, attachments);
 });
 
-Deno.test("BottEvent - toJSON with minimal properties", () => {
-  const event = new BottEvent(BottEventType.MESSAGE);
+Deno.test("BottServiceEvent - toJSON with minimal properties", () => {
+  const event = new BottServiceEvent(BottEventType.MESSAGE);
   const json = event.toJSON();
 
   assertExists(json.id);
@@ -199,8 +204,8 @@ Deno.test("BottEvent - toJSON with minimal properties", () => {
   assertEquals(json.attachments, undefined);
 });
 
-Deno.test("BottEvent - toJSON includes lastProcessedAt when set", () => {
-  const event = new BottEvent(BottEventType.MESSAGE);
+Deno.test("BottServiceEvent - toJSON includes lastProcessedAt when set", () => {
+  const event = new BottServiceEvent(BottEventType.MESSAGE);
   const processedTime = new Date();
   event.lastProcessedAt = processedTime;
 
@@ -209,8 +214,8 @@ Deno.test("BottEvent - toJSON includes lastProcessedAt when set", () => {
   assertEquals(json.lastProcessedAt, processedTime);
 });
 
-Deno.test("BottEvent - toJSON result is serializable", () => {
-  const event = new BottEvent(BottEventType.MESSAGE, {
+Deno.test("BottServiceEvent - toJSON result is serializable", () => {
+  const event = new BottServiceEvent(BottEventType.MESSAGE, {
     detail: { content: "Serialization test" },
   });
 
@@ -228,38 +233,45 @@ Deno.test("BottEvent - toJSON result is serializable", () => {
   );
 });
 
-Deno.test("BottEvent - supports all event types", () => {
-  const messageEvent = new BottEvent(BottEventType.MESSAGE);
-  const replyEvent = new BottEvent(BottEventType.REPLY);
-  const reactionEvent = new BottEvent(BottEventType.REACTION);
-  const actionCallEvent = new BottEvent(BottEventType.ACTION_CALL);
-  const actionCompleteEvent = new BottEvent(BottEventType.ACTION_COMPLETE);
-  const actionErrorEvent = new BottEvent(BottEventType.ACTION_ERROR);
+Deno.test("BottServiceEvent - supports all event types", () => {
+  const messageEvent = new BottServiceEvent(BottEventType.MESSAGE);
+  const replyEvent = new BottServiceEvent(BottEventType.REPLY);
+  const reactionEvent = new BottServiceEvent(BottEventType.REACTION);
+  const actionCallEvent = new BottServiceEvent(BottActionEventType.ACTION_CALL);
+  const actionCompleteEvent = new BottServiceEvent(
+    BottActionEventType.ACTION_COMPLETE,
+  );
+  const actionErrorEvent = new BottServiceEvent(
+    BottActionEventType.ACTION_ERROR,
+  );
 
   assertEquals(messageEvent.type, BottEventType.MESSAGE);
   assertEquals(replyEvent.type, BottEventType.REPLY);
   assertEquals(reactionEvent.type, BottEventType.REACTION);
-  assertEquals(actionCallEvent.type, BottEventType.ACTION_CALL);
-  assertEquals(actionCompleteEvent.type, BottEventType.ACTION_COMPLETE);
-  assertEquals(actionErrorEvent.type, BottEventType.ACTION_ERROR);
+  assertEquals(actionCallEvent.type, BottActionEventType.ACTION_CALL);
+  assertEquals(actionCompleteEvent.type, BottActionEventType.ACTION_COMPLETE);
+  assertEquals(actionErrorEvent.type, BottActionEventType.ACTION_ERROR);
 });
 
-Deno.test("BottEvent - type-specific details work correctly", () => {
-  const actionCallEvent = new BottEvent(BottEventType.ACTION_CALL, {
-    detail: {
-      id: "actionCallEventId",
-      name: "testAction",
-      parameters: { param1: "value1" },
+Deno.test("BottServiceEvent - type-specific details work correctly", () => {
+  const actionCallEvent = new BottServiceEvent(
+    BottActionEventType.ACTION_CALL,
+    {
+      detail: {
+        id: "actionCallEventId",
+        name: "testAction",
+        parameters: { param1: "value1" },
+      },
     },
-  });
+  );
 
   assertEquals(actionCallEvent.detail.name, "testAction");
   assertEquals(actionCallEvent.detail.parameters.param1, "value1");
 });
 
-Deno.test("BottEvent - createdAt is close to current time", () => {
+Deno.test("BottServiceEvent - createdAt is close to current time", () => {
   const beforeCreation = new Date();
-  const event = new BottEvent(BottEventType.MESSAGE);
+  const event = new BottServiceEvent(BottEventType.MESSAGE);
   const afterCreation = new Date();
 
   assert(
@@ -294,12 +306,12 @@ Deno.test("addEventListener - calls handler when nonce matches", () => {
   addEventListener(eventType, handler);
 
   // Dispatch event
-  const event = new BottEvent(eventType);
+  const event = new BottServiceEvent(eventType);
   globalThis.dispatchEvent(event);
 
   // Verify handler called
   assertSpyCalls(handler, 1);
-  assert(handler.calls[0].args[0] instanceof BottEvent);
+  assert(handler.calls[0].args[0] instanceof BottServiceEvent);
 });
 
 Deno.test("addEventListener - does not call handler when nonce mismatches", () => {
@@ -323,7 +335,7 @@ Deno.test("addEventListener - does not call handler when nonce mismatches", () =
   addEventListener(eventType, handler);
 
   // Dispatch event
-  const event = new BottEvent(eventType);
+  const event = new BottServiceEvent(eventType);
   globalThis.dispatchEvent(event);
 
   // Verify handler NOT called
@@ -351,7 +363,7 @@ Deno.test("addEventListener - passes service to handler", () => {
   addEventListener(eventType, handler);
 
   // Dispatch event with matching user
-  const event = new BottEvent(eventType, {
+  const event = new BottServiceEvent(eventType, {
     user: { id: serviceId, name: "Bot" },
   });
   globalThis.dispatchEvent(event);

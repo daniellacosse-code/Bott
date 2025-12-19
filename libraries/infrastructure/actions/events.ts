@@ -9,20 +9,18 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import {
-  type BottEvent as BottEventInterface,
-  BottEventType,
-} from "@bott/model";
+import type { BottEvent as BottEventInterface } from "@bott/model";
+import { BottActionEventType } from "./types.ts";
 import type { BottActionCallEvent, BottActionCompleteEvent } from "./types.ts";
 
 export function isBottActionCallEvent(
   event: BottEventInterface,
 ): event is BottActionCallEvent {
-  return event.type === BottEventType.ACTION_CALL;
+  return event.type === BottActionEventType.ACTION_CALL;
 }
 
 export function isBottActionCompleteEvent(
   event: BottEventInterface,
 ): event is BottActionCompleteEvent {
-  return event.type === BottEventType.ACTION_COMPLETE;
+  return event.type === BottActionEventType.ACTION_COMPLETE;
 }

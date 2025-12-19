@@ -13,6 +13,7 @@ import type { AnyShape, BottUser } from "@bott/model";
 
 export type BottService = {
   user: BottUser;
+  events?: string[];
 };
 
 export type BottServiceFactory = (

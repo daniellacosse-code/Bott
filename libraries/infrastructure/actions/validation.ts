@@ -77,7 +77,8 @@ export function validateParameters(
         field.type !== "file"
       ) {
         throw new Error(
-          `Parameter '${field.name}' has invalid value '${param.value}'. Allowed values: ${field.allowedValues.join(", ")
+          `Parameter '${field.name}' has invalid value '${param.value}'. Allowed values: ${
+            field.allowedValues.join(", ")
           }`,
         );
       }

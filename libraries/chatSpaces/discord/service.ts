@@ -13,14 +13,16 @@ import { Buffer } from "node:buffer";
 import type { BottAction } from "@bott/actions";
 import {
   BOTT_ATTACHMENT_TYPE_LOOKUP,
+  type BottEvent,
   BottEventType,
   type BottUser,
 } from "@bott/model";
 import {
   addEventListener,
-  BottEvent,
   type BottService,
+  BottServiceEvent,
   type BottServiceFactory,
+  dispatchEvent,
 } from "@bott/service";
 import {
   AttachmentBuilder,
@@ -37,7 +39,7 @@ import {
 
 import { getCommandJson } from "./command/json.ts";
 import { resolveCommandRequestEvent } from "./command/request.ts";
-import { resolveBottEventFromMessage } from "./message/event.ts";
+import { resolveEventFromMessage } from "./message/event.ts";
 
 const REQUIRED_INTENTS = [
   GatewayIntentBits.GuildMembers,
@@ -50,7 +52,7 @@ const REQUIRED_INTENTS = [
 export const startDiscordService: BottServiceFactory = async ({
   identityToken: token = "",
   actions = {},
-}: { identityToken?: string; actions?: Record<string, BottAction> }) => {
+}: { identityToken?: string; actions?: Record<string, BottAction> } = {}) => {
   const client = new Client({ intents: REQUIRED_INTENTS });
 
   await client.login(token);
@@ -64,16 +66,21 @@ export const startDiscordService: BottServiceFactory = async ({
       id: client.user.id,
       name: client.user.username,
     },
+    events: [
+      BottEventType.MESSAGE,
+      BottEventType.REPLY,
+      BottEventType.REACTION,
+    ],
   };
 
   client.on(DiscordEvents.MessageCreate, async (message) => {
     if (message.channel.type !== ChannelType.GuildText) return;
 
-    const event = (await resolveBottEventFromMessage(
+    const event = (await resolveEventFromMessage(
       message as Message<true>,
-    )) as BottEvent;
+    )) as BottServiceEvent;
 
-    globalThis.dispatchEvent(event);
+    dispatchEvent(event);
   });
 
   client.on(DiscordEvents.MessageReactionAdd, async (reaction) => {
@@ -88,13 +95,13 @@ export const startDiscordService: BottServiceFactory = async ({
 
     let parent: BottEvent | undefined;
     if (reaction.message.content) {
-      parent = await resolveBottEventFromMessage(
+      parent = await resolveEventFromMessage(
         reaction.message as Message<true>,
       );
     }
 
-    globalThis.dispatchEvent(
-      new BottEvent(BottEventType.REACTION, {
+    dispatchEvent(
+      new BottServiceEvent(BottEventType.REACTION, {
         detail: { content: reaction.emoji.toString() },
         channel: {
           id: currentChannel.id,
@@ -119,7 +126,7 @@ export const startDiscordService: BottServiceFactory = async ({
 
     if (!action) return;
 
-    globalThis.dispatchEvent(
+    dispatchEvent(
       await resolveCommandRequestEvent(
         interaction,
         localService,
