@@ -47,6 +47,22 @@ jobs:
           token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
           files: .output/coverage/lcov.info
 
+  benchmarks:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.5.x
+
+      - name: Run Benchmarks
+        run: deno bench --allow-all
+
   licensing:
     name: License Headers
     runs-on: ubuntu-latest
