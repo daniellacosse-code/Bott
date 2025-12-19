@@ -25,7 +25,7 @@ Deno.bench("throwIfUnsafeFileSize - small file (1KB)", () => {
   try {
     throwIfUnsafeFileSize(smallFile);
   } catch {
-    // Expected for files over limit
+    // Validation complete
   }
 });
 
@@ -33,7 +33,7 @@ Deno.bench("throwIfUnsafeFileSize - medium file (1MB)", () => {
   try {
     throwIfUnsafeFileSize(mediumFile);
   } catch {
-    // Expected for files over limit
+    // Validation complete
   }
 });
 
@@ -41,7 +41,7 @@ Deno.bench("throwIfUnsafeFileSize - large file (10MB)", () => {
   try {
     throwIfUnsafeFileSize(largeFile);
   } catch {
-    // Expected for files over limit
+    // Validation complete
   }
 });
 
@@ -49,7 +49,7 @@ Deno.bench("throwIfUnsafeUrl - safe http URL", () => {
   try {
     throwIfUnsafeUrl(safeHttpUrl);
   } catch {
-    // Should not throw
+    // Validation complete
   }
 });
 
@@ -57,7 +57,7 @@ Deno.bench("throwIfUnsafeUrl - safe https URL", () => {
   try {
     throwIfUnsafeUrl(safeHttpsUrl);
   } catch {
-    // Should not throw
+    // Validation complete
   }
 });
 
@@ -65,7 +65,7 @@ Deno.bench("throwIfUnsafeUrl - URL with query parameters", () => {
   try {
     throwIfUnsafeUrl(urlWithQuery);
   } catch {
-    // Should not throw
+    // Validation complete
   }
 });
 
@@ -73,7 +73,7 @@ Deno.bench("throwIfUnsafeUrl - URL with fragment", () => {
   try {
     throwIfUnsafeUrl(urlWithFragment);
   } catch {
-    // Should not throw
+    // Validation complete
   }
 });
 
@@ -81,7 +81,7 @@ Deno.bench("throwIfUnsafeUrl - localhost (blocked)", () => {
   try {
     throwIfUnsafeUrl(new URL("http://localhost:8080"));
   } catch {
-    // Expected to throw
+    // Validation complete
   }
 });
 
@@ -89,7 +89,7 @@ Deno.bench("throwIfUnsafeUrl - 127.0.0.1 (blocked)", () => {
   try {
     throwIfUnsafeUrl(new URL("http://127.0.0.1:3000"));
   } catch {
-    // Expected to throw
+    // Validation complete
   }
 });
 
@@ -97,7 +97,7 @@ Deno.bench("throwIfUnsafeUrl - private IP 10.x (blocked)", () => {
   try {
     throwIfUnsafeUrl(new URL("http://10.0.0.1"));
   } catch {
-    // Expected to throw
+    // Validation complete
   }
 });
 
@@ -105,7 +105,7 @@ Deno.bench("throwIfUnsafeUrl - private IP 192.168.x (blocked)", () => {
   try {
     throwIfUnsafeUrl(new URL("http://192.168.1.1"));
   } catch {
-    // Expected to throw
+    // Validation complete
   }
 });
 
@@ -113,6 +113,6 @@ Deno.bench("throwIfUnsafeUrl - metadata endpoint (blocked)", () => {
   try {
     throwIfUnsafeUrl(new URL("http://169.254.169.254/metadata"));
   } catch {
-    // Expected to throw
+    // Validation complete
   }
 });
