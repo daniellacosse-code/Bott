@@ -47,8 +47,8 @@ jobs:
           token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
           files: .output/coverage/lcov.info
 
-  benchmarks:
-    name: Benchmarks
+  bench:
+    name: Bench
     runs-on: ubuntu-latest
 
     steps:
@@ -61,7 +61,20 @@ jobs:
           deno-version: v2.5.x
 
       - name: Run Benchmarks
-        run: deno bench --allow-all
+        run: |
+          deno bench --allow-all | tee bench-results.txt
+          echo "## Benchmark Results" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat bench-results.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Benchmark Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results
+          path: bench-results.txt
+          retention-days: 30
 
   licensing:
     name: License Headers
