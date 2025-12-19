@@ -38,19 +38,19 @@ if (MODEL_PROVIDER === "auto") {
 
 if (provider === "gemini") {
   if (GEMINI_EVENT_MODEL && GEMINI_RATING_MODEL) {
-    actions.responseAction = responseAction;
+    actions.simulateResponseForChannel = responseAction;
   }
 
   if (GEMINI_SONG_MODEL) {
-    actions.songAction = songAction;
+    actions.song = songAction;
   }
 
   if (GEMINI_PHOTO_MODEL) {
-    actions.photoAction = photoAction;
+    actions.photo = photoAction;
   }
 
   if (GEMINI_MOVIE_MODEL) {
-    actions.movieAction = movieAction;
+    actions.movie = movieAction;
   }
 }
 
