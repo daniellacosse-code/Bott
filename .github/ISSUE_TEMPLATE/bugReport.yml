@@ -1,5 +1,4 @@
 name: Report Unexpected Behavior
-type: bug
 description: File a bug report.
 body:
   - type: checkboxes
