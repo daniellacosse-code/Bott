@@ -11,56 +11,33 @@
 
 import { sql } from "./sql.ts";
 
-// Test data for benchmarks
-const simpleValue = "test";
-const numberValue = 42;
-const arrayValues = [1, 2, 3, 4, 5];
-const nestedSql = sql`SELECT * FROM users WHERE id = ${1}`;
-const arrayOfSql = [
-  sql`name = ${"Alice"}`,
-  sql`age = ${30}`,
-  sql`city = ${"NYC"}`,
-];
+// Large test data for benchmarking
+const largeArrayValues = Array.from({ length: 100 }, (_, i) => i);
+const largeArrayOfSql = Array.from({ length: 50 }, (_, i) => 
+  sql`field${i} = ${"value" + i}`
+);
+const complexNestedSql = sql`
+  SELECT * FROM users 
+  WHERE id IN (${largeArrayValues}) 
+  AND status = ${"active"}
+`;
 
-Deno.bench("sql - simple string parameter", () => {
-  sql`SELECT * FROM users WHERE name = ${simpleValue}`;
+Deno.bench("sql - large array of values (IN clause)", () => {
+  sql`SELECT * FROM users WHERE id IN (${largeArrayValues})`;
 });
 
-Deno.bench("sql - simple number parameter", () => {
-  sql`SELECT * FROM users WHERE id = ${numberValue}`;
+Deno.bench("sql - large array of SqlInstructions", () => {
+  sql`UPDATE users SET ${largeArrayOfSql} WHERE id = ${1}`;
 });
 
-Deno.bench("sql - multiple parameters", () => {
-  sql`SELECT * FROM users WHERE name = ${simpleValue} AND age = ${numberValue}`;
+Deno.bench("sql - complex nested query", () => {
+  sql`SELECT * FROM (${complexNestedSql}) as subquery WHERE created_at > ${Date.now()}`;
 });
 
-Deno.bench("sql - array of values (IN clause)", () => {
-  sql`SELECT * FROM users WHERE id IN (${arrayValues})`;
-});
-
-Deno.bench("sql - nested SqlInstructions", () => {
-  sql`SELECT * FROM (${nestedSql}) as subquery`;
-});
-
-Deno.bench("sql - array of SqlInstructions", () => {
-  sql`UPDATE users SET ${arrayOfSql} WHERE id = ${1}`;
-});
-
-Deno.bench("sql - complex query with mixed types", () => {
+Deno.bench("sql - complex query with many parameters", () => {
+  const values = Array.from({ length: 20 }, (_, i) => i);
   sql`
-    INSERT INTO logs (user_id, action, metadata, timestamp)
-    VALUES (${123}, ${"login"}, ${"null"}, ${Date.now()})
+    INSERT INTO logs (user_id, action, metadata, timestamp, value1, value2, value3)
+    VALUES ${values.map((v) => sql`(${v}, ${"action"}, ${"meta"}, ${Date.now()}, ${v * 2}, ${v * 3}, ${v * 4})`)}
   `;
-});
-
-Deno.bench("sql - no parameters", () => {
-  sql`SELECT * FROM users`;
-});
-
-Deno.bench("sql - undefined parameter", () => {
-  sql`SELECT * FROM users WHERE deleted_at = ${undefined}`;
-});
-
-Deno.bench("sql - null string parameter", () => {
-  sql`SELECT * FROM users WHERE notes = ${"null"}`;
 });

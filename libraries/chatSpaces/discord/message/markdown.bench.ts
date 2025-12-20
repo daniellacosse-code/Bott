@@ -11,22 +11,7 @@
 
 import { getMarkdownLinks } from "./markdown.ts";
 
-// Test data for benchmarks
-const noLinks = "This is a simple text with no links at all.";
-const singleLink = "Check out [Google](https://google.com) for more info.";
-const multipleLinks = `
-Visit [Google](https://google.com) and [GitHub](https://github.com).
-Also check https://example.com and http://test.org.
-Images: ![Logo](https://example.com/logo.png)
-`;
-const codeWithLinks = `
-Some text with code:
-\`\`\`
-https://code-example.com/api
-http://another.example.com
-\`\`\`
-And inline code: \`https://inline.example.com\`
-`;
+// Large test data for benchmarking
 const longTextWithManyLinks = `
 # Documentation
 
@@ -50,7 +35,8 @@ Images:
 More plaintext URLs:
 http://test1.com http://test2.com http://test3.com
 www.example1.org www.example2.org www.example3.org
-`;
+`.repeat(10); // Make it even larger
+
 const complexMarkdown = `
 # Complex Document
 
@@ -67,23 +53,9 @@ List:
 - Item with https://list-item1.com
 - Item with [link](https://list-item2.com)
 - Item with ![img](https://list-item3.com/img.png)
-`;
+`.repeat(20); // Make it larger
 
-Deno.bench("getMarkdownLinks - no links", () => {
-  getMarkdownLinks(noLinks);
-});
-
-Deno.bench("getMarkdownLinks - single link", () => {
-  getMarkdownLinks(singleLink);
-});
-
-Deno.bench("getMarkdownLinks - multiple links", () => {
-  getMarkdownLinks(multipleLinks);
-});
-
-Deno.bench("getMarkdownLinks - code blocks with links", () => {
-  getMarkdownLinks(codeWithLinks);
-});
+const largeTextNoLinks = "Lorem ipsum dolor sit amet. ".repeat(1000);
 
 Deno.bench("getMarkdownLinks - long text with many links", () => {
   getMarkdownLinks(longTextWithManyLinks);
@@ -93,11 +65,6 @@ Deno.bench("getMarkdownLinks - complex markdown", () => {
   getMarkdownLinks(complexMarkdown);
 });
 
-Deno.bench("getMarkdownLinks - empty string", () => {
-  getMarkdownLinks("");
-});
-
 Deno.bench("getMarkdownLinks - large text no links", () => {
-  const largeText = "Lorem ipsum dolor sit amet. ".repeat(500);
-  getMarkdownLinks(largeText);
+  getMarkdownLinks(largeTextNoLinks);
 });

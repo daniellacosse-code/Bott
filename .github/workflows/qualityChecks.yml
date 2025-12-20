@@ -62,7 +62,7 @@ jobs:
 
       - name: Run Benchmarks
         run: |
-          deno bench --allow-all --no-color > bench-results.txt 2>&1 || true
+          deno bench --allow-all > bench-results.txt 2>&1 || true
           {
             echo "## Benchmark Results"
             echo '```'

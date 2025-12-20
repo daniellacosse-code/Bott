@@ -11,10 +11,8 @@
 
 import { budgetedStringify } from "./budgetedStringify.ts";
 
-// Test data for benchmarks
-const smallString = "Hello, World!";
+// Large test data for benchmarking
 const largeString = "a".repeat(10000);
-const smallObject = { name: "John", age: 30, city: "New York" };
 const largeObject = {
   users: Array.from({ length: 100 }, (_, i) => ({
     id: i,
@@ -34,17 +32,10 @@ const deeplyNestedObject = (() => {
   }
   return obj;
 })();
-
-Deno.bench("budgetedStringify - small string within budget", () => {
-  budgetedStringify(smallString, 100);
-});
+const largeArray = Array.from({ length: 1000 }, (_, i) => `string ${i}`);
 
 Deno.bench("budgetedStringify - large string exceeds budget", () => {
   budgetedStringify(largeString, 100);
-});
-
-Deno.bench("budgetedStringify - small object within budget", () => {
-  budgetedStringify(smallObject, 100);
 });
 
 Deno.bench("budgetedStringify - large object exceeds budget", () => {
@@ -55,27 +46,10 @@ Deno.bench("budgetedStringify - deeply nested object", () => {
   budgetedStringify(deeplyNestedObject, 1000);
 });
 
-Deno.bench("budgetedStringify - array of strings", () => {
-  const data = Array.from({ length: 100 }, (_, i) => `string ${i}`);
-  budgetedStringify(data, 500);
+Deno.bench("budgetedStringify - large array of strings", () => {
+  budgetedStringify(largeArray, 500);
 });
 
-Deno.bench("budgetedStringify - mixed types array", () => {
-  const data = [
-    "string",
-    123,
-    true,
-    null,
-    { key: "value" },
-    ["nested", "array"],
-  ];
-  budgetedStringify(data, 200);
-});
-
-Deno.bench("budgetedStringify - very tight budget", () => {
+Deno.bench("budgetedStringify - very tight budget on large object", () => {
   budgetedStringify(largeObject, 50);
-});
-
-Deno.bench("budgetedStringify - generous budget", () => {
-  budgetedStringify(smallObject, 10000);
 });
