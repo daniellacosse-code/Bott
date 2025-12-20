@@ -62,19 +62,11 @@ jobs:
 
       - name: Run Benchmarks
         run: |
-          deno bench --allow-all | tee bench-results.txt
+          deno bench --allow-all --no-color | tee bench-results.txt
           echo "## Benchmark Results" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat bench-results.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload Benchmark Results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: benchmark-results
-          path: bench-results.txt
-          retention-days: 30
 
   licensing:
     name: License Headers
