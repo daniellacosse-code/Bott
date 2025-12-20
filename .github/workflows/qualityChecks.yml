@@ -90,7 +90,9 @@ jobs:
           changed_files="${{ needs.detect-changes.outputs.all_changed_files }}"
           if [ -n "$changed_files" ]; then
             echo "Linting changed files: $changed_files"
+            # shellcheck disable=SC2086
             deno fmt --check $changed_files
+            # shellcheck disable=SC2086
             deno lint $changed_files
           else
             echo "No files to lint"
@@ -163,6 +165,7 @@ jobs:
           
           if [ -n "$test_paths" ]; then
             echo "Running tests for: $test_paths"
+            # shellcheck disable=SC2086
             deno test --allow-all --coverage=.output/cov_profile $test_paths
             mkdir -p .output/coverage
             deno coverage .output/cov_profile --lcov --output=.output/coverage/lcov.info
@@ -216,7 +219,7 @@ jobs:
             echo '```'
             cat bench-results.txt
             echo '```'
-          } >> $GITHUB_STEP_SUMMARY
+          } >> "$GITHUB_STEP_SUMMARY"
           cat bench-results.txt
 
       - name: Run Benchmarks (Changed Modules Only)
@@ -255,8 +258,10 @@ jobs:
           if [ -n "$bench_paths" ]; then
             echo "Running benchmarks for: $bench_paths"
             # Cache dependencies first to avoid download noise in benchmark output
+            # shellcheck disable=SC2086
             deno bench --allow-all --quiet $bench_paths > /dev/null 2>&1 || true
             # Now run benchmarks and capture clean output
+            # shellcheck disable=SC2086
             deno bench --allow-all $bench_paths > bench-results-raw.txt 2>&1 || true
             # Strip ANSI color codes from the output
             sed 's/\x1b\[[0-9;]*m//g' bench-results-raw.txt > bench-results.txt
@@ -265,7 +270,7 @@ jobs:
               echo '```'
               cat bench-results.txt
               echo '```'
-            } >> $GITHUB_STEP_SUMMARY
+            } >> "$GITHUB_STEP_SUMMARY"
             cat bench-results.txt
           else
             echo "No modules to benchmark"
@@ -295,10 +300,12 @@ jobs:
         if: needs.detect-changes.outputs.is_main_branch == 'true'
         run: |
           REQUIRED_HEADER_SNIPPET="This project is dual-licensed:"
+          # shellcheck disable=SC2046
           MISSING_HEADERS_COUNT=$(grep -L "${REQUIRED_HEADER_SNIPPET}" $(find . -name "*.ts" -o -name "*.sql") | wc -l)
 
           if [ "$MISSING_HEADERS_COUNT" -gt 0 ]; then
             echo "Error: The following files are missing the required license header:"
+            # shellcheck disable=SC2046
             grep -L "${REQUIRED_HEADER_SNIPPET}" $(find . -name "*.ts" -o -name "*.sql")
             exit 1
           else
@@ -326,10 +333,12 @@ jobs:
             exit 0
           fi
           
+          # shellcheck disable=SC2086
           MISSING_HEADERS_COUNT=$(grep -L "${REQUIRED_HEADER_SNIPPET}" $ts_sql_files 2>/dev/null | wc -l)
 
           if [ "$MISSING_HEADERS_COUNT" -gt 0 ]; then
             echo "Error: The following changed files are missing the required license header:"
+            # shellcheck disable=SC2086
             grep -L "${REQUIRED_HEADER_SNIPPET}" $ts_sql_files
             exit 1
           else
