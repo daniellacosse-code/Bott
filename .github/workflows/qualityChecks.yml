@@ -11,15 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       all_changed_files: ${{ steps.changed-files.outputs.all_changed_files }}
-      model_changed: ${{ steps.changed-files.outputs.model_any_changed }}
-      log_changed: ${{ steps.changed-files.outputs.log_any_changed }}
-      service_changed: ${{ steps.changed-files.outputs.service_any_changed }}
-      storage_changed: ${{ steps.changed-files.outputs.storage_any_changed }}
-      task_changed: ${{ steps.changed-files.outputs.task_any_changed }}
-      gemini_changed: ${{ steps.changed-files.outputs.gemini_any_changed }}
-      discord_changed: ${{ steps.changed-files.outputs.discord_any_changed }}
-      app_changed: ${{ steps.changed-files.outputs.app_any_changed }}
+      changed_module_paths: ${{ steps.generate-paths.outputs.module_paths }}
       root_changed: ${{ steps.changed-files.outputs.root_any_changed }}
+      any_changes: ${{ steps.generate-paths.outputs.any_changes }}
       is_main_branch: ${{ github.ref == 'refs/heads/main' }}
 
     steps:
@@ -55,21 +49,54 @@ jobs:
               - '*.json'
               - '.github/workflows/**'
 
+      - name: Generate Module Paths
+        id: generate-paths
+        run: |
+          module_paths=""
+          
+          if [ "${{ steps.changed-files.outputs.model_any_changed }}" == "true" ]; then
+            module_paths="$module_paths model/"
+          fi
+          if [ "${{ steps.changed-files.outputs.log_any_changed }}" == "true" ]; then
+            module_paths="$module_paths libraries/infrastructure/log/"
+          fi
+          if [ "${{ steps.changed-files.outputs.service_any_changed }}" == "true" ]; then
+            module_paths="$module_paths libraries/infrastructure/service/"
+          fi
+          if [ "${{ steps.changed-files.outputs.storage_any_changed }}" == "true" ]; then
+            module_paths="$module_paths libraries/infrastructure/storage/"
+          fi
+          if [ "${{ steps.changed-files.outputs.task_any_changed }}" == "true" ]; then
+            module_paths="$module_paths libraries/infrastructure/task/"
+          fi
+          if [ "${{ steps.changed-files.outputs.gemini_any_changed }}" == "true" ]; then
+            module_paths="$module_paths libraries/aiModels/gemini/"
+          fi
+          if [ "${{ steps.changed-files.outputs.discord_any_changed }}" == "true" ]; then
+            module_paths="$module_paths libraries/chatSpaces/discord/"
+          fi
+          if [ "${{ steps.changed-files.outputs.app_any_changed }}" == "true" ]; then
+            module_paths="$module_paths app/"
+          fi
+          
+          # Trim leading/trailing whitespace
+          module_paths=$(echo "$module_paths" | xargs)
+          
+          echo "module_paths=$module_paths" >> $GITHUB_OUTPUT
+          
+          if [ -n "$module_paths" ] || [ "${{ steps.changed-files.outputs.root_any_changed }}" == "true" ]; then
+            echo "any_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "any_changes=false" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "Changed module paths: $module_paths"
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: |
-      needs.detect-changes.outputs.is_main_branch == 'true' ||
-      needs.detect-changes.outputs.model_changed == 'true' ||
-      needs.detect-changes.outputs.log_changed == 'true' ||
-      needs.detect-changes.outputs.service_changed == 'true' ||
-      needs.detect-changes.outputs.storage_changed == 'true' ||
-      needs.detect-changes.outputs.task_changed == 'true' ||
-      needs.detect-changes.outputs.gemini_changed == 'true' ||
-      needs.detect-changes.outputs.discord_changed == 'true' ||
-      needs.detect-changes.outputs.app_changed == 'true' ||
-      needs.detect-changes.outputs.root_changed == 'true'
+    if: needs.detect-changes.outputs.is_main_branch == 'true' || needs.detect-changes.outputs.any_changes == 'true'
 
     steps:
       - name: Clone Repository
@@ -102,17 +129,7 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: |
-      needs.detect-changes.outputs.is_main_branch == 'true' ||
-      needs.detect-changes.outputs.model_changed == 'true' ||
-      needs.detect-changes.outputs.log_changed == 'true' ||
-      needs.detect-changes.outputs.service_changed == 'true' ||
-      needs.detect-changes.outputs.storage_changed == 'true' ||
-      needs.detect-changes.outputs.task_changed == 'true' ||
-      needs.detect-changes.outputs.gemini_changed == 'true' ||
-      needs.detect-changes.outputs.discord_changed == 'true' ||
-      needs.detect-changes.outputs.app_changed == 'true' ||
-      needs.detect-changes.outputs.root_changed == 'true'
+    if: needs.detect-changes.outputs.is_main_branch == 'true' || needs.detect-changes.outputs.any_changes == 'true'
 
     steps:
       - name: Clone Repository
@@ -139,37 +156,12 @@ jobs:
             echo "Root files changed - running all tests"
             deno test --allow-all --coverage=.output/cov_profile
           else
-            test_paths=""
+            module_paths="${{ needs.detect-changes.outputs.changed_module_paths }}"
             
-            if [ "${{ needs.detect-changes.outputs.model_changed }}" == "true" ]; then
-              test_paths="$test_paths model/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.log_changed }}" == "true" ]; then
-              test_paths="$test_paths libraries/infrastructure/log/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.service_changed }}" == "true" ]; then
-              test_paths="$test_paths libraries/infrastructure/service/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.storage_changed }}" == "true" ]; then
-              test_paths="$test_paths libraries/infrastructure/storage/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.task_changed }}" == "true" ]; then
-              test_paths="$test_paths libraries/infrastructure/task/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.gemini_changed }}" == "true" ]; then
-              test_paths="$test_paths libraries/aiModels/gemini/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.discord_changed }}" == "true" ]; then
-              test_paths="$test_paths libraries/chatSpaces/discord/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.app_changed }}" == "true" ]; then
-              test_paths="$test_paths app/"
-            fi
-            
-            if [ -n "$test_paths" ]; then
-              echo "Running tests for changed modules: $test_paths"
+            if [ -n "$module_paths" ]; then
+              echo "Running tests for changed modules: $module_paths"
               # shellcheck disable=SC2086
-              deno test --allow-all --coverage=.output/cov_profile $test_paths
+              deno test --allow-all --coverage=.output/cov_profile $module_paths
             else
               echo "No modules to test"
               exit 0
@@ -190,17 +182,7 @@ jobs:
     name: Bench
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: |
-      needs.detect-changes.outputs.is_main_branch == 'true' ||
-      needs.detect-changes.outputs.model_changed == 'true' ||
-      needs.detect-changes.outputs.log_changed == 'true' ||
-      needs.detect-changes.outputs.service_changed == 'true' ||
-      needs.detect-changes.outputs.storage_changed == 'true' ||
-      needs.detect-changes.outputs.task_changed == 'true' ||
-      needs.detect-changes.outputs.gemini_changed == 'true' ||
-      needs.detect-changes.outputs.discord_changed == 'true' ||
-      needs.detect-changes.outputs.app_changed == 'true' ||
-      needs.detect-changes.outputs.root_changed == 'true'
+    if: needs.detect-changes.outputs.is_main_branch == 'true' || needs.detect-changes.outputs.any_changes == 'true'
 
     steps:
       - name: Clone Repository
@@ -240,41 +222,16 @@ jobs:
             # Now run benchmarks and capture clean output
             deno bench --allow-all > bench-results-raw.txt 2>&1 || true
           else
-            bench_paths=""
+            module_paths="${{ needs.detect-changes.outputs.changed_module_paths }}"
             
-            if [ "${{ needs.detect-changes.outputs.model_changed }}" == "true" ]; then
-              bench_paths="$bench_paths model/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.log_changed }}" == "true" ]; then
-              bench_paths="$bench_paths libraries/infrastructure/log/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.service_changed }}" == "true" ]; then
-              bench_paths="$bench_paths libraries/infrastructure/service/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.storage_changed }}" == "true" ]; then
-              bench_paths="$bench_paths libraries/infrastructure/storage/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.task_changed }}" == "true" ]; then
-              bench_paths="$bench_paths libraries/infrastructure/task/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.gemini_changed }}" == "true" ]; then
-              bench_paths="$bench_paths libraries/aiModels/gemini/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.discord_changed }}" == "true" ]; then
-              bench_paths="$bench_paths libraries/chatSpaces/discord/"
-            fi
-            if [ "${{ needs.detect-changes.outputs.app_changed }}" == "true" ]; then
-              bench_paths="$bench_paths app/"
-            fi
-            
-            if [ -n "$bench_paths" ]; then
-              echo "Running benchmarks for changed modules: $bench_paths"
+            if [ -n "$module_paths" ]; then
+              echo "Running benchmarks for changed modules: $module_paths"
               # Cache dependencies first to avoid download noise in benchmark output
               # shellcheck disable=SC2086
-              deno bench --allow-all --quiet $bench_paths > /dev/null 2>&1 || true
+              deno bench --allow-all --quiet $module_paths > /dev/null 2>&1 || true
               # Now run benchmarks and capture clean output
               # shellcheck disable=SC2086
-              deno bench --allow-all $bench_paths > bench-results-raw.txt 2>&1 || true
+              deno bench --allow-all $module_paths > bench-results-raw.txt 2>&1 || true
             else
               echo "No modules to benchmark"
               exit 0
@@ -295,17 +252,7 @@ jobs:
     name: License Headers
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: |
-      needs.detect-changes.outputs.is_main_branch == 'true' ||
-      needs.detect-changes.outputs.model_changed == 'true' ||
-      needs.detect-changes.outputs.log_changed == 'true' ||
-      needs.detect-changes.outputs.service_changed == 'true' ||
-      needs.detect-changes.outputs.storage_changed == 'true' ||
-      needs.detect-changes.outputs.task_changed == 'true' ||
-      needs.detect-changes.outputs.gemini_changed == 'true' ||
-      needs.detect-changes.outputs.discord_changed == 'true' ||
-      needs.detect-changes.outputs.app_changed == 'true' ||
-      needs.detect-changes.outputs.root_changed == 'true'
+    if: needs.detect-changes.outputs.is_main_branch == 'true' || needs.detect-changes.outputs.any_changes == 'true'
 
     steps:
       - name: Clone Repository
