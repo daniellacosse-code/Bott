@@ -62,10 +62,14 @@ jobs:
 
       - name: Run Benchmarks
         run: |
-          echo "## Benchmark Results" | tee -a $GITHUB_STEP_SUMMARY
-          echo '```' | tee -a $GITHUB_STEP_SUMMARY
-          deno bench --allow-all --no-color | tee -a $GITHUB_STEP_SUMMARY
-          echo '```' | tee -a $GITHUB_STEP_SUMMARY
+          deno bench --allow-all --no-color > bench-results.txt 2>&1
+          {
+            echo "## Benchmark Results"
+            echo '```'
+            cat bench-results.txt
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
+          cat bench-results.txt
 
   licensing:
     name: License Headers
