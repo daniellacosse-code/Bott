@@ -6,9 +6,70 @@ permissions:
   contents: read
 
 jobs:
+  detect-changes:
+    name: Detect Changed Modules
+    runs-on: ubuntu-latest
+    outputs:
+      all_changed_files: ${{ steps.changed-files.outputs.all_changed_files }}
+      model_changed: ${{ steps.changed-files.outputs.model_any_changed }}
+      log_changed: ${{ steps.changed-files.outputs.log_any_changed }}
+      service_changed: ${{ steps.changed-files.outputs.service_any_changed }}
+      storage_changed: ${{ steps.changed-files.outputs.storage_any_changed }}
+      task_changed: ${{ steps.changed-files.outputs.task_any_changed }}
+      gemini_changed: ${{ steps.changed-files.outputs.gemini_any_changed }}
+      discord_changed: ${{ steps.changed-files.outputs.discord_any_changed }}
+      app_changed: ${{ steps.changed-files.outputs.app_any_changed }}
+      root_changed: ${{ steps.changed-files.outputs.root_any_changed }}
+      is_main_branch: ${{ github.ref == 'refs/heads/main' }}
+
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get Changed Files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          files_yaml: |
+            model:
+              - 'model/**'
+            log:
+              - 'libraries/infrastructure/log/**'
+            service:
+              - 'libraries/infrastructure/service/**'
+            storage:
+              - 'libraries/infrastructure/storage/**'
+            task:
+              - 'libraries/infrastructure/task/**'
+            gemini:
+              - 'libraries/aiModels/gemini/**'
+            discord:
+              - 'libraries/chatSpaces/discord/**'
+            app:
+              - 'app/**'
+            root:
+              - '*.ts'
+              - '*.jsonc'
+              - '*.json'
+              - '.github/workflows/**'
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.is_main_branch == 'true' ||
+      needs.detect-changes.outputs.model_changed == 'true' ||
+      needs.detect-changes.outputs.log_changed == 'true' ||
+      needs.detect-changes.outputs.service_changed == 'true' ||
+      needs.detect-changes.outputs.storage_changed == 'true' ||
+      needs.detect-changes.outputs.task_changed == 'true' ||
+      needs.detect-changes.outputs.gemini_changed == 'true' ||
+      needs.detect-changes.outputs.discord_changed == 'true' ||
+      needs.detect-changes.outputs.app_changed == 'true' ||
+      needs.detect-changes.outputs.root_changed == 'true'
 
     steps:
       - name: Clone Repository
@@ -19,12 +80,37 @@ jobs:
         with:
           deno-version: v2.5.x
 
-      - name: Lint Code
+      - name: Lint Code (All Files)
+        if: needs.detect-changes.outputs.is_main_branch == 'true'
         run: deno fmt --check && deno lint
+
+      - name: Lint Code (Changed Files Only)
+        if: needs.detect-changes.outputs.is_main_branch != 'true'
+        run: |
+          changed_files="${{ needs.detect-changes.outputs.all_changed_files }}"
+          if [ -n "$changed_files" ]; then
+            echo "Linting changed files: $changed_files"
+            deno fmt --check $changed_files
+            deno lint $changed_files
+          else
+            echo "No files to lint"
+          fi
 
   unit_tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.is_main_branch == 'true' ||
+      needs.detect-changes.outputs.model_changed == 'true' ||
+      needs.detect-changes.outputs.log_changed == 'true' ||
+      needs.detect-changes.outputs.service_changed == 'true' ||
+      needs.detect-changes.outputs.storage_changed == 'true' ||
+      needs.detect-changes.outputs.task_changed == 'true' ||
+      needs.detect-changes.outputs.gemini_changed == 'true' ||
+      needs.detect-changes.outputs.discord_changed == 'true' ||
+      needs.detect-changes.outputs.app_changed == 'true' ||
+      needs.detect-changes.outputs.root_changed == 'true'
 
     steps:
       - name: Clone Repository
@@ -35,13 +121,57 @@ jobs:
         with:
           deno-version: v2.5.x
 
-      - name: Run Tests
+      - name: Run Tests (All Modules)
+        if: needs.detect-changes.outputs.is_main_branch == 'true'
         run: |
           deno test --allow-all --coverage=.output/cov_profile
           mkdir -p .output/coverage
           deno coverage .output/cov_profile --lcov --output=.output/coverage/lcov.info
 
+      - name: Run Tests (Changed Modules Only)
+        if: needs.detect-changes.outputs.is_main_branch != 'true'
+        run: |
+          test_paths=""
+          
+          if [ "${{ needs.detect-changes.outputs.model_changed }}" == "true" ]; then
+            test_paths="$test_paths model/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.log_changed }}" == "true" ]; then
+            test_paths="$test_paths libraries/infrastructure/log/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.service_changed }}" == "true" ]; then
+            test_paths="$test_paths libraries/infrastructure/service/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.storage_changed }}" == "true" ]; then
+            test_paths="$test_paths libraries/infrastructure/storage/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.task_changed }}" == "true" ]; then
+            test_paths="$test_paths libraries/infrastructure/task/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.gemini_changed }}" == "true" ]; then
+            test_paths="$test_paths libraries/aiModels/gemini/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.discord_changed }}" == "true" ]; then
+            test_paths="$test_paths libraries/chatSpaces/discord/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.app_changed }}" == "true" ]; then
+            test_paths="$test_paths app/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.root_changed }}" == "true" ]; then
+            test_paths="$test_paths ."
+          fi
+          
+          if [ -n "$test_paths" ]; then
+            echo "Running tests for: $test_paths"
+            deno test --allow-all --coverage=.output/cov_profile $test_paths
+            mkdir -p .output/coverage
+            deno coverage .output/cov_profile --lcov --output=.output/coverage/lcov.info
+          else
+            echo "No modules to test"
+          fi
+
       - name: Upload Coverage
+        if: always() && hashFiles('.output/coverage/lcov.info') != ''
         uses: qltysh/qlty-action/coverage@v2
         with:
           token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
@@ -50,6 +180,18 @@ jobs:
   bench:
     name: Bench
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.is_main_branch == 'true' ||
+      needs.detect-changes.outputs.model_changed == 'true' ||
+      needs.detect-changes.outputs.log_changed == 'true' ||
+      needs.detect-changes.outputs.service_changed == 'true' ||
+      needs.detect-changes.outputs.storage_changed == 'true' ||
+      needs.detect-changes.outputs.task_changed == 'true' ||
+      needs.detect-changes.outputs.gemini_changed == 'true' ||
+      needs.detect-changes.outputs.discord_changed == 'true' ||
+      needs.detect-changes.outputs.app_changed == 'true' ||
+      needs.detect-changes.outputs.root_changed == 'true'
 
     steps:
       - name: Clone Repository
@@ -60,7 +202,8 @@ jobs:
         with:
           deno-version: v2.5.x
 
-      - name: Run Benchmarks
+      - name: Run Benchmarks (All Modules)
+        if: needs.detect-changes.outputs.is_main_branch == 'true'
         run: |
           # Cache dependencies first to avoid download noise in benchmark output
           deno bench --allow-all --quiet > /dev/null 2>&1 || true
@@ -76,15 +219,80 @@ jobs:
           } >> $GITHUB_STEP_SUMMARY
           cat bench-results.txt
 
+      - name: Run Benchmarks (Changed Modules Only)
+        if: needs.detect-changes.outputs.is_main_branch != 'true'
+        run: |
+          bench_paths=""
+          
+          if [ "${{ needs.detect-changes.outputs.model_changed }}" == "true" ]; then
+            bench_paths="$bench_paths model/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.log_changed }}" == "true" ]; then
+            bench_paths="$bench_paths libraries/infrastructure/log/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.service_changed }}" == "true" ]; then
+            bench_paths="$bench_paths libraries/infrastructure/service/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.storage_changed }}" == "true" ]; then
+            bench_paths="$bench_paths libraries/infrastructure/storage/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.task_changed }}" == "true" ]; then
+            bench_paths="$bench_paths libraries/infrastructure/task/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.gemini_changed }}" == "true" ]; then
+            bench_paths="$bench_paths libraries/aiModels/gemini/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.discord_changed }}" == "true" ]; then
+            bench_paths="$bench_paths libraries/chatSpaces/discord/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.app_changed }}" == "true" ]; then
+            bench_paths="$bench_paths app/"
+          fi
+          if [ "${{ needs.detect-changes.outputs.root_changed }}" == "true" ]; then
+            bench_paths="$bench_paths ."
+          fi
+          
+          if [ -n "$bench_paths" ]; then
+            echo "Running benchmarks for: $bench_paths"
+            # Cache dependencies first to avoid download noise in benchmark output
+            deno bench --allow-all --quiet $bench_paths > /dev/null 2>&1 || true
+            # Now run benchmarks and capture clean output
+            deno bench --allow-all $bench_paths > bench-results-raw.txt 2>&1 || true
+            # Strip ANSI color codes from the output
+            sed 's/\x1b\[[0-9;]*m//g' bench-results-raw.txt > bench-results.txt
+            {
+              echo "## Benchmark Results (Changed Modules)"
+              echo '```'
+              cat bench-results.txt
+              echo '```'
+            } >> $GITHUB_STEP_SUMMARY
+            cat bench-results.txt
+          else
+            echo "No modules to benchmark"
+          fi
+
   licensing:
     name: License Headers
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.is_main_branch == 'true' ||
+      needs.detect-changes.outputs.model_changed == 'true' ||
+      needs.detect-changes.outputs.log_changed == 'true' ||
+      needs.detect-changes.outputs.service_changed == 'true' ||
+      needs.detect-changes.outputs.storage_changed == 'true' ||
+      needs.detect-changes.outputs.task_changed == 'true' ||
+      needs.detect-changes.outputs.gemini_changed == 'true' ||
+      needs.detect-changes.outputs.discord_changed == 'true' ||
+      needs.detect-changes.outputs.app_changed == 'true' ||
+      needs.detect-changes.outputs.root_changed == 'true'
 
     steps:
       - name: Clone Repository
         uses: actions/checkout@v4
 
-      - name: Check Files
+      - name: Check Files (All)
+        if: needs.detect-changes.outputs.is_main_branch == 'true'
         run: |
           REQUIRED_HEADER_SNIPPET="This project is dual-licensed:"
           MISSING_HEADERS_COUNT=$(grep -L "${REQUIRED_HEADER_SNIPPET}" $(find . -name "*.ts" -o -name "*.sql") | wc -l)
@@ -95,4 +303,35 @@ jobs:
             exit 1
           else
             echo "All files have the required license header."
+          fi
+
+      - name: Check Files (Changed Only)
+        if: needs.detect-changes.outputs.is_main_branch != 'true'
+        run: |
+          REQUIRED_HEADER_SNIPPET="This project is dual-licensed:"
+          changed_files="${{ needs.detect-changes.outputs.all_changed_files }}"
+          
+          # Filter for only .ts and .sql files
+          ts_sql_files=""
+          for file in $changed_files; do
+            if [[ "$file" == *.ts ]] || [[ "$file" == *.sql ]]; then
+              if [ -f "$file" ]; then
+                ts_sql_files="$ts_sql_files $file"
+              fi
+            fi
+          done
+          
+          if [ -z "$ts_sql_files" ]; then
+            echo "No .ts or .sql files changed"
+            exit 0
+          fi
+          
+          MISSING_HEADERS_COUNT=$(grep -L "${REQUIRED_HEADER_SNIPPET}" $ts_sql_files 2>/dev/null | wc -l)
+
+          if [ "$MISSING_HEADERS_COUNT" -gt 0 ]; then
+            echo "Error: The following changed files are missing the required license header:"
+            grep -L "${REQUIRED_HEADER_SNIPPET}" $ts_sql_files
+            exit 1
+          else
+            echo "All changed .ts and .sql files have the required license header."
           fi
