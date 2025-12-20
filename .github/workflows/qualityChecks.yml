@@ -9,12 +9,11 @@ jobs:
   detect-changes:
     name: Detect Changed Modules
     runs-on: ubuntu-latest
+    if: ${{ github.ref != 'refs/heads/main' }}
     outputs:
       all_changed_files: ${{ steps.changed-files.outputs.all_changed_files }}
       changed_module_paths: ${{ steps.generate-paths.outputs.module_paths }}
       root_changed: ${{ steps.changed-files.outputs.root_any_changed }}
-      any_changes: ${{ steps.generate-paths.outputs.any_changes }}
-      is_main_branch: ${{ github.ref == 'refs/heads/main' }}
 
     steps:
       - name: Clone Repository
@@ -84,20 +83,13 @@ jobs:
           module_paths="${module_paths% }"
           
           echo "module_paths=$module_paths" >> $GITHUB_OUTPUT
-          
-          if [ -n "$module_paths" ] || [ "${{ steps.changed-files.outputs.root_any_changed }}" == "true" ]; then
-            echo "any_changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "any_changes=false" >> $GITHUB_OUTPUT
-          fi
-          
           echo "Changed module paths: $module_paths"
 
   lint:
     name: Lint
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.detect-changes.outputs.is_main_branch == 'true' || needs.detect-changes.outputs.any_changes == 'true'
+    if: always()
 
     steps:
       - name: Clone Repository
@@ -108,12 +100,7 @@ jobs:
         with:
           deno-version: v2.5.x
 
-      - name: Lint Code (All Files)
-        if: needs.detect-changes.outputs.is_main_branch == 'true'
-        run: deno fmt --check && deno lint
-
-      - name: Lint Code (Changed Files Only)
-        if: needs.detect-changes.outputs.is_main_branch != 'true'
+      - name: Lint Code
         run: |
           changed_files="${{ needs.detect-changes.outputs.all_changed_files }}"
           if [ -n "$changed_files" ]; then
@@ -123,14 +110,15 @@ jobs:
             # shellcheck disable=SC2086
             deno lint $changed_files
           else
-            echo "No files to lint"
+            echo "Linting all files"
+            deno fmt --check && deno lint
           fi
 
   unit_tests:
     name: Unit Tests
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.detect-changes.outputs.is_main_branch == 'true' || needs.detect-changes.outputs.any_changes == 'true'
+    if: always()
 
     steps:
       - name: Clone Repository
@@ -141,15 +129,7 @@ jobs:
         with:
           deno-version: v2.5.x
 
-      - name: Run Tests (All Modules)
-        if: needs.detect-changes.outputs.is_main_branch == 'true'
-        run: |
-          deno test --allow-all --coverage=.output/cov_profile
-          mkdir -p .output/coverage
-          deno coverage .output/cov_profile --lcov --output=.output/coverage/lcov.info
-
-      - name: Run Tests (Changed Modules Only)
-        if: needs.detect-changes.outputs.is_main_branch != 'true'
+      - name: Run Tests
         run: |
           # When root files change (constants.ts, deno.jsonc, workflows), run all tests
           # since these files affect the entire workspace
@@ -164,8 +144,8 @@ jobs:
               # shellcheck disable=SC2086
               deno test --allow-all --coverage=.output/cov_profile $module_paths
             else
-              echo "No modules to test"
-              exit 0
+              echo "Running all tests"
+              deno test --allow-all --coverage=.output/cov_profile
             fi
           fi
           
@@ -183,7 +163,7 @@ jobs:
     name: Bench
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.detect-changes.outputs.is_main_branch == 'true' || needs.detect-changes.outputs.any_changes == 'true'
+    if: always()
 
     steps:
       - name: Clone Repository
@@ -194,25 +174,7 @@ jobs:
         with:
           deno-version: v2.5.x
 
-      - name: Run Benchmarks (All Modules)
-        if: needs.detect-changes.outputs.is_main_branch == 'true'
-        run: |
-          # Cache dependencies first to avoid download noise in benchmark output
-          deno bench --allow-all --quiet > /dev/null 2>&1 || true
-          # Now run benchmarks and capture clean output
-          deno bench --allow-all > bench-results-raw.txt 2>&1 || true
-          # Strip ANSI color codes from the output
-          sed 's/\x1b\[[0-9;]*m//g' bench-results-raw.txt > bench-results.txt
-          {
-            echo "## Benchmark Results"
-            echo '```'
-            cat bench-results.txt
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-          cat bench-results.txt
-
-      - name: Run Benchmarks (Changed Modules Only)
-        if: needs.detect-changes.outputs.is_main_branch != 'true'
+      - name: Run Benchmarks
         run: |
           # When root files change (constants.ts, deno.jsonc, workflows), run all benchmarks
           # since these files affect the entire workspace
@@ -234,15 +196,18 @@ jobs:
               # shellcheck disable=SC2086
               deno bench --allow-all $module_paths > bench-results-raw.txt 2>&1 || true
             else
-              echo "No modules to benchmark"
-              exit 0
+              echo "Running all benchmarks"
+              # Cache dependencies first to avoid download noise in benchmark output
+              deno bench --allow-all --quiet > /dev/null 2>&1 || true
+              # Now run benchmarks and capture clean output
+              deno bench --allow-all > bench-results-raw.txt 2>&1 || true
             fi
           fi
           
           # Strip ANSI color codes from the output
           sed 's/\x1b\[[0-9;]*m//g' bench-results-raw.txt > bench-results.txt
           {
-            echo "## Benchmark Results (Changed Modules)"
+            echo "## Benchmark Results"
             echo '```'
             cat bench-results.txt
             echo '```'
@@ -253,57 +218,56 @@ jobs:
     name: License Headers
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.detect-changes.outputs.is_main_branch == 'true' || needs.detect-changes.outputs.any_changes == 'true'
+    if: always()
 
     steps:
       - name: Clone Repository
         uses: actions/checkout@v4
 
-      - name: Check Files (All)
-        if: needs.detect-changes.outputs.is_main_branch == 'true'
-        run: |
-          REQUIRED_HEADER_SNIPPET="This project is dual-licensed:"
-          # shellcheck disable=SC2046
-          MISSING_HEADERS_COUNT=$(grep -L "${REQUIRED_HEADER_SNIPPET}" $(find . -name "*.ts" -o -name "*.sql") | wc -l)
-
-          if [ "$MISSING_HEADERS_COUNT" -gt 0 ]; then
-            echo "Error: The following files are missing the required license header:"
-            # shellcheck disable=SC2046
-            grep -L "${REQUIRED_HEADER_SNIPPET}" $(find . -name "*.ts" -o -name "*.sql")
-            exit 1
-          else
-            echo "All files have the required license header."
-          fi
-
-      - name: Check Files (Changed Only)
-        if: needs.detect-changes.outputs.is_main_branch != 'true'
+      - name: Check Files
         run: |
           REQUIRED_HEADER_SNIPPET="This project is dual-licensed:"
           changed_files="${{ needs.detect-changes.outputs.all_changed_files }}"
           
-          # Filter for only .ts and .sql files
-          ts_sql_files=""
-          for file in $changed_files; do
-            if [[ "$file" == *.ts ]] || [[ "$file" == *.sql ]]; then
-              if [ -f "$file" ]; then
-                ts_sql_files="$ts_sql_files $file"
+          if [ -n "$changed_files" ]; then
+            echo "Checking changed files only"
+            # Filter for only .ts and .sql files
+            ts_sql_files=""
+            for file in $changed_files; do
+              if [[ "$file" == *.ts ]] || [[ "$file" == *.sql ]]; then
+                if [ -f "$file" ]; then
+                  ts_sql_files="$ts_sql_files $file"
+                fi
               fi
+            done
+            
+            if [ -z "$ts_sql_files" ]; then
+              echo "No .ts or .sql files changed"
+              exit 0
             fi
-          done
-          
-          if [ -z "$ts_sql_files" ]; then
-            echo "No .ts or .sql files changed"
-            exit 0
-          fi
-          
-          # shellcheck disable=SC2086
-          MISSING_HEADERS_COUNT=$(grep -L "${REQUIRED_HEADER_SNIPPET}" $ts_sql_files 2>/dev/null | wc -l)
-
-          if [ "$MISSING_HEADERS_COUNT" -gt 0 ]; then
-            echo "Error: The following changed files are missing the required license header:"
+            
             # shellcheck disable=SC2086
-            grep -L "${REQUIRED_HEADER_SNIPPET}" $ts_sql_files
-            exit 1
+            MISSING_HEADERS_COUNT=$(grep -L "${REQUIRED_HEADER_SNIPPET}" $ts_sql_files 2>/dev/null | wc -l)
+
+            if [ "$MISSING_HEADERS_COUNT" -gt 0 ]; then
+              echo "Error: The following changed files are missing the required license header:"
+              # shellcheck disable=SC2086
+              grep -L "${REQUIRED_HEADER_SNIPPET}" $ts_sql_files
+              exit 1
+            else
+              echo "All changed .ts and .sql files have the required license header."
+            fi
           else
-            echo "All changed .ts and .sql files have the required license header."
+            echo "Checking all files"
+            # shellcheck disable=SC2046
+            MISSING_HEADERS_COUNT=$(grep -L "${REQUIRED_HEADER_SNIPPET}" $(find . -name "*.ts" -o -name "*.sql") | wc -l)
+
+            if [ "$MISSING_HEADERS_COUNT" -gt 0 ]; then
+              echo "Error: The following files are missing the required license header:"
+              # shellcheck disable=SC2046
+              grep -L "${REQUIRED_HEADER_SNIPPET}" $(find . -name "*.ts" -o -name "*.sql")
+              exit 1
+            else
+              echo "All files have the required license header."
+            fi
           fi
