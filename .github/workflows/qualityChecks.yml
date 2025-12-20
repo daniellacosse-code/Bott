@@ -133,47 +133,51 @@ jobs:
       - name: Run Tests (Changed Modules Only)
         if: needs.detect-changes.outputs.is_main_branch != 'true'
         run: |
-          test_paths=""
-          
-          if [ "${{ needs.detect-changes.outputs.model_changed }}" == "true" ]; then
-            test_paths="$test_paths model/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.log_changed }}" == "true" ]; then
-            test_paths="$test_paths libraries/infrastructure/log/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.service_changed }}" == "true" ]; then
-            test_paths="$test_paths libraries/infrastructure/service/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.storage_changed }}" == "true" ]; then
-            test_paths="$test_paths libraries/infrastructure/storage/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.task_changed }}" == "true" ]; then
-            test_paths="$test_paths libraries/infrastructure/task/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.gemini_changed }}" == "true" ]; then
-            test_paths="$test_paths libraries/aiModels/gemini/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.discord_changed }}" == "true" ]; then
-            test_paths="$test_paths libraries/chatSpaces/discord/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.app_changed }}" == "true" ]; then
-            test_paths="$test_paths app/"
-          fi
           # When root files change (constants.ts, deno.jsonc, workflows), run all tests
           # since these files affect the entire workspace
           if [ "${{ needs.detect-changes.outputs.root_changed }}" == "true" ]; then
-            test_paths="$test_paths ."
+            echo "Root files changed - running all tests"
+            deno test --allow-all --coverage=.output/cov_profile
+          else
+            test_paths=""
+            
+            if [ "${{ needs.detect-changes.outputs.model_changed }}" == "true" ]; then
+              test_paths="$test_paths model/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.log_changed }}" == "true" ]; then
+              test_paths="$test_paths libraries/infrastructure/log/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.service_changed }}" == "true" ]; then
+              test_paths="$test_paths libraries/infrastructure/service/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.storage_changed }}" == "true" ]; then
+              test_paths="$test_paths libraries/infrastructure/storage/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.task_changed }}" == "true" ]; then
+              test_paths="$test_paths libraries/infrastructure/task/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.gemini_changed }}" == "true" ]; then
+              test_paths="$test_paths libraries/aiModels/gemini/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.discord_changed }}" == "true" ]; then
+              test_paths="$test_paths libraries/chatSpaces/discord/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.app_changed }}" == "true" ]; then
+              test_paths="$test_paths app/"
+            fi
+            
+            if [ -n "$test_paths" ]; then
+              echo "Running tests for changed modules: $test_paths"
+              # shellcheck disable=SC2086
+              deno test --allow-all --coverage=.output/cov_profile $test_paths
+            else
+              echo "No modules to test"
+              exit 0
+            fi
           fi
           
-          if [ -n "$test_paths" ]; then
-            echo "Running tests for: $test_paths"
-            # shellcheck disable=SC2086
-            deno test --allow-all --coverage=.output/cov_profile $test_paths
-            mkdir -p .output/coverage
-            deno coverage .output/cov_profile --lcov --output=.output/coverage/lcov.info
-          else
-            echo "No modules to test"
-          fi
+          mkdir -p .output/coverage
+          deno coverage .output/cov_profile --lcov --output=.output/coverage/lcov.info
 
       - name: Upload Coverage
         if: always() && hashFiles('.output/coverage/lcov.info') != ''
@@ -227,58 +231,65 @@ jobs:
       - name: Run Benchmarks (Changed Modules Only)
         if: needs.detect-changes.outputs.is_main_branch != 'true'
         run: |
-          bench_paths=""
-          
-          if [ "${{ needs.detect-changes.outputs.model_changed }}" == "true" ]; then
-            bench_paths="$bench_paths model/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.log_changed }}" == "true" ]; then
-            bench_paths="$bench_paths libraries/infrastructure/log/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.service_changed }}" == "true" ]; then
-            bench_paths="$bench_paths libraries/infrastructure/service/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.storage_changed }}" == "true" ]; then
-            bench_paths="$bench_paths libraries/infrastructure/storage/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.task_changed }}" == "true" ]; then
-            bench_paths="$bench_paths libraries/infrastructure/task/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.gemini_changed }}" == "true" ]; then
-            bench_paths="$bench_paths libraries/aiModels/gemini/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.discord_changed }}" == "true" ]; then
-            bench_paths="$bench_paths libraries/chatSpaces/discord/"
-          fi
-          if [ "${{ needs.detect-changes.outputs.app_changed }}" == "true" ]; then
-            bench_paths="$bench_paths app/"
-          fi
           # When root files change (constants.ts, deno.jsonc, workflows), run all benchmarks
           # since these files affect the entire workspace
           if [ "${{ needs.detect-changes.outputs.root_changed }}" == "true" ]; then
-            bench_paths="$bench_paths ."
+            echo "Root files changed - running all benchmarks"
+            # Cache dependencies first to avoid download noise in benchmark output
+            deno bench --allow-all --quiet > /dev/null 2>&1 || true
+            # Now run benchmarks and capture clean output
+            deno bench --allow-all > bench-results-raw.txt 2>&1 || true
+          else
+            bench_paths=""
+            
+            if [ "${{ needs.detect-changes.outputs.model_changed }}" == "true" ]; then
+              bench_paths="$bench_paths model/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.log_changed }}" == "true" ]; then
+              bench_paths="$bench_paths libraries/infrastructure/log/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.service_changed }}" == "true" ]; then
+              bench_paths="$bench_paths libraries/infrastructure/service/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.storage_changed }}" == "true" ]; then
+              bench_paths="$bench_paths libraries/infrastructure/storage/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.task_changed }}" == "true" ]; then
+              bench_paths="$bench_paths libraries/infrastructure/task/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.gemini_changed }}" == "true" ]; then
+              bench_paths="$bench_paths libraries/aiModels/gemini/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.discord_changed }}" == "true" ]; then
+              bench_paths="$bench_paths libraries/chatSpaces/discord/"
+            fi
+            if [ "${{ needs.detect-changes.outputs.app_changed }}" == "true" ]; then
+              bench_paths="$bench_paths app/"
+            fi
+            
+            if [ -n "$bench_paths" ]; then
+              echo "Running benchmarks for changed modules: $bench_paths"
+              # Cache dependencies first to avoid download noise in benchmark output
+              # shellcheck disable=SC2086
+              deno bench --allow-all --quiet $bench_paths > /dev/null 2>&1 || true
+              # Now run benchmarks and capture clean output
+              # shellcheck disable=SC2086
+              deno bench --allow-all $bench_paths > bench-results-raw.txt 2>&1 || true
+            else
+              echo "No modules to benchmark"
+              exit 0
+            fi
           fi
           
-          if [ -n "$bench_paths" ]; then
-            echo "Running benchmarks for: $bench_paths"
-            # Cache dependencies first to avoid download noise in benchmark output
-            # shellcheck disable=SC2086
-            deno bench --allow-all --quiet $bench_paths > /dev/null 2>&1 || true
-            # Now run benchmarks and capture clean output
-            # shellcheck disable=SC2086
-            deno bench --allow-all $bench_paths > bench-results-raw.txt 2>&1 || true
-            # Strip ANSI color codes from the output
-            sed 's/\x1b\[[0-9;]*m//g' bench-results-raw.txt > bench-results.txt
-            {
-              echo "## Benchmark Results (Changed Modules)"
-              echo '```'
-              cat bench-results.txt
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
+          # Strip ANSI color codes from the output
+          sed 's/\x1b\[[0-9;]*m//g' bench-results-raw.txt > bench-results.txt
+          {
+            echo "## Benchmark Results (Changed Modules)"
+            echo '```'
             cat bench-results.txt
-          else
-            echo "No modules to benchmark"
-          fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat bench-results.txt
 
   licensing:
     name: License Headers
