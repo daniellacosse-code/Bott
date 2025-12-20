@@ -159,6 +159,8 @@ jobs:
           if [ "${{ needs.detect-changes.outputs.app_changed }}" == "true" ]; then
             test_paths="$test_paths app/"
           fi
+          # When root files change (constants.ts, deno.jsonc, workflows), run all tests
+          # since these files affect the entire workspace
           if [ "${{ needs.detect-changes.outputs.root_changed }}" == "true" ]; then
             test_paths="$test_paths ."
           fi
@@ -251,6 +253,8 @@ jobs:
           if [ "${{ needs.detect-changes.outputs.app_changed }}" == "true" ]; then
             bench_paths="$bench_paths app/"
           fi
+          # When root files change (constants.ts, deno.jsonc, workflows), run all benchmarks
+          # since these files affect the entire workspace
           if [ "${{ needs.detect-changes.outputs.root_changed }}" == "true" ]; then
             bench_paths="$bench_paths ."
           fi
