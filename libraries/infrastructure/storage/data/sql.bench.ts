@@ -13,8 +13,9 @@ import { sql } from "./sql.ts";
 
 // Large test data for benchmarking
 const largeArrayValues = Array.from({ length: 100 }, (_, i) => i);
-const largeArrayOfSql = Array.from({ length: 50 }, (_, i) => 
-  sql`field${i} = ${"value" + i}`
+const largeArrayOfSql = Array.from(
+  { length: 50 },
+  (_, i) => sql`field${i} = ${"value" + i}`,
 );
 const complexNestedSql = sql`
   SELECT * FROM users 
@@ -38,6 +39,12 @@ Deno.bench("sql - complex query with many parameters", () => {
   const values = Array.from({ length: 20 }, (_, i) => i);
   sql`
     INSERT INTO logs (user_id, action, metadata, timestamp, value1, value2, value3)
-    VALUES ${values.map((v) => sql`(${v}, ${"action"}, ${"meta"}, ${Date.now()}, ${v * 2}, ${v * 3}, ${v * 4})`)}
+    VALUES ${
+    values.map((v) =>
+      sql`(${v}, ${"action"}, ${"meta"}, ${Date.now()}, ${v * 2}, ${v * 3}, ${
+        v * 4
+      })`
+    )
+  }
   `;
 });
