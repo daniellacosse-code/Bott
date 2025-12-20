@@ -65,7 +65,9 @@ jobs:
           # Cache dependencies first to avoid download noise in benchmark output
           deno bench --allow-all --quiet > /dev/null 2>&1 || true
           # Now run benchmarks and capture clean output
-          deno bench --allow-all > bench-results.txt 2>&1 || true
+          deno bench --allow-all > bench-results-raw.txt 2>&1 || true
+          # Strip ANSI color codes from the output
+          sed 's/\x1b\[[0-9;]*m//g' bench-results-raw.txt > bench-results.txt
           {
             echo "## Benchmark Results"
             echo '```'
