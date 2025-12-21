@@ -27,7 +27,7 @@ export const filterOutput: EventPipelineProcessor = async (context) => {
   }
 
   const output = context.data.output;
-  const outputReasons = context.settings.reasons.output;
+  const outputReasons = context.actionContext.globalSettings.reasons.output;
   const outputRatingScales = [
     ...new Set(outputReasons.flatMap((reason) => reason.ratingScales ?? [])),
   ];

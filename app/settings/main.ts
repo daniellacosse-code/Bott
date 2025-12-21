@@ -14,6 +14,7 @@ import type { BottGlobalSettings } from "@bott/model";
 
 import ejs from "ejs";
 
+import actions from "./actions.ts";
 import * as reasons from "./reasons.ts";
 
 const identityTemplate = Deno.readTextFileSync(
@@ -31,4 +32,5 @@ export const defaultSettings: BottGlobalSettings = {
       reasons.ensurePotentialImpact,
     ],
   },
+  actions
 };

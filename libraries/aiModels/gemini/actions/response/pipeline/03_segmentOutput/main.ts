@@ -44,7 +44,7 @@ export const segmentOutput: EventPipelineProcessor = async (context) => {
       output.slice(0, pointer + 1),
       {
         systemPrompt,
-        responseSchema: getEventSchema(context),
+        responseSchema: getEventSchema(context.actionContext.globalSettings),
         pipelineContext: context,
         useIdentity: false,
       },

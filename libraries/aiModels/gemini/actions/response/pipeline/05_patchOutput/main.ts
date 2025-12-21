@@ -31,7 +31,7 @@ export const patchOutput: EventPipelineProcessor = async (context) => {
     context.data.output,
     {
       systemPrompt,
-      responseSchema: getEventSchema(context),
+      responseSchema: getEventSchema(context.actionContext.globalSettings),
       pipelineContext: context,
       useIdentity: false,
     },
@@ -53,7 +53,7 @@ export const patchOutput: EventPipelineProcessor = async (context) => {
   // bypassing the need for a re-evaluation loop.
   for (const event of context.data.output) {
     context.evaluationState.set(event, {
-      outputReasons: context.settings.reasons.output,
+      outputReasons: context.actionContext.globalSettings.reasons.output,
     });
   }
 

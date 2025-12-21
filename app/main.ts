@@ -21,7 +21,7 @@ import { startDiscordService } from "@bott/discord";
 import { serviceRegistry } from "@bott/service";
 import { startEventStorageService } from "@bott/storage";
 
-import actions from "./actions.ts";
+import actions from "./settings/actions.ts";
 import { startAppService } from "./service.ts";
 
 if (import.meta.main) {

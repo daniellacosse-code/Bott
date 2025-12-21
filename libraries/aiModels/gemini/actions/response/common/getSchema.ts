@@ -9,14 +9,12 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottAction, BottActionParameter } from "@bott/actions";
+import type {
+  BottAction,
+  BottActionParameter,
+} from "@bott/actions";
 import { BottActionEventType } from "@bott/actions";
-import {
-  type BottChannel,
-  BottEventType,
-  type BottGlobalSettings,
-  type BottUser,
-} from "@bott/model";
+import { BottEventType, type BottGlobalSettings } from "@bott/model";
 
 import {
   type Schema as GeminiStructuredResponseSchema,
@@ -24,12 +22,7 @@ import {
 } from "@google/genai";
 
 export const getEventSchema = (
-  context: {
-    user: BottUser;
-    channel: BottChannel;
-    actions: Record<string, BottAction>;
-    settings: BottGlobalSettings;
-  },
+  settings: BottGlobalSettings,
 ): GeminiStructuredResponseSchema => ({
   type: GeminiStructuredResponseType.ARRAY,
   description:
@@ -72,7 +65,7 @@ export const getEventSchema = (
         },
         required: ["type", "detail"],
       },
-      ...getActionSchema(context.actions),
+      ...getActionSchema(settings.actions),
     ],
   },
 });
@@ -91,12 +84,14 @@ export const getActionSchema = (
 
     const schema: GeminiStructuredResponseSchema = {
       type: GeminiStructuredResponseType.OBJECT,
-      description: `Schema for a call event to the '${name}' action. Send this type of event to call the action.`,
+      description:
+        `Schema for a call event to the '${name}' action. Send this type of event to call the action.`,
       properties: {
         type: {
           type: GeminiStructuredResponseType.STRING,
           enum: [BottActionEventType.ACTION_CALL],
-          description: `The type of event to generate, in this case '${BottActionEventType.ACTION_CALL}'. Required so the system can anticipate the event structure.`
+          description:
+            `The type of event to generate, in this case '${BottActionEventType.ACTION_CALL}'. Required so the system can anticipate the event structure.`,
         },
         detail: {
           type: GeminiStructuredResponseType.OBJECT,
@@ -105,7 +100,8 @@ export const getActionSchema = (
             name: {
               type: GeminiStructuredResponseType.STRING,
               enum: [name],
-              description: "The name of this action. Required so the action can be identified.",
+              description:
+                "The name of this action. Required so the action can be identified.",
             },
           },
           required: ["name"],

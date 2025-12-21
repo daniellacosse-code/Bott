@@ -39,7 +39,7 @@ export const generateOutput: EventPipelineProcessor = async function (
     context.data.input,
     {
       systemPrompt,
-      responseSchema: getEventSchema(context),
+      responseSchema: getEventSchema(context.actionContext.globalSettings),
       pipelineContext: context,
     },
   );

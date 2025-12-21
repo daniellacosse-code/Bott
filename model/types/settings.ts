@@ -9,6 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import type { BottAction } from "@bott/actions";
 import type { BottReason } from "./reasons.ts";
 
 /**
@@ -21,4 +22,5 @@ export interface BottGlobalSettings {
     input: BottReason[];
     output: BottReason[];
   };
+  actions: Record<string, BottAction>;
 }

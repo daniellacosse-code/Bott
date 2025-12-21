@@ -12,7 +12,6 @@
 import { createAction } from "@bott/actions";
 import type { BottAction, BottActionSettings } from "@bott/actions";
 import {
-  BOTT_USER,
   TYPING_MAX_TIME_MS,
   TYPING_WORDS_PER_MINUTE,
 } from "@bott/constants";
