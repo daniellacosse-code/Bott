@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottAction } from "@bott/actions";
+import type { BottAction, BottActionParameter } from "@bott/actions";
 import { BottActionEventType } from "@bott/actions";
 import {
   type BottChannel,
@@ -88,7 +88,10 @@ export const getActionSchema = (
 
   for (const name in actions) {
     const action = actions[name];
-    // Some handlers might not have options.
+    const parametersSchema = getActionParametersSchema(action.parameters);
+    const requiredDetails = parametersSchema
+      ? ["id", "name", "parameters"]
+      : ["id", "name"];
 
     schemas.push({
       type: GeminiStructuredResponseType.OBJECT,
@@ -108,45 +111,9 @@ export const getActionSchema = (
               type: GeminiStructuredResponseType.STRING,
               enum: [name],
             },
-            parameters: {
-              type: GeminiStructuredResponseType.OBJECT,
-              properties: (action.parameters ?? []).reduce(
-                (properties, parameter) => {
-                  let type: GeminiStructuredResponseType;
-
-                  switch (parameter.type) {
-                    case "number":
-                      type = GeminiStructuredResponseType.NUMBER;
-                      break;
-                    case "boolean":
-                      type = GeminiStructuredResponseType.BOOLEAN;
-                      break;
-                    case "string":
-                      type = GeminiStructuredResponseType.STRING;
-                      break;
-                    default:
-                      type = GeminiStructuredResponseType.STRING;
-                      break;
-                  }
-
-                  properties[parameter.name] = {
-                    type,
-                    enum: parameter.type !== "file"
-                      ? parameter.allowedValues?.map(String)
-                      : undefined,
-                    description: parameter.description,
-                  };
-
-                  return properties;
-                },
-                {} as Record<string, GeminiStructuredResponseSchema>,
-              ),
-              required: (action.parameters ?? []).filter((parameter) =>
-                parameter.required
-              ).map((parameter) => parameter.name),
-            },
+            parameters: parametersSchema,
           },
-          required: ["name", "parameters", "id"],
+          required: requiredDetails,
         },
       },
       required: ["type", "detail"],
@@ -154,4 +121,48 @@ export const getActionSchema = (
   }
 
   return schemas;
+};
+
+const getActionParametersSchema = (
+  parameters?: BottActionParameter[],
+): GeminiStructuredResponseSchema | undefined => {
+  if (!parameters || parameters.length === 0) {
+    return;
+  }
+
+  return {
+    type: GeminiStructuredResponseType.OBJECT,
+    properties: parameters.reduce(
+      (properties, parameter) => {
+        let type: GeminiStructuredResponseType;
+
+        switch (parameter.type) {
+          case "number":
+            type = GeminiStructuredResponseType.NUMBER;
+            break;
+          case "boolean":
+            type = GeminiStructuredResponseType.BOOLEAN;
+            break;
+          case "string":
+          default:
+            type = GeminiStructuredResponseType.STRING;
+            break;
+        }
+
+        properties[parameter.name] = {
+          type,
+          enum: parameter.type !== "file"
+            ? parameter.allowedValues?.map(String)
+            : undefined,
+          description: parameter.description,
+        };
+
+        return properties;
+      },
+      {} as Record<string, GeminiStructuredResponseSchema>,
+    ),
+    required: parameters.filter((parameter) =>
+      parameter.required
+    ).map((parameter) => parameter.name),
+  }
 };

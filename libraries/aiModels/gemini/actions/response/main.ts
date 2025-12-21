@@ -33,7 +33,7 @@ import pipeline, { type EventPipelineContext } from "./pipeline/main.ts";
 const MS_IN_MINUTE = 60 * 1000;
 
 const settings: BottActionSettings = {
-  name: "simulateResponseForChannel",
+  name: "response",
   instructions: "Simulate a response for a channel.",
   shouldForwardOutput: true,
 };

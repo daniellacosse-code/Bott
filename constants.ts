@@ -84,20 +84,10 @@ export const DISCORD_TOKEN = Deno.env.get("DISCORD_TOKEN");
 
 // -- Models --
 
-/**
- * The model provider to use.
- * - "gemini": Explicitly select Gemini (requires GCP credentials).
- * - "auto": Automatically select the best available provider (currently behaves the same as "gemini" and uses Gemini if GCP credentials are present).
- *
- * Note: Both "gemini" and "auto" currently use Gemini if GCP credentials are present.
- * The "auto" option is reserved for future extensibility, where additional providers may be supported.
- */
-export const MODEL_PROVIDER = Deno.env.get("MODEL_PROVIDER") ?? "auto";
-
-// Gemini Models
+// Gemini
 export const GEMINI_ACCESS_TOKEN = Deno.env.get("GEMINI_ACCESS_TOKEN");
-const isGeminiAvailable = ["gemini", "auto"].includes(MODEL_PROVIDER) &&
-  GCP_PROJECT;
+
+const isGeminiAvailable = Boolean(GCP_PROJECT);
 
 export const GEMINI_EVENT_MODEL = Deno.env.get("GEMINI_EVENT_MODEL") ??
   (isGeminiAvailable ? "gemini-2.5-flash" : undefined);

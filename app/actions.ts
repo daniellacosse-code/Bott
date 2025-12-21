@@ -10,13 +10,13 @@
  */
 
 import type { BottAction } from "@bott/actions";
+import { createAction } from "@bott/actions";
 import {
   GEMINI_EVENT_MODEL,
   GEMINI_MOVIE_MODEL,
   GEMINI_PHOTO_MODEL,
   GEMINI_RATING_MODEL,
   GEMINI_SONG_MODEL,
-  MODEL_PROVIDER,
 } from "@bott/constants";
 import {
   movieAction,
@@ -27,31 +27,27 @@ import {
 
 const actions: Record<string, BottAction> = {};
 
-let provider;
-
-// We only support Gemini for now.
-if (MODEL_PROVIDER === "auto") {
-  provider = "gemini";
-} else {
-  provider = MODEL_PROVIDER;
+if (GEMINI_EVENT_MODEL && GEMINI_RATING_MODEL) {
+  actions[responseAction.name] = responseAction;
 }
 
-if (provider === "gemini") {
-  if (GEMINI_EVENT_MODEL && GEMINI_RATING_MODEL) {
-    actions.simulateResponseForChannel = responseAction;
-  }
-
-  if (GEMINI_SONG_MODEL) {
-    actions.song = songAction;
-  }
-
-  if (GEMINI_PHOTO_MODEL) {
-    actions.photo = photoAction;
-  }
-
-  if (GEMINI_MOVIE_MODEL) {
-    actions.movie = movieAction;
-  }
+if (GEMINI_SONG_MODEL) {
+  actions[songAction.name] = songAction;
 }
+
+if (GEMINI_PHOTO_MODEL) {
+  actions[photoAction.name] = photoAction;
+}
+
+if (GEMINI_MOVIE_MODEL) {
+  actions[movieAction.name] = movieAction;
+}
+
+actions.help = createAction(async function* () {
+  // TODO
+}, {
+  name: "help",
+  instructions: "Show help information.",
+});
 
 export default actions;
