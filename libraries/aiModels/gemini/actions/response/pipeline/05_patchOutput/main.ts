@@ -32,19 +32,18 @@ export const patchOutput: EventPipelineProcessor = async (context) => {
     {
       systemPrompt,
       responseSchema: getEventSchema(context),
-      context,
+      pipelineContext: context,
       useIdentity: false,
     },
   );
 
   log.debug(
-    `Patched events: ${context.data.output.length}. Content: ${
-      JSON.stringify(
-        context.data.output.map((e) => ({
-          type: e.type,
-          content: e.detail?.content ?? "n/a",
-        })),
-      )
+    `Patched events: ${context.data.output.length}. Content: ${JSON.stringify(
+      context.data.output.map((e) => ({
+        type: e.type,
+        content: e.detail?.content ?? "n/a",
+      })),
+    )
     }`,
   );
 

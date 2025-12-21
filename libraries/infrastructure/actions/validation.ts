@@ -27,6 +27,7 @@ export function applyParameterDefaults(
       mergedParameters.push({
         name: field.name,
         value: field.defaultValue,
+        type: field.type,
       });
     }
   }
@@ -79,8 +80,7 @@ export function validateParameters(
         )
       ) {
         throw new Error(
-          `Parameter '${field.name}' has invalid value '${param.value}'. Allowed values: ${
-            field.allowedValues.join(", ")
+          `Parameter '${field.name}' has invalid value '${param.value}'. Allowed values: ${field.allowedValues.join(", ")
           }`,
         );
       }

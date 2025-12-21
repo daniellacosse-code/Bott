@@ -9,6 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import type { BottChannel } from "@bott/model";
 import { BottServiceEvent } from "@bott/service";
 
 import { commit } from "../commit.ts";
@@ -152,18 +153,17 @@ export const getEvents = async (
   return [...events.values()];
 };
 
-export const getEventIdsForChannel = (channelId: string): string[] => {
+export const getEventHistory = (channel: BottChannel): Promise<BottServiceEvent[]> => {
   const result = commit(
     sql`
       select e.id
       from events e
-      where e.channel_id = ${channelId}`,
+      where e.channel_id = ${channel.id}`,
   );
 
   if ("error" in result) {
     throw result.error;
   }
 
-  // deno-lint-ignore no-explicit-any
-  return result.reads.map(({ id }: any) => id);
+  return getEvents(...result.reads.map(({ id }: { id: string; }) => id));
 };

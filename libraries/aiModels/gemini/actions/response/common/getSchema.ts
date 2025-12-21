@@ -88,81 +88,99 @@ export const getActionSchema = (
 
   for (const name in actions) {
     const action = actions[name];
-    const parametersSchema = getActionParametersSchema(action.parameters);
-    const requiredDetails = parametersSchema
-      ? ["id", "name", "parameters"]
-      : ["id", "name"];
 
-    schemas.push({
+    const schema: GeminiStructuredResponseSchema = {
       type: GeminiStructuredResponseType.OBJECT,
-      description: `Schema for the '${name}' action call event.`,
+      description: `Schema for a call event to the '${name}' action. Send this type of event to call the action.`,
       properties: {
         type: {
           type: GeminiStructuredResponseType.STRING,
           enum: [BottActionEventType.ACTION_CALL],
+          description: `The type of event to generate, in this case '${BottActionEventType.ACTION_CALL}'. Required so the system can anticipate the event structure.`
         },
         detail: {
           type: GeminiStructuredResponseType.OBJECT,
+          description: "The specifics of the action call you're making.",
           properties: {
-            id: {
-              type: GeminiStructuredResponseType.STRING,
-            },
             name: {
               type: GeminiStructuredResponseType.STRING,
               enum: [name],
+              description: "The name of this action. Required so the action can be identified.",
             },
-            parameters: parametersSchema,
           },
-          required: requiredDetails,
+          required: ["name"],
         },
       },
       required: ["type", "detail"],
-    });
+    };
+
+    if (action.parameters?.length) {
+      schema.properties!.detail!.properties!.parameters =
+        getActionParametersSchema(action.parameters);
+      schema.properties!.detail!.required!.push("parameters");
+    }
+
+    schemas.push(schema);
   }
 
   return schemas;
 };
 
 const getActionParametersSchema = (
-  parameters?: BottActionParameter[],
-): GeminiStructuredResponseSchema | undefined => {
-  if (!parameters || parameters.length === 0) {
-    return;
-  }
-
-  return {
-    type: GeminiStructuredResponseType.OBJECT,
-    properties: parameters.reduce(
-      (properties, parameter) => {
-        let type: GeminiStructuredResponseType;
+  parameters: BottActionParameter[],
+): GeminiStructuredResponseSchema => ({
+  type: GeminiStructuredResponseType.ARRAY,
+  items: {
+    // We can't enforce all parameters, unfortunately.
+    anyOf: parameters.map(
+      (parameter) => {
+        let valueType: GeminiStructuredResponseType;
 
         switch (parameter.type) {
           case "number":
-            type = GeminiStructuredResponseType.NUMBER;
+            valueType = GeminiStructuredResponseType.NUMBER;
             break;
           case "boolean":
-            type = GeminiStructuredResponseType.BOOLEAN;
+            valueType = GeminiStructuredResponseType.BOOLEAN;
             break;
           case "string":
           default:
-            type = GeminiStructuredResponseType.STRING;
+            valueType = GeminiStructuredResponseType.STRING;
             break;
         }
 
-        properties[parameter.name] = {
-          type,
-          enum: parameter.type !== "file"
-            ? parameter.allowedValues?.map(String)
-            : undefined,
+        const schema: GeminiStructuredResponseSchema = {
+          type: GeminiStructuredResponseType.OBJECT,
+          properties: {
+            name: {
+              type: GeminiStructuredResponseType.STRING,
+              enum: [parameter.name],
+              description:
+                "The name of this parameter. Required so the parameter can be identified.",
+            },
+            value: {
+              type: valueType,
+              enum: parameter.type !== "file"
+                ? parameter.allowedValues?.map(String)
+                : undefined,
+              description:
+                "The value of this parameter. In the case of 'file', provide the attachment ID you'd like to pass to the action. The system will resolve the file data for you.",
+            },
+            type: {
+              type: GeminiStructuredResponseType.STRING,
+              enum: [parameter.type],
+              description:
+                "The type of this parameter. Providing this here accellerates system performance.",
+            },
+          },
           description: parameter.description,
+          required: parameter.required
+            ? ["name", "value", "type"]
+            : ["name", "value"],
         };
 
-        return properties;
+        return schema;
       },
-      {} as Record<string, GeminiStructuredResponseSchema>,
     ),
-    required: parameters.filter((parameter) =>
-      parameter.required
-    ).map((parameter) => parameter.name),
-  }
-};
+  },
+});

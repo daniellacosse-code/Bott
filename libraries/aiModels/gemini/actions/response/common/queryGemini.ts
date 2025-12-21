@@ -28,10 +28,10 @@ const eventStructure = await Deno.readTextFile(
 );
 
 export interface QueryGeminiOptions {
-  systemPrompt: string;
-  responseSchema?: Schema;
-  context: EventPipelineContext;
   model?: string;
+  pipelineContext: EventPipelineContext;
+  responseSchema?: Schema;
+  systemPrompt: string;
   useIdentity?: boolean;
 }
 
@@ -40,17 +40,25 @@ export const queryGemini = async <O>(
   {
     systemPrompt,
     responseSchema,
-    context,
-    model = GEMINI_EVENT_MODEL ?? "gemini-2.5-flash",
+    pipelineContext: context,
+    model = GEMINI_EVENT_MODEL,
     useIdentity = true,
   }: QueryGeminiOptions,
 ): Promise<O> => {
+  if (!model) {
+    throw new Error(
+      "queryGemini: No model provided. Ensure `GEMINI_EVENT_MODEL` is set in your environment.",
+    );
+  }
+
   const config: GenerateContentConfig = {
-    abortSignal: context.abortSignal,
+    abortSignal: context.actionContext.signal,
     candidateCount: 1,
     systemInstruction: {
       parts: [
-        ...(useIdentity ? [{ text: context.settings.identity }] : []),
+        ...(useIdentity
+          ? [{ text: context.actionContext.globalSettings.identity }]
+          : []),
         {
           text: systemPrompt,
         },
@@ -136,7 +144,9 @@ export const _transformBottEventToContent = async (
 
   const parts: Part[] = [{ text: JSON.stringify(eventToSerialize) }];
   const content: Content = {
-    role: (event.user && event.user.id === context.user.id) ? "model" : "user",
+    role: (event.user && event.user.id === context.actionContext.user?.id)
+      ? "model"
+      : "user",
     parts,
   };
 
@@ -147,6 +157,8 @@ export const _transformBottEventToContent = async (
       if (!attachment.compressed?.file) {
         continue;
       }
+
+      parts.push({ text: `Attachment ID: ${attachment.id}` });
 
       parts.push({
         inlineData: {

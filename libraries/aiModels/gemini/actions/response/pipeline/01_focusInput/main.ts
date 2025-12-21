@@ -84,7 +84,7 @@ export const focusInput: EventPipelineProcessor = async (context) => {
         {
           systemPrompt,
           responseSchema,
-          context,
+          pipelineContext: context,
           model: GEMINI_RATING_MODEL,
           useIdentity: false,
         },
@@ -113,11 +113,10 @@ export const focusInput: EventPipelineProcessor = async (context) => {
 
       log.debug(
         logMessage +
-          (triggeredFocusReasons.length > 0
-            ? `    [TRIGGERED FOCUS REASONS]: ${
-              triggeredFocusReasons.map(({ name }) => name).join(", ")
-            }`
-            : ""),
+        (triggeredFocusReasons.length > 0
+          ? `    [TRIGGERED FOCUS REASONS]: ${triggeredFocusReasons.map(({ name }) => name).join(", ")
+          }`
+          : ""),
       );
     })());
 

@@ -85,6 +85,7 @@ export type BottActionParameter =
 export type BottActionParameterEntry = {
   name: string;
   value: BottActionParameterValue;
+  type: BottActionParameter["type"];
 };
 
 export type BottActionCallEvent = BottEvent<

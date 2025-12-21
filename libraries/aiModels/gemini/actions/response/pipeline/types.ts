@@ -9,13 +9,10 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottAction } from "@bott/actions";
+import type { BottActionContext } from "@bott/actions";
 import type {
-  BottChannel,
   BottEvent,
-  BottGlobalSettings,
   BottReason,
-  BottUser,
 } from "@bott/model";
 
 /**
@@ -29,17 +26,13 @@ export interface PipelineEvaluationMetadata {
 }
 
 export interface EventPipelineContext {
+  actionContext: BottActionContext;
   data: {
     input: BottEvent[];
     output: BottEvent[];
   };
   /** Ephemeral evaluation state for events in the pipeline. */
   evaluationState: Map<BottEvent, PipelineEvaluationMetadata>;
-  abortSignal: AbortSignal;
-  user: BottUser;
-  channel: BottChannel;
-  actions: Record<string, BottAction>;
-  settings: BottGlobalSettings;
 }
 
 export type EventPipelineProcessor = (

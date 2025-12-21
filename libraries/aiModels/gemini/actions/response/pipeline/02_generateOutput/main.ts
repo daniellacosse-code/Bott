@@ -40,16 +40,15 @@ export const generateOutput: EventPipelineProcessor = async function (
     {
       systemPrompt,
       responseSchema: getEventSchema(context),
-      context,
+      pipelineContext: context,
     },
   );
 
   log.debug(
-    `Raw generated output: ${
-      JSON.stringify(context.data.output, (key, value) => {
-        if (key === "parent") return value?.id;
-        return value;
-      })
+    `Raw generated output: ${JSON.stringify(context.data.output, (key, value) => {
+      if (key === "parent") return value?.id;
+      return value;
+    })
     }`,
   );
 
