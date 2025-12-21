@@ -9,9 +9,9 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import type { BottEvent } from "@bott/events";
 import type {
   BottChannel,
-  BottEvent,
   BottUser,
   NonEmptyArray,
 } from "@bott/model";

@@ -12,7 +12,14 @@
     ]
   },
   "imports": {
+    "@bott/actions": "./libraries/system/actions/module.ts",
     "@bott/constants": "./constants.ts",
+    "@bott/discord": "./libraries/chatSpaces/discord/module.ts",
+    "@bott/events": "./libraries/system/events/module.ts",
+    "@bott/gemini": "./libraries/aiModels/gemini/module.ts",
+    "@bott/log": "./libraries/log/module.ts",
+    "@bott/services": "./libraries/system/services/module.ts",
+    "@bott/storage": "./libraries/system/storage/module.ts",
     "@extractus/article-extractor": "npm:@extractus/article-extractor@^8.0.19",
     "@faker-js/faker": "npm:@faker-js/faker",
     "@google/genai": "npm:@google/genai@^1.30.0",
@@ -27,7 +34,6 @@
     "@std/testing": "jsr:@std/testing@^1.0.6",
     "@std/text": "jsr:@std/text@^1.0.8",
     "@std/yaml": "jsr:@std/yaml@^0.224.0",
-    "@bott/services": "./libraries/infrastructure/services/module.ts",
     "discord.js": "npm:discord.js@^14.19.3",
     "ejs": "npm:ejs@^3.1.7",
     "mdast-util-from-markdown": "npm:mdast-util-from-markdown@^2.0.2",
@@ -42,10 +48,11 @@
   "nodeModulesDir": "auto",
   "workspace": [
     "./model",
-    "./libraries/infrastructure/log",
-    "./libraries/infrastructure/actions",
-    "./libraries/infrastructure/services",
-    "./libraries/infrastructure/storage",
+    "./libraries/log",
+    "./libraries/system/events",
+    "./libraries/system/actions",
+    "./libraries/system/services",
+    "./libraries/system/storage",
     "./libraries/aiModels/gemini",
     "./libraries/chatSpaces/discord",
     "./app"

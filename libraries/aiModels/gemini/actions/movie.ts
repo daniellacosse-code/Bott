@@ -11,8 +11,8 @@
 
 import { createAction } from "@bott/actions";
 import type { BottAction, BottActionSettings } from "@bott/actions";
-import { GEMINI_MOVIE_MODEL, RATE_LIMIT_VIDEOS } from "@bott/constants";
-import { BottEventType } from "@bott/model";
+import { GEMINI_MOVIE_MODEL, ACTION_RATE_LIMIT_VIDEOS } from "@bott/constants";
+import { BottEventType } from "@bott/events";
 import { BottServiceEvent } from "@bott/services";
 import { prepareAttachmentFromFile } from "@bott/storage";
 import {
@@ -28,7 +28,7 @@ import _gemini from "../client.ts";
 const settings: BottActionSettings = {
   name: "movie",
   instructions: "Generate a movie based on the prompt.",
-  limitPerMonth: RATE_LIMIT_VIDEOS,
+  limitPerMonth: ACTION_RATE_LIMIT_VIDEOS,
   shouldForwardOutput: true,
   parameters: [{
     name: "prompt",

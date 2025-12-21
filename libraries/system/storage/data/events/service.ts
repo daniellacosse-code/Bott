@@ -10,8 +10,8 @@
  */
 
 import { BottActionEventType } from "@bott/actions";
+import { type BottEvent, BottEventType } from "@bott/events";
 import { log } from "@bott/log";
-import { BottEvent, BottEventType } from "@bott/model";
 import { type BottService, type BottServiceSettings, createService } from "@bott/services";
 
 import { addEvents } from "./add.ts";

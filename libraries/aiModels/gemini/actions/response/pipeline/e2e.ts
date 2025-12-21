@@ -9,18 +9,16 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { type BottEvent as BottEventInterface, BottEventType } from "@bott/events";
 import { log } from "@bott/log";
-import {
-  type AnyShape,
-  type BottChannel,
-  type BottEvent as BottEventInterface,
-  BottEventType,
-  type BottRatingScale,
-  type BottReason,
-  type BottUser,
+import type {
+  AnyShape,
+  BottChannel,
+  BottRatingScale,
+  BottReason,
+  BottUser,
 } from "@bott/model";
-import { BottServiceEvent } from "@bott/services";
-import type { BottServiceContext } from "@bott/services";
+import { type BottServiceContext, BottServiceEvent } from "@bott/services";
 
 import { faker } from "@faker-js/faker";
 

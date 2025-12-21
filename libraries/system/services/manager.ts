@@ -12,10 +12,9 @@
 import type { BottAction } from "@bott/actions";
 import type { BottActionEventType } from "@bott/actions";
 import { STORAGE_DEPLOY_NONCE_LOCATION, STORAGE_ROOT } from "@bott/constants";
+import type { BottEvent, BottEventType } from "@bott/events";
 import { log } from "@bott/log";
 import type {
-  BottEvent,
-  BottEventType,
   BottResponseSettings,
 } from "@bott/model";
 import type { BottService, BottServiceContext } from "./types.ts";

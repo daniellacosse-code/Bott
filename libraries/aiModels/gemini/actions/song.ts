@@ -18,7 +18,7 @@ import {
   ACTION_RATE_LIMIT_MUSIC,
   ACTION_SONG_DURATION_SECONDS,
 } from "@bott/constants";
-import { BottEventType } from "@bott/model";
+import { BottEventType } from "@bott/events";
 import { BottServiceEvent } from "@bott/services";
 import { prepareAttachmentFromFile } from "@bott/storage";
 

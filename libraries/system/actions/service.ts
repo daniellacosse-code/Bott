@@ -14,7 +14,8 @@ import type {
   BottActionAbortEvent,
 } from "@bott/actions";
 import { BottActionEventType } from "@bott/actions";
-import { BottEvent, type BottUser } from "@bott/model";
+import { BottEvent } from "@bott/events";
+import type { BottUser } from "@bott/model";
 import {
   type BottService,
   type BottServiceSettings,

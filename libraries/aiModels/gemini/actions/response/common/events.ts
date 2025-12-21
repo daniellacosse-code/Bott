@@ -21,7 +21,7 @@ import {
   BottAttachmentType,
   type BottEvent,
   type BottEventAttachment,
-} from "@bott/model";
+} from "@bott/events";
 import type { BottServiceEvent } from "@bott/services";
 import { getEvents } from "@bott/storage";
 import type { EventPipelineContext } from "../pipeline/types.ts";

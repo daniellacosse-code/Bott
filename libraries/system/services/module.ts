@@ -9,12 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-
-export * from "./types/common.ts";
-export * from "./types/entities.ts";
-export * from "./types/reasons.ts";
-export * from "./types/settings.ts";
-
-export const schema = Deno.readTextFileSync(
-  new URL("./schema.sql", import.meta.url).pathname,
-);
+export * from "./types.ts";
+export * from "./create.ts";
+export * from "./manager.ts";
+export * from "./event.ts";

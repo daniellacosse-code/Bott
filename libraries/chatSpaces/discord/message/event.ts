@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { type BottEvent, BottEventType } from "@bott/model";
+import { type BottEvent, BottEventType } from "@bott/events";
 
 import { BottServiceEvent } from "@bott/services";
 import { getEvents, prepareAttachmentFromUrl } from "@bott/storage";

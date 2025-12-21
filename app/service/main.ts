@@ -15,10 +15,11 @@ import {
   type BottActionOutputEvent,
 } from "@bott/actions";
 import { APP_NAME } from "@bott/constants";
-import { BottEventType, type BottUser } from "@bott/model";
-import {
-  type BottService,
-  type BottServiceSettings,
+import { BottEvent, BottEventType } from "@bott/events";
+import type { BottUser } from "@bott/model";
+import type {
+  BottService,
+  BottServiceSettings,
 } from "@bott/services";
 
 import { createService } from "@bott/services";

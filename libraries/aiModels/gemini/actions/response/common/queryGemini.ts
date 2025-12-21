@@ -10,7 +10,7 @@
  */
 
 import { GEMINI_EVENT_MODEL } from "@bott/constants";
-import type { BottEvent } from "@bott/model";
+import type { BottEvent } from "@bott/events";
 import type {
   Content,
   GenerateContentConfig,
@@ -57,7 +57,7 @@ export const queryGemini = async <O>(
     systemInstruction: {
       parts: [
         ...(useIdentity
-          ? [{ text: pipeline.action.service.app.response.identity }]
+          ? [{ text: pipeline.action.service.app.identity }]
           : []),
         {
           text: systemPrompt,
@@ -66,7 +66,7 @@ export const queryGemini = async <O>(
           text: ejs.render(eventStructure, {
             ...pipeline.action,
             settings: pipeline.action.service.app,
-            actions: pipeline.action.service.app.actions ?? {},
+            actions: pipeline.action.service.settings.actions ?? {},
           }),
         },
       ],

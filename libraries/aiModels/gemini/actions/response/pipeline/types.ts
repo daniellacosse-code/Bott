@@ -10,10 +10,8 @@
  */
 
 import type { BottActionContext } from "@bott/actions";
-import type {
-  BottEvent,
-  BottReason,
-} from "@bott/model";
+import type { BottEvent } from "@bott/events";
+import type { BottReason } from "@bott/model";
 
 /**
  * Pipeline evaluation metadata stored separately from event details.

@@ -9,6 +9,6 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-export * from "./types.ts";
-export * from "./create.ts";
-export * from "./manager.ts";
+import { BottEvent } from "@bott/events";
+
+export class BottServiceEvent extends BottEvent { }

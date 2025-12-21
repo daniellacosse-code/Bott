@@ -11,8 +11,8 @@
 
 import { createAction } from "@bott/actions";
 import type { BottAction, BottActionSettings } from "@bott/actions";
-import { GEMINI_PHOTO_MODEL, RATE_LIMIT_PHOTOS } from "@bott/constants";
-import { BottEventType } from "@bott/model";
+import { GEMINI_PHOTO_MODEL, ACTION_RATE_LIMIT_PHOTOS } from "@bott/constants";
+import { BottEventType } from "@bott/events";
 import { BottServiceEvent } from "@bott/services";
 import { prepareAttachmentFromFile } from "@bott/storage";
 import {
@@ -29,7 +29,7 @@ import _gemini from "../client.ts";
 const settings: BottActionSettings = {
   name: "photo",
   instructions: "Generate a photo based on the prompt.",
-  limitPerMonth: RATE_LIMIT_PHOTOS,
+  limitPerMonth: ACTION_RATE_LIMIT_PHOTOS,
   shouldForwardOutput: true,
   parameters: [{
     name: "prompt",

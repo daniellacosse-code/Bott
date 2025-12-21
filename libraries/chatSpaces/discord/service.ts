@@ -15,8 +15,8 @@ import {
   BOTT_ATTACHMENT_TYPE_LOOKUP,
   BottEvent,
   BottEventType,
-  type BottUser,
-} from "@bott/model";
+} from "@bott/events";
+import type { BottUser } from "@bott/model";
 import {
   type BottService,
   type BottServiceSettings,
@@ -167,9 +167,9 @@ export const discordService: BottService = createService(
             ),
             {
               name: `${attachment.id}.${BOTT_ATTACHMENT_TYPE_LOOKUP[
-                  attachment.raw.file
-                    .type as keyof typeof BOTT_ATTACHMENT_TYPE_LOOKUP
-                ].toLowerCase()
+                attachment.raw.file
+                  .type as keyof typeof BOTT_ATTACHMENT_TYPE_LOOKUP
+              ].toLowerCase()
                 }`,
             },
           ),
