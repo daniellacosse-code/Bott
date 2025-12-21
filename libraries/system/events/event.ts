@@ -23,7 +23,7 @@ export class BottEvent<
   public readonly id: string;
 
   /** The type of the event. */
-  public get type(): T {
+  public override get type(): T {
     return super.type as T;
   }
   /** Timestamp of when the event was created. */

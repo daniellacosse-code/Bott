@@ -9,8 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import type { BottEvent } from "@bott/events";
 import { log } from "@bott/log";
-import type { BottEvent } from "@bott/model";
 import { getEventSchema } from "../../common/getSchema.ts";
 import { queryGemini } from "../../common/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
@@ -31,7 +31,7 @@ export const patchOutput: EventPipelineProcessor = async function () {
     this.data.output,
     {
       systemPrompt,
-      responseSchema: getEventSchema(this.action.service.app),
+      responseSchema: getEventSchema(this.action.service.settings),
       pipeline: this,
       useIdentity: false,
     },
@@ -53,7 +53,7 @@ export const patchOutput: EventPipelineProcessor = async function () {
   // bypassing the need for a re-evaluation loop.
   for (const event of this.data.output) {
     this.evaluationState.set(event, {
-      outputReasons: this.action.service.app.response.reasons.output,
+      outputReasons: this.action.service.app.reasons.output,
     });
   }
 };

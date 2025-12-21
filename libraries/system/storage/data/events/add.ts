@@ -11,11 +11,13 @@
 
 import type {
   BottChannel,
-  BottEvent,
-  BottEventAttachment,
   BottSpace,
   BottUser,
 } from "@bott/model";
+import type {
+  BottEvent,
+  BottEventAttachment,
+} from "@bott/events";
 
 import { commit, type TransactionResults } from "../commit.ts";
 import { sql } from "../sql.ts";
@@ -28,9 +30,8 @@ const getAddChannelsSql = (
   }
 
   const values = channels.map((channel) =>
-    sql`(${channel.id}, ${channel.space.id}, ${channel.name}, ${channel.description}, ${
-      JSON.stringify({})
-    })`
+    sql`(${channel.id}, ${channel.space.id}, ${channel.name}, ${channel.description}, ${JSON.stringify({})
+      })`
   );
 
   return sql`
@@ -50,11 +51,9 @@ const getAddEventsSql = (...events: BottEvent[]) => {
   }
 
   const values = events.map((event) =>
-    sql`(${event.id}, ${event.type}, ${
-      JSON.stringify(event.detail)
-    }, ${event.parent?.id}, ${event.channel?.id}, ${event.user?.id}, ${event.createdAt.toISOString()}, ${
-      event.lastProcessedAt?.toISOString() ?? null
-    })`
+    sql`(${event.id}, ${event.type}, ${JSON.stringify(event.detail)
+      }, ${event.parent?.id}, ${event.channel?.id}, ${event.user?.id}, ${event.createdAt.toISOString()}, ${event.lastProcessedAt?.toISOString() ?? null
+      })`
   );
 
   return sql`

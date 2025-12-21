@@ -11,8 +11,8 @@
 
 import { GEMINI_RATING_MODEL } from "@bott/constants";
 
+import { BottEventType } from "@bott/events";
 import { log } from "@bott/log";
-import { BottEventType } from "@bott/model";
 import { type Schema, Type } from "@google/genai";
 import { queryGemini } from "../../common/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
@@ -27,7 +27,7 @@ export const filterOutput: EventPipelineProcessor = async function () {
   }
 
   const output = this.data.output;
-  const outputReasons = this.action.service.app.response.reasons.output;
+  const outputReasons = this.action.service.app.reasons.output;
   const outputRatingScales = [
     ...new Set(outputReasons.flatMap((reason) => reason.ratingScales ?? [])),
   ];

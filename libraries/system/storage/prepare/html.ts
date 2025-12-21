@@ -10,7 +10,7 @@
  */
 
 import { STORAGE_FILE_SIZE_LIMIT } from "@bott/constants";
-import { BottAttachmentType } from "@bott/model";
+import { BottAttachmentType } from "@bott/events";
 import { extractFromHtml } from "@extractus/article-extractor";
 import TurndownService from "turndown";
 

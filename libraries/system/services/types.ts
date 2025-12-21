@@ -13,6 +13,8 @@ import type { BottAction, BottActionEventType } from "@bott/actions";
 import type {
   BottEvent,
   BottEventType,
+} from "@bott/events";
+import type {
   BottResponseSettings,
 } from "@bott/model";
 
@@ -33,9 +35,8 @@ export interface BottServiceContext {
   settings: Required<BottServiceSettings>;
   app: BottResponseSettings;
   dispatchEvent: (event: BottEvent) => void;
-  addEventListener: (
+  addEventListener: <E extends BottEvent>(
     type: BottEventType | BottActionEventType,
-    listener: EventListenerOrEventListenerObject,
-    options?: AddEventListenerOptions,
+    listener: (event: E, context?: BottServiceContext) => unknown,
   ) => void;
 }

@@ -13,7 +13,7 @@ import type {
   BottActionCallEvent,
   BottActionAbortEvent,
 } from "@bott/actions";
-import { BottActionEventType } from "@bott/actions";
+import { BottActionEventType } from "./types.ts";
 import { BottEvent } from "@bott/events";
 import type { BottUser } from "@bott/model";
 import {
@@ -161,8 +161,8 @@ export const actionService: BottService = createService(
             let next = await iterator.next();
             while (!next.done) {
               const yieldedEvent = next.value;
-              yieldedEvent.user = actionUser;
-              yieldedEvent.channel = event.channel;
+              // Bypass readonly to contextually bind user and channel
+              Object.assign(yieldedEvent, { user: actionUser, channel: event.channel });
               dispatchEvent(yieldedEvent);
               next = await iterator.next();
             }

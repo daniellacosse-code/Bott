@@ -10,7 +10,7 @@
  */
 
 import { BaseHandler, ConsoleHandler, getLogger } from "@std/log";
-import { _setLoggerTopics } from "./logger.ts";
+import { _setLoggerTopics } from "./log.ts";
 
 // Simple log record for testing
 export interface TestLogRecord {

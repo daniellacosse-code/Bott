@@ -14,13 +14,13 @@ import {
   STORAGE_FILE_ROOT,
   STORAGE_FILE_WORD_LIMIT,
 } from "@bott/constants";
-import { log } from "@bott/log";
 import {
   BOTT_ATTACHMENT_TYPE_LOOKUP,
   BottAttachmentType,
   type BottEvent,
   type BottEventAttachment,
-} from "@bott/model";
+} from "@bott/events";
+import { log } from "@bott/log";
 import { join } from "@std/path";
 
 import { throwIfUnsafeFileSize, throwIfUnsafeUrl } from "../validation.ts";

@@ -9,24 +9,29 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { STORAGE_DEPLOY_NONCE_LOCATION } from "@bott/constants";
+import { BottEventType } from "@bott/events";
 import { log } from "@bott/log";
-
-import { BottEventType } from "@bott/model";
-import { BottServiceEvent } from "@bott/services";
-import { serviceRegistry } from "@bott/services";
+import { BottServiceEvent, BottServicesManager } from "@bott/services";
 
 import { assertEquals, assertExists } from "@std/assert";
-import { stub } from "@std/testing/mock";
 import { addEvents } from "./data/events/add.ts";
 import { getEvents } from "./data/events/get.ts";
 import { eventStorageService } from "./data/events/service.ts";
 import { prepareHtmlAsMarkdown } from "./prepare/html.ts";
 
+const createTestManager = () => {
+  const manager = new BottServicesManager({
+    identity: "test",
+    reasons: { input: [], output: [] },
+  });
+  manager.register(eventStorageService);
+  manager.start("eventStorage");
+  return manager;
+};
+
 Deno.test("Storage - addEventsData, getEvents", async () => {
   const _tempDir = Deno.makeTempDirSync();
-
-  eventStorageService.start();
+  createTestManager();
 
   // spaces
   const spaceChatWorld = {
@@ -128,7 +133,7 @@ body { color: blue; }
 
 Deno.test("Storage - prepareHtml", async () => {
   const _tempDir = Deno.makeTempDirSync();
-  eventStorageService.start();
+  createTestManager();
 
   const inputData = new TextEncoder().encode(htmlInput);
   const result = await prepareHtmlAsMarkdown(
@@ -146,20 +151,7 @@ Deno.test("Storage - prepareHtml", async () => {
 
 Deno.test("Storage - Global Listener Persistence", async () => {
   const _tempDir = Deno.makeTempDirSync();
-  eventStorageService.start();
-
-  // Setup nonce to ensure listener fires
-  const nonce = "test-nonce";
-  serviceRegistry.nonce = nonce;
-
-  using _readStub = stub(
-    Deno,
-    "readTextFileSync",
-    (path: string | URL) => {
-      if (path === STORAGE_DEPLOY_NONCE_LOCATION) return nonce;
-      throw new Deno.errors.NotFound();
-    },
-  );
+  createTestManager();
 
   const event = new BottServiceEvent(BottEventType.MESSAGE, {
     detail: { content: "Global dispatch test" },

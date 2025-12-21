@@ -22,7 +22,7 @@ const systemPrompt = await Deno.readTextFile(
 
 export const focusInput: EventPipelineProcessor = async function () {
   const input = this.data.input;
-  const inputReasons = this.action.service.app.response.reasons.input;
+  const inputReasons = this.action.service.app.reasons.input;
   const inputRatingScales = [
     ...new Set(inputReasons.flatMap((reason) => reason.ratingScales ?? [])),
   ];

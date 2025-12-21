@@ -9,5 +9,5 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-export * from "./logger.ts";
+export * from "./log.ts";
 export * from "./testing.ts";

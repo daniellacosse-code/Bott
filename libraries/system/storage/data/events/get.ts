@@ -72,33 +72,28 @@ export const getEvents = async (
 
     const event = new BottServiceEvent(type, {
       detail: JSON.parse(detail),
+      id,
+      createdAt: new Date(createdAt),
+      lastProcessedAt: lastProcessedAt ? new Date(lastProcessedAt) : undefined,
+      channel: rowData.c_id
+        ? {
+          id: rowData.c_id,
+          name: rowData.c_name,
+          description: rowData.c_description,
+          space: {
+            id: rowData.s_id,
+            name: rowData.s_name,
+            description: rowData.s_description,
+          },
+        }
+        : undefined,
+      user: rowData.u_id
+        ? {
+          id: rowData.u_id,
+          name: rowData.u_name,
+        }
+        : undefined,
     });
-
-    event.id = id;
-    event.createdAt = new Date(createdAt);
-    event.lastProcessedAt = lastProcessedAt
-      ? new Date(lastProcessedAt)
-      : undefined;
-
-    if (rowData.c_id) {
-      event.channel = {
-        id: rowData.c_id,
-        name: rowData.c_name,
-        description: rowData.c_description,
-        space: {
-          id: rowData.s_id,
-          name: rowData.s_name,
-          description: rowData.s_description,
-        },
-      };
-    }
-
-    if (rowData.u_id) {
-      event.user = {
-        id: rowData.u_id,
-        name: rowData.u_name,
-      };
-    }
 
     events.set(id, event);
   }
@@ -145,6 +140,7 @@ export const getEvents = async (
     if (rowData.p_id && events.has(rowData.e_id)) {
       const event = events.get(rowData.e_id)!;
       if (!event.parent) {
+        // @ts-expect-error: parent is readonly but we need to hydrate it
         [event.parent] = await getEvents(rowData.p_id);
       }
     }

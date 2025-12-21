@@ -13,7 +13,7 @@ import {
   STORAGE_FFMPEG_TIME_LIMIT_MS,
   STORAGE_FILE_DIMENSION_LIMIT,
 } from "@bott/constants";
-import { BottAttachmentType } from "@bott/model";
+import { BottAttachmentType } from "@bott/events";
 import { throwIfUnsafeFileSize } from "../validation.ts";
 
 // Security Note: _ffmpeg is not exported and all arguments are hardcoded below.

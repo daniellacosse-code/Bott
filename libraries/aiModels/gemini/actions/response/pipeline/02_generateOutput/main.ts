@@ -9,9 +9,9 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { log } from "@bott/log";
+import type { BottEvent } from "@bott/events";
 
-import type { BottEvent } from "@bott/model";
+import { log } from "@bott/log";
 import ejs from "ejs";
 import { getEventSchema } from "../../common/getSchema.ts";
 import { queryGemini } from "../../common/queryGemini.ts";
@@ -37,7 +37,7 @@ export const generateOutput: EventPipelineProcessor = async function () {
     this.data.input,
     {
       systemPrompt,
-      responseSchema: getEventSchema(this.action.service.app),
+      responseSchema: getEventSchema(this.action.service.settings),
       pipeline: this,
     },
   );

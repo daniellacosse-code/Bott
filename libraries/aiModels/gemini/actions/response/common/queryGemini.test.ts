@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BottEventType } from "@bott/model";
+import { BottEventType } from "@bott/events";
 import { BottServiceEvent } from "@bott/services";
 import { assertEquals } from "@std/assert/equals";
 import { createMockContext, createMockUser } from "../pipeline/e2e.ts";

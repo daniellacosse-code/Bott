@@ -14,7 +14,7 @@ import type {
   BottActionParameter,
 } from "@bott/actions";
 import { BottActionEventType } from "@bott/actions";
-import { BottEventType } from "@bott/model";
+import { BottEventType } from "@bott/events";
 import type { BottServiceSettings } from "@bott/services";
 import {
   type Schema as GeminiStructuredResponseSchema,
@@ -65,7 +65,7 @@ export const getEventSchema = (
         },
         required: ["type", "detail"],
       },
-      ...getActionSchema(settings.actions),
+      ...getActionSchema(settings.actions ?? {}),
     ],
   },
 });
