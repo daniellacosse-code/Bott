@@ -11,39 +11,19 @@
 
 import type {
   BottAction,
-  BottActionContext,
   BottActionFunction,
-  BottActionHandler,
   BottActionSettings,
 } from "@bott/actions";
-import type { BottEventActionParameterEntry } from "@bott/events";
 
 export function createAction(
-  fn: BottActionHandler,
+  actionFunction: BottActionFunction,
   settings: BottActionSettings,
 ): BottAction {
-  const wrapper: BottActionFunction = async function* (
-    this: BottActionContext,
-    parameters: BottEventActionParameterEntry[],
-  ) {
-    const paramsObject = parameters.reduce(
-      (acc, p) => ({ ...acc, [p.name]: p.value }),
-      {},
-    );
-    // @ts-ignore: Bind context
-    const boundFn = fn.bind(this);
-    // @ts-ignore: Call generator
-    const generator = boundFn(paramsObject);
-
-    // Yield all events and capture return value
-    return yield* generator;
-  };
-
-  const action = wrapper as unknown as BottAction;
+  const action = actionFunction;
   const { name, ...otherSettings } = settings;
 
   Object.defineProperty(action, "name", { value: name });
   Object.assign(action, otherSettings);
 
-  return action;
+  return action as BottAction;
 }

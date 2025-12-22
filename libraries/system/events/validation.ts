@@ -10,44 +10,36 @@
  */
 
 import type {
-  BottEventActionParameter,
-  BottEventActionParameterEntry,
+  BottEventActionParameterDefinition,
+  BottEventActionParameterRecord,
 } from "@bott/events";
 
 export function applyParameterDefaults(
-  schema: BottEventActionParameter[],
-  parameters: BottEventActionParameterEntry[],
-): BottEventActionParameterEntry[] {
-  const mergedParameters = [...parameters];
+  schema: BottEventActionParameterDefinition[],
+  parameters: BottEventActionParameterRecord,
+): BottEventActionParameterRecord {
+  const mergedParameters = { ...parameters };
 
   for (const field of schema) {
-    const existingParam = parameters.find((p) => p.name === field.name);
-
-    if (existingParam === undefined && field.defaultValue !== undefined) {
-      mergedParameters.push({
-        name: field.name,
-        value: field.defaultValue,
-        type: field.type,
-      });
-    }
+    mergedParameters[field.name] ??= field.defaultValue;
   }
 
   return mergedParameters;
 }
 
 export function validateParameters(
-  schema: BottEventActionParameter[],
-  parameters: BottEventActionParameterEntry[],
+  schema: BottEventActionParameterDefinition[],
+  parameters: BottEventActionParameterRecord,
 ) {
   // Check for unknown parameters
-  for (const param of parameters) {
-    if (!schema.find((s) => s.name === param.name)) {
-      throw new Error(`Unknown parameter: ${param.name}`);
+  for (const param of Object.keys(parameters)) {
+    if (!schema.find((s) => s.name === param)) {
+      throw new Error(`Unknown parameter: ${param}`);
     }
   }
 
   for (const field of schema) {
-    const param = parameters.find((p) => p.name === field.name);
+    const param = parameters[field.name];
 
     if (field.required && param === undefined) {
       throw new Error(`Missing required parameter: ${field.name}`);
@@ -55,15 +47,15 @@ export function validateParameters(
 
     if (param !== undefined) {
       if (field.type === "file") {
-        if (!(param.value instanceof File)) {
+        if (!(param instanceof File)) {
           throw new Error(
             `Parameter '${field.name}' must be of type file`,
           );
         }
       } else if (
-        (field.type === "string" && typeof param.value !== "string") ||
-        (field.type === "number" && typeof param.value !== "number") ||
-        (field.type === "boolean" && typeof param.value !== "boolean")
+        (field.type === "string" && typeof param !== "string") ||
+        (field.type === "number" && typeof param !== "number") ||
+        (field.type === "boolean" && typeof param !== "boolean")
       ) {
         throw new Error(
           `Parameter '${field.name}' must be of type ${field.type}`,
@@ -74,12 +66,11 @@ export function validateParameters(
         field.type === "string" &&
         field.allowedValues &&
         !field.allowedValues.includes(
-          param.value as string,
+          param as string,
         )
       ) {
         throw new Error(
-          `Parameter '${field.name}' has invalid value '${param.value}'. Allowed values: ${field.allowedValues.join(", ")
-          }`,
+          `Parameter '${field.name}' has invalid value '${param}'. Allowed values: ${field.allowedValues.join(", ")}`,
         );
       }
     }

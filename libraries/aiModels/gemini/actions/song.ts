@@ -9,24 +9,20 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { Buffer } from "node:buffer";
-
 import { createAction } from "@bott/actions";
 import type { BottAction, BottActionSettings } from "@bott/actions";
-import {
-  ACTION_RATE_LIMIT_MUSIC,
-  ACTION_SONG_DURATION_SECONDS,
-  GEMINI_SONG_MODEL,
-} from "@bott/constants";
+import { ACTION_RATE_LIMIT_MUSIC, GEMINI_SONG_MODEL } from "@bott/constants";
 import { BottEvent, BottEventType } from "@bott/events";
 import { prepareAttachmentFromFile } from "@bott/storage";
+import { delay } from "@std/async";
 
-import _gemini from "../client.ts";
+import gemini from "../client.ts";
 import { generateFilename } from "./common.ts";
 
 const settings: BottActionSettings = {
   name: "song",
-  instructions: "Generate a song based on the prompt.",
+  instructions:
+    "Generate a song based on the prompt. Duration is fixed to 15 seconds.",
   limitPerMonth: ACTION_RATE_LIMIT_MUSIC,
   shouldForwardOutput: true,
   parameters: [{
@@ -34,92 +30,73 @@ const settings: BottActionSettings = {
     type: "string",
     description: "Description of the music/song to generate",
     required: true,
-  }, {
-    name: "duration",
-    type: "number",
-    description: "Duration of the song in seconds",
-    defaultValue: ACTION_SONG_DURATION_SECONDS,
-    required: false,
   }],
 };
 
-// Helper to write a WAV header for the raw PCM data
-export function writeWavHeader(
-  sampleRate: number,
-  numChannels: number,
-  bitsPerSample: number,
-  dataLength: number,
-): Buffer {
-  const buffer = Buffer.alloc(44);
-  // RIFF chunk descriptor
-  buffer.write("RIFF", 0);
-  buffer.writeUInt32LE(36 + dataLength, 4); // ChunkSize
-  buffer.write("WAVE", 8);
-  // fmt sub-chunk
-  buffer.write("fmt ", 12);
-  buffer.writeUInt32LE(16, 16); // Subchunk1Size (16 for PCM)
-  buffer.writeUInt16LE(1, 20); // AudioFormat (1 for PCM)
-  buffer.writeUInt16LE(numChannels, 22);
-  buffer.writeUInt32LE(sampleRate, 24);
-  buffer.writeUInt32LE(sampleRate * numChannels * (bitsPerSample / 8), 28); // ByteRate
-  buffer.writeUInt16LE(numChannels * (bitsPerSample / 8), 32); // BlockAlign
-  buffer.writeUInt16LE(bitsPerSample, 34);
-  // data sub-chunk
-  buffer.write("data", 36);
-  buffer.writeUInt32LE(dataLength, 40);
-  return buffer;
-}
+const SONG_DURATION_SECONDS = 15;
+const BYTES_PER_SECOND = 192_000; // 48000 Hz * 2 channels * 2 bytes/sample
+
+// Pre-calculated WAV header for 15 seconds of 48kHz stereo 16-bit audio
+// deno-fmt-ignore
+const WAV_HEADER = new Uint8Array([82, 73, 70, 70, 36, 242, 43, 0, 87, 65, 86, 69, 102, 109, 116, 32, 16, 0, 0, 0, 1, 0, 2, 0, 128, 187, 0, 0, 0, 238, 2, 0, 4, 0, 16, 0, 100, 97, 116, 97, 0, 242, 43, 0]);
+
+const SONG_FILE_SIZE = WAV_HEADER.length +
+  Math.floor(BYTES_PER_SECOND * SONG_DURATION_SECONDS);
+const SECOND_TO_MS = 1000;
 
 export const songAction: BottAction = createAction(
-  async function* ({ prompt, duration }) {
+  async function* ({ prompt }) {
     if (!GEMINI_SONG_MODEL) {
-      throw new Error("Gemini song model is not configured");
+      throw new Error(
+        "Gemini song model is not configured. Please ensure `GEMINI_SONG_MODEL` is set in your environment.",
+      );
     }
 
-    const audioBuffer: Buffer[] = [];
+    const promptString = prompt as string;
 
-    // 1. Initialize the Live Session for Music
-    // @ts-expect-error: Client type definition might not yet have deep property 'music'
-    const session = await _gemini.aio.live.music.connect({
+    // Pre-allocate the entire file buffer
+    const fileData = new Uint8Array(SONG_FILE_SIZE);
+    fileData.set(WAV_HEADER);
+
+    let writeOffset = WAV_HEADER.length;
+    const stream = await gemini.live.music.connect({
       model: GEMINI_SONG_MODEL,
-      config: {
-        responseModalities: ["AUDIO"],
+      callbacks: {
+        onmessage: (message) => {
+          if (!message.serverContent?.audioChunks) {
+            return;
+          }
+
+          for (const chunk of message.serverContent.audioChunks) {
+            for (const char of atob(chunk?.data ?? "")) {
+              if (writeOffset >= SONG_FILE_SIZE) break;
+              fileData[writeOffset] = char.charCodeAt(0);
+              writeOffset++;
+            }
+          }
+        },
       },
     });
 
-    // 2. Set up the listener to collect chunks
-    session.on("audio", (chunk: { data: string }) => {
-      // chunk.data is usually a base64 string or buffer of raw PCM
-      const pcmData = Buffer.from(chunk.data, "base64");
-      audioBuffer.push(pcmData);
+    await stream.setWeightedPrompts({
+      weightedPrompts: [{
+        text: promptString,
+      }],
     });
 
-    // 3. Send the Prompt to start the music
-    await session.setWeightedPrompts([{
-      text: prompt,
-      weight: 1.0,
-    }]);
+    await stream.play();
 
-    // Start playback in the session
-    await session.play();
+    await delay(SONG_DURATION_SECONDS * SECOND_TO_MS, { signal: this.signal });
 
-    // 4. Wait for the desired duration, then stop
-    await new Promise((resolve) =>
-      setTimeout(resolve, duration as number * 1000)
-    );
+    stream.stop();
 
-    // Stop and close
-    await session.pause();
-    session.disconnect();
-
-    // 5. Combine chunks and save as WAV
-    const allPcmData = Buffer.concat(audioBuffer);
-    const wavHeader = writeWavHeader(48000, 2, 16, allPcmData.length); // Lyria is 48kHz Stereo 16-bit
-    const finalWav = Buffer.concat([wavHeader, allPcmData]);
+    if (this.signal.aborted) {
+      return;
+    }
 
     const file = new File(
-      [finalWav],
-      generateFilename("wav", prompt as string),
+      [fileData],
+      generateFilename("wav", promptString),
       { type: "audio/wav" },
     );
 

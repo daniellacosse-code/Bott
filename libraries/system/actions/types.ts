@@ -10,9 +10,8 @@
  */
 
 import type {
-  BottEventActionParameter,
-  BottEventActionParameterEntry,
-  BottEventActionParameterValue,
+  BottEventActionParameterRecord,
+  BottEventActionParameterDefinition,
   BottEvent,
 } from "@bott/events";
 import type { BottChannel, BottUser, NonEmptyArray } from "@bott/model";
@@ -22,22 +21,14 @@ export type BottAction = BottActionFunction & BottActionSettings;
 
 export type BottActionFunction = (
   this: BottActionContext,
-  parameters: BottEventActionParameterEntry[],
-) => AsyncGenerator<BottEvent, BottEvent | void, void>;
-
-export type BottActionHandler = (
-  this: BottActionContext,
-  params: Record<
-    string,
-    BottEventActionParameterValue | undefined
-  >,
+  parameters: BottEventActionParameterRecord,
 ) => AsyncGenerator<BottEvent, BottEvent | void, void>;
 
 export type BottActionSettings = {
   instructions: string;
   limitPerMonth?: number;
   name: string;
-  parameters?: NonEmptyArray<BottEventActionParameter>;
+  parameters?: NonEmptyArray<BottEventActionParameterDefinition>;
   shouldForwardOutput?: boolean;
   shouldInterpretOutput?: boolean;
 };

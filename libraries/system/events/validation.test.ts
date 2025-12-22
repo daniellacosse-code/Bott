@@ -10,51 +10,52 @@
  */
 
 import type {
-  BottEventActionParameter,
-  BottEventActionParameterEntry,
+  BottEventActionParameterDefinition,
+  BottEventActionParameterRecord,
 } from "@bott/events";
 import { assertEquals, assertThrows } from "@std/assert";
 import { applyParameterDefaults, validateParameters } from "./validation.ts";
 
 Deno.test("applyParameterDefaults", () => {
-  const schema: BottEventActionParameter[] = [
+  const schema: BottEventActionParameterDefinition[] = [
     { name: "p1", type: "string" },
     { name: "p2", type: "number", defaultValue: 42 },
     { name: "p3", type: "boolean", defaultValue: true },
     { name: "p4", type: "string", defaultValue: "default" },
   ];
 
-  const parameters: BottEventActionParameterEntry[] = [
-    { name: "p1", value: "value1", type: "string" },
-    { name: "p4", value: "overridden", type: "string" },
-  ];
+  const parameters: BottEventActionParameterRecord = {
+    p1: "value1",
+    p4: "overridden",
+  };
 
   const result = applyParameterDefaults(schema, parameters);
 
   assertEquals(result.length, 4);
-  assertEquals(result.find((p) => p.name === "p1")?.value, "value1");
-  assertEquals(result.find((p) => p.name === "p2")?.value, 42);
-  assertEquals(result.find((p) => p.name === "p3")?.value, true);
-  assertEquals(result.find((p) => p.name === "p4")?.value, "overridden");
+  assertEquals(result.p1, "value1");
+  assertEquals(result.p2, 42);
+  assertEquals(result.p3, true);
+  assertEquals(result.p4, "overridden");
 });
 
 Deno.test("validateParameters - Valid parameters", () => {
-  const schema: BottEventActionParameter[] = [
+  const schema: BottEventActionParameterDefinition[] = [
     { name: "name", type: "string", required: true },
     { name: "age", type: "number" },
   ];
-  const params: BottEventActionParameterEntry[] = [
-    { name: "name", value: "Alice", type: "string" },
-    { name: "age", value: 30, type: "number" },
-  ];
+  const params: BottEventActionParameterRecord = {
+    name: "Alice",
+    age: 30,
+  };
+
   validateParameters(schema, params);
 });
 
 Deno.test("validateParameters - Missing required parameter", () => {
-  const schema: BottEventActionParameter[] = [
+  const schema: BottEventActionParameterDefinition[] = [
     { name: "name", type: "string", required: true },
   ];
-  const params: BottEventActionParameterEntry[] = [];
+  const params: BottEventActionParameterRecord = {};
   assertThrows(
     () => validateParameters(schema, params),
     Error,
@@ -63,12 +64,12 @@ Deno.test("validateParameters - Missing required parameter", () => {
 });
 
 Deno.test("validateParameters - Invalid type (string expected)", () => {
-  const schema: BottEventActionParameter[] = [
+  const schema: BottEventActionParameterDefinition[] = [
     { name: "name", type: "string" },
   ];
-  const params: BottEventActionParameterEntry[] = [
-    { name: "name", value: 123, type: "number" },
-  ];
+  const params: BottEventActionParameterRecord = {
+    name: 123,
+  };
   assertThrows(
     () => validateParameters(schema, params),
     Error,
@@ -77,12 +78,12 @@ Deno.test("validateParameters - Invalid type (string expected)", () => {
 });
 
 Deno.test("validateParameters - Invalid type (number expected)", () => {
-  const schema: BottEventActionParameter[] = [
+  const schema: BottEventActionParameterDefinition[] = [
     { name: "age", type: "number" },
   ];
-  const params: BottEventActionParameterEntry[] = [
-    { name: "age", value: "30", type: "string" },
-  ];
+  const params: BottEventActionParameterRecord = {
+    age: "30",
+  };
   assertThrows(
     () => validateParameters(schema, params),
     Error,
@@ -91,12 +92,12 @@ Deno.test("validateParameters - Invalid type (number expected)", () => {
 });
 
 Deno.test("validateParameters - Invalid value (not allowed)", () => {
-  const schema: BottEventActionParameter[] = [
+  const schema: BottEventActionParameterDefinition[] = [
     { name: "color", type: "string", allowedValues: ["red", "blue"] },
   ];
-  const params: BottEventActionParameterEntry[] = [
-    { name: "color", value: "green", type: "string" },
-  ];
+  const params: BottEventActionParameterRecord = {
+    color: "green",
+  };
   assertThrows(
     () => validateParameters(schema, params),
     Error,
@@ -105,10 +106,10 @@ Deno.test("validateParameters - Invalid value (not allowed)", () => {
 });
 
 Deno.test("validateParameters - Unknown parameter", () => {
-  const schema: BottEventActionParameter[] = [];
-  const params: BottEventActionParameterEntry[] = [
-    { name: "extra", value: "value", type: "string" },
-  ];
+  const schema: BottEventActionParameterDefinition[] = [];
+  const params: BottEventActionParameterRecord = {
+    extra: "value",
+  };
   assertThrows(
     () => validateParameters(schema, params),
     Error,

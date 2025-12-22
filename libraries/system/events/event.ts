@@ -95,38 +95,37 @@ export type BottReactionEvent = BottEvent<BottEventType.REACTION, {
 
 export type BottEventActionParameterValue = string | number | boolean | File;
 
-type _ParameterBase = {
+type _ParameterDefinitionBase = {
   name: string;
   description?: string;
   required?: boolean;
 };
 
-type _StringParameter = _ParameterBase & {
+type _StringParameterDefinition = _ParameterDefinitionBase & {
   type: "string";
   allowedValues?: string[];
   defaultValue?: string;
 };
 
-type _NonStringParameter = _ParameterBase & {
+type _NonStringParameterDefinition = _ParameterDefinitionBase & {
   type: "number" | "boolean" | "file";
   allowedValues?: never;
   defaultValue?: number | boolean | File;
 };
 
-export type BottEventActionParameter =
-  | _StringParameter
-  | _NonStringParameter;
+export type BottEventActionParameterDefinition =
+  | _StringParameterDefinition
+  | _NonStringParameterDefinition;
 
-export type BottEventActionParameterEntry = {
-  name: string;
-  value: BottEventActionParameterValue;
-  type: BottEventActionParameter["type"];
-};
+export type BottEventActionParameterRecord = Record<
+  string,
+  BottEventActionParameterValue | undefined
+>;
 
 export type BottActionCallEvent = BottEvent<BottEventType.ACTION_CALL, {
   id: string;
   name: string;
-  parameters: BottEventActionParameterEntry[];
+  parameters: BottEventActionParameterRecord;
 }>;
 
 export type BottActionStartEvent = BottEvent<BottEventType.ACTION_START, {
