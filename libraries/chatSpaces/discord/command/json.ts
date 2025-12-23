@@ -56,7 +56,7 @@ export function actionToCommandJSON({
 
       if (description) {
         option.setDescription(
-          (defaultValue
+          (defaultValue && type !== "file"
             ? `${description} (Default: ${defaultValue})`
             : description).slice(0, SERVICE_DISCORD_COMMAND_DESCRIPTION_LIMIT),
         );
