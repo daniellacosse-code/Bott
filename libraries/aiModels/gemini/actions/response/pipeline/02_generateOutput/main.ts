@@ -42,7 +42,7 @@ export const generateOutput: EventPipelineProcessor = async function () {
       responseSchema: getEventSchema(this.action.service.settings),
       pipeline: this,
     },
-  )
+  );
 
   this.data.output = await resolveOutputEvents(this);
 

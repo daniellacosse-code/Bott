@@ -61,7 +61,8 @@ export async function commandInteractionToActionCallEvent(
 }
 
 async function extractResolvedOptions(
-  interaction: ChatInputCommandInteraction): Promise<BottEventActionParameterRecord> {
+  interaction: ChatInputCommandInteraction,
+): Promise<BottEventActionParameterRecord> {
   const parameters: BottEventActionParameterRecord = {};
 
   for (const option of interaction.options.data) {

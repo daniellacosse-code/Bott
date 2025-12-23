@@ -158,5 +158,5 @@ export const getEventHistory = (channel: BottChannel): Promise<BottEvent[]> => {
     throw result.error;
   }
 
-  return getEvents(...result.reads.map(({ id }: { id: string; }) => id));
+  return getEvents(...result.reads.map(({ id }: { id: string }) => id));
 };

@@ -9,7 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottService, BottServiceFunction as BottServiceSetupFunction, BottServiceSettings } from "./types.ts";
+import type {
+  BottService,
+  BottServiceFunction as BottServiceSetupFunction,
+  BottServiceSettings,
+} from "./types.ts";
 
 export function createService(
   setup: BottServiceSetupFunction,

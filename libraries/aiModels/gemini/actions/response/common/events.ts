@@ -10,18 +10,18 @@
  */
 
 import {
-  ACTION_RESPONSE_FILE_TOKEN_LIMIT,
-  ACTION_RESPONSE_EVENT_COUNT_LIMIT as INPUT_EVENT_COUNT_LIMIT,
-  ACTION_RESPONSE_HISTORY_SIZE_MS as INPUT_EVENT_TIME_LIMIT_MS,
   ACTION_RESPONSE_AUDIO_COUNT_LIMIT as INPUT_FILE_AUDIO_COUNT_LIMIT,
+  ACTION_RESPONSE_EVENT_COUNT_LIMIT as INPUT_EVENT_COUNT_LIMIT,
+  ACTION_RESPONSE_FILE_TOKEN_LIMIT,
+  ACTION_RESPONSE_HISTORY_SIZE_MS as INPUT_EVENT_TIME_LIMIT_MS,
   ACTION_RESPONSE_VIDEO_COUNT_LIMIT as INPUT_FILE_VIDEO_COUNT_LIMIT,
 } from "@bott/constants";
 import {
-  BottAttachmentType,
   type BottActionCallEvent,
+  BottAttachmentType,
   type BottEvent,
-  BottEventType,
   type BottEventAttachment,
+  BottEventType,
 } from "@bott/events";
 import { getEvents } from "@bott/storage";
 import type { EventPipelineContext } from "../pipeline/types.ts";
@@ -129,7 +129,8 @@ export const resolveOutputEvents = async (
         for (const parameterDefinition of action.parameters) {
           if (parameterDefinition.type !== "file") continue;
 
-          const attachmentId = actionCallEvent.detail.parameters[parameterDefinition.name];
+          const attachmentId =
+            actionCallEvent.detail.parameters[parameterDefinition.name];
 
           if (!attachmentId) continue;
 

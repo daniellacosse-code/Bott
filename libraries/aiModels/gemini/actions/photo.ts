@@ -11,7 +11,11 @@
 
 import { createAction } from "@bott/actions";
 import type { BottAction, BottActionSettings } from "@bott/actions";
-import { ACTION_RATE_LIMIT_PHOTOS, APP_USER, GEMINI_PHOTO_MODEL } from "@bott/constants";
+import {
+  ACTION_RATE_LIMIT_PHOTOS,
+  APP_USER,
+  GEMINI_PHOTO_MODEL,
+} from "@bott/constants";
 import { BottEvent, BottEventType } from "@bott/events";
 import { prepareAttachmentFromFile } from "@bott/storage";
 import {

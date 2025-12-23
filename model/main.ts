@@ -9,7 +9,6 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-
 export * from "./types/common.ts";
 export * from "./types/entities.ts";
 export * from "./types/reasons.ts";

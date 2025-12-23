@@ -31,4 +31,4 @@ export const settings: BottResponseSettings = {
       reasons.ensurePotentialImpact,
     ],
   },
-}
+};

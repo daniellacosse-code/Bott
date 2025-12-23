@@ -12,12 +12,12 @@
 import { createAction } from "@bott/actions";
 import type { BottAction, BottActionSettings } from "@bott/actions";
 import {
-  APP_USER,
   ACTION_MOVIE_ASPECT_RATIO,
   ACTION_MOVIE_FPS,
   ACTION_MOVIE_JOB_INTERVAL_MS,
   ACTION_MOVIE_RESOLUTION,
   ACTION_RATE_LIMIT_VIDEOS,
+  APP_USER,
   GEMINI_MOVIE_MODEL,
 } from "@bott/constants";
 import { BottEvent, BottEventType } from "@bott/events";

@@ -10,9 +10,9 @@
  */
 
 import type {
-  BottEventActionParameterRecord,
-  BottEventActionParameterDefinition,
   BottEvent,
+  BottEventActionParameterDefinition,
+  BottEventActionParameterRecord,
 } from "@bott/events";
 import type { BottChannel, BottUser, NonEmptyArray } from "@bott/model";
 import type { BottServiceContext } from "@bott/services";

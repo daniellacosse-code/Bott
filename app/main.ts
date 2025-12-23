@@ -10,10 +10,7 @@
  */
 
 import { actionService } from "@bott/actions";
-import {
-  SERVICE_LIST,
-  PORT
-} from "@bott/constants";
+import { PORT, SERVICE_LIST } from "@bott/constants";
 import { discordService } from "@bott/discord";
 import { BottServicesManager } from "@bott/services";
 import { eventStorageService } from "@bott/storage";

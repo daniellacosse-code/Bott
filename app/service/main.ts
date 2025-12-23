@@ -11,16 +11,13 @@
 
 import { APP_USER } from "@bott/constants";
 import {
+  type BottActionCallEvent,
   type BottActionErrorEvent,
   type BottActionOutputEvent,
-  BottEventType,
   BottEvent,
-  type BottActionCallEvent,
+  BottEventType,
 } from "@bott/events";
-import type {
-  BottService,
-  BottServiceSettings,
-} from "@bott/services";
+import type { BottService, BottServiceSettings } from "@bott/services";
 
 import { createService } from "@bott/services";
 
@@ -41,7 +38,7 @@ const settings: BottServiceSettings = {
     BottEventType.ACTION_ERROR,
   ]),
   actions,
-}
+};
 
 // Maps each channel ID to the ID of the in-flight response action
 const channelResponseActionIndex = new Map<string, BottActionCallEvent>();
@@ -100,7 +97,6 @@ export const appService: BottService = createService(
       callResponseAction(event);
     };
 
-
     this.addEventListener(BottEventType.MESSAGE, respondIfNotSelf);
     this.addEventListener(BottEventType.REPLY, respondIfNotSelf);
     this.addEventListener(BottEventType.REACTION, respondIfNotSelf);
@@ -146,4 +142,3 @@ export const appService: BottService = createService(
   },
   settings,
 );
-

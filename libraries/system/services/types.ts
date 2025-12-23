@@ -10,13 +10,8 @@
  */
 
 import type { BottAction } from "@bott/actions";
-import type {
-  BottEvent,
-  BottEventType,
-} from "@bott/events";
-import type {
-  BottResponseSettings,
-} from "@bott/model";
+import type { BottEvent, BottEventType } from "@bott/events";
+import type { BottResponseSettings } from "@bott/model";
 
 export type BottService = BottServiceFunction & BottServiceSettings;
 

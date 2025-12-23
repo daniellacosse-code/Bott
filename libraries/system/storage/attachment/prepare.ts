@@ -147,7 +147,9 @@ export async function prepareAttachmentFromFile(
 
   const type = file.type as BottAttachmentType;
   const rawExtension = BOTT_ATTACHMENT_TYPE_LOOKUP[type].toLowerCase();
-  const rawFileName = `${name || UNNAMED_FILE_PREFIX}.${attachmentId}.raw.${rawExtension}`;
+  const rawFileName = `${
+    name || UNNAMED_FILE_PREFIX
+  }.${attachmentId}.raw.${rawExtension}`;
   const rawPath = join(fileSystemRoot, rawFileName);
 
   // Save raw file
@@ -162,7 +164,9 @@ export async function prepareAttachmentFromFile(
   const compressedExtension = BOTT_ATTACHMENT_TYPE_LOOKUP[
     compressedFile.type as BottAttachmentType
   ].toLowerCase();
-  const compressedFileName = `${name || UNNAMED_FILE_PREFIX}.${attachmentId}.compressed.${compressedExtension}`;
+  const compressedFileName = `${
+    name || UNNAMED_FILE_PREFIX
+  }.${attachmentId}.compressed.${compressedExtension}`;
   const compressedPath = join(fileSystemRoot, compressedFileName);
 
   log.debug(

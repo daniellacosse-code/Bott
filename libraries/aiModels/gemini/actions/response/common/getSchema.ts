@@ -10,7 +10,10 @@
  */
 
 import type { BottAction } from "@bott/actions";
-import { type BottEventActionParameterDefinition, BottEventType } from "@bott/events";
+import {
+  type BottEventActionParameterDefinition,
+  BottEventType,
+} from "@bott/events";
 import type { BottServiceSettings } from "@bott/services";
 import {
   type Schema as GeminiStructuredResponseSchema,
@@ -81,7 +84,7 @@ export const getEventSchema = (
               },
             },
             required: ["id"],
-          }
+          },
         },
         required: ["type", "detail"],
       },
@@ -103,8 +106,7 @@ export const getActionSchema = (
 
     const schema: GeminiStructuredResponseSchema = {
       type: GeminiStructuredResponseType.OBJECT,
-      description:
-        `Schema for a call to the '${name}' action.`,
+      description: `Schema for a call to the '${name}' action.`,
       properties: {
         type: {
           type: GeminiStructuredResponseType.STRING,
@@ -164,7 +166,8 @@ const getActionParametersSchema = (
         ? parameter.allowedValues?.map(String)
         : undefined,
       description: parameter.type === "file"
-        ? parameter.description + " IMPORTANT: This is a 'file' parameter. You must send an attachment ID as the string. The system will automatically resolve the attachment by its ID."
+        ? parameter.description +
+          " IMPORTANT: This is a 'file' parameter. You must send an attachment ID as the string. The system will automatically resolve the attachment by its ID."
         : parameter.description,
     };
 

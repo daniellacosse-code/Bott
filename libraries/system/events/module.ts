@@ -10,8 +10,8 @@
  */
 
 export {
-  BottEventAttachmentType as BottAttachmentType,
   type BottEventAttachment,
+  BottEventAttachmentType as BottAttachmentType,
   BottEventType,
 } from "./types.ts";
 export * from "./event.ts";

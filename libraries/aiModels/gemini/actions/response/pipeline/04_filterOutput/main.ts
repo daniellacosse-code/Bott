@@ -13,7 +13,7 @@ import { GEMINI_RATING_MODEL } from "@bott/constants";
 
 import { BottEventType } from "@bott/events";
 import { log } from "@bott/log";
-import { type Schema, Type } from "@google/genai"
+import { type Schema, Type } from "@google/genai";
 import { resolveOutputEvents } from "../../common/events.ts";
 import { queryGemini } from "../../common/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";

@@ -9,12 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-
 import { APP_USER, SERVICE_DISCORD_TOKEN } from "@bott/constants";
-import {
-  BottEvent,
-  BottEventType,
-} from "@bott/events";
+import { BottEvent, BottEventType } from "@bott/events";
 import type { BottUser } from "@bott/model";
 import {
   type BottService,
@@ -58,13 +54,17 @@ export const discordService: BottService = createService(
     const client = new Client({ intents: REQUIRED_INTENTS });
 
     if (!SERVICE_DISCORD_TOKEN) {
-      throw new Error("discordService: Cannot start: the `SERVICE_DISCORD_TOKEN` is not set");
+      throw new Error(
+        "discordService: Cannot start: the `SERVICE_DISCORD_TOKEN` is not set",
+      );
     }
 
     await client.login(SERVICE_DISCORD_TOKEN);
 
     if (!client.user) {
-      throw new Error("discordService: Failed to start: the `client.user` was not set");
+      throw new Error(
+        "discordService: Failed to start: the `client.user` was not set",
+      );
     }
 
     const api = new REST({ version: "10" }).setToken(SERVICE_DISCORD_TOKEN);
@@ -83,9 +83,11 @@ export const discordService: BottService = createService(
     client.on(DiscordEvents.MessageCreate, async (message) => {
       if (message.channel.type !== ChannelType.GuildText) return;
 
-      this.dispatchEvent(await messageToEvent(
-        message as Message<true>,
-      ));
+      this.dispatchEvent(
+        await messageToEvent(
+          message as Message<true>,
+        ),
+      );
     });
 
     client.on(DiscordEvents.MessageReactionAdd, async (reaction) => {
@@ -146,7 +148,9 @@ export const discordService: BottService = createService(
       if (event.user?.id !== APP_USER.id) return;
 
       const targetChannel = await client.channels.fetch(event.channel.id);
-      if (!targetChannel || targetChannel.type !== ChannelType.GuildText) return;
+      if (!targetChannel || targetChannel.type !== ChannelType.GuildText) {
+        return;
+      }
 
       // Reaction
       const content = event.detail.content as string;

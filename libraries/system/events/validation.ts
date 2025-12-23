@@ -42,7 +42,9 @@ export function validateParameters(
     const param = parameters[field.name];
 
     if (field.required && param === undefined) {
-      throw new Error(`validateParameters: Missing required parameter: ${field.name}`);
+      throw new Error(
+        `validateParameters: Missing required parameter: ${field.name}`,
+      );
     }
 
     if (param !== undefined) {
@@ -70,7 +72,9 @@ export function validateParameters(
         )
       ) {
         throw new Error(
-          `validateParameters: Parameter '${field.name}' has invalid value '${param}'. Allowed values: ${field.allowedValues.join(", ")}`,
+          `validateParameters: Parameter '${field.name}' has invalid value '${param}'. Allowed values: ${
+            field.allowedValues.join(", ")
+          }`,
         );
       }
     }

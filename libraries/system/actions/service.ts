@@ -48,8 +48,11 @@ export const actionService: BottService = createService(
 
     const handleActionCall = async (event: BottActionCallEvent) => {
       const controller = new AbortController();
-      const { id: actionCallId, name: actionCallName, parameters: actionCallParameters } =
-        event.detail;
+      const {
+        id: actionCallId,
+        name: actionCallName,
+        parameters: actionCallParameters,
+      } = event.detail;
       const actionCallLocation = event.channel;
 
       const _dispatch = (
@@ -79,14 +82,18 @@ export const actionService: BottService = createService(
 
       if (!actionCallLocation) {
         return _dispatch(BottEventType.ACTION_ERROR, {
-          error: new Error(`actionService: Can't call action ${actionCallName}: missing call location`),
+          error: new Error(
+            `actionService: Can't call action ${actionCallName}: missing call location`,
+          ),
         });
       }
 
       const action = this.settings.actions[actionCallName];
       if (!action) {
         return _dispatch(BottEventType.ACTION_ERROR, {
-          error: new Error(`actionService: Can't call action ${actionCallName}: there's no action with that name registered`),
+          error: new Error(
+            `actionService: Can't call action ${actionCallName}: there's no action with that name registered`,
+          ),
         });
       }
 

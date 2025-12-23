@@ -11,7 +11,11 @@
 
 import { type BottEvent, BottEventType } from "@bott/events";
 import { log } from "@bott/log";
-import { type BottService, type BottServiceSettings, createService } from "@bott/services";
+import {
+  type BottService,
+  type BottServiceSettings,
+  createService,
+} from "@bott/services";
 
 import { upsertEvents } from "./upsert.ts";
 

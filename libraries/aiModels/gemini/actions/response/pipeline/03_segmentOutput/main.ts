@@ -58,5 +58,4 @@ export const segmentOutput: EventPipelineProcessor = async function () {
   this.data.output = await resolveOutputEvents(this);
 
   log.debug(this.data.output);
-
 };
