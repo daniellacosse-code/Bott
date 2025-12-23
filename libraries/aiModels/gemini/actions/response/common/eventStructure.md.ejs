@@ -82,7 +82,7 @@ In a `BottEvent` of `type: "action:call"`, the `detail.name` and `detail.paramet
 
 These are the actions currently available to you:
 
-<% for (const action of Object.values(actions)) { %>
+<% for (const action of Object.values(service.settings.actions)) { %>
 ##### Action: `<%= action.name %>`
 
 <%= action.instructions %>
@@ -170,7 +170,7 @@ This metadata is separate from the core `BottEvent` data model and contains eval
 
 The `ratings` object contains scores based on these definitions:
 
-<% for (const reason of settings.reasons.input) { %>
+<% for (const reason of service.app.reasons.input) { %>
 <% for (const ratingScale of reason.ratingScales ?? []) { %>
 #### <%= ratingScale.name %>
 
@@ -185,7 +185,7 @@ Definition: <%= ratingScale.definition %>
 <% } %>
 <% } %>
 
-<% for (const reason of settings.reasons.output) { %>
+<% for (const reason of service.app.reasons.output) { %>
 <% for (const ratingScale of reason.ratingScales ?? []) { %>
 #### <%= ratingScale.name %>
 

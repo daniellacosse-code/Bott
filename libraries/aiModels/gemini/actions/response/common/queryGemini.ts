@@ -51,25 +51,19 @@ export const queryGemini = async <O>(
     );
   }
 
+  let parts: Part[] = useIdentity
+    ? [{ text: pipeline.action.service.app.identity }]
+    : [];
+
+  parts = [...parts, { text: systemPrompt }, {
+    text: ejs.render(eventStructure, pipeline.action),
+  }];
+
   const config: GenerateContentConfig = {
     abortSignal: pipeline.action.signal,
     candidateCount: 1,
     systemInstruction: {
-      parts: [
-        ...(useIdentity
-          ? [{ text: pipeline.action.service.app.identity }]
-          : []),
-        {
-          text: systemPrompt,
-        },
-        {
-          text: ejs.render(eventStructure, {
-            ...pipeline.action,
-            settings: pipeline.action.service.app,
-            actions: pipeline.action.service.settings.actions ?? {},
-          }),
-        },
-      ],
+      parts,
     },
     tools: [
       { googleSearch: {} },
@@ -161,9 +155,7 @@ export const _transformBottEventToContent = async (
 
   const parts: Part[] = [{ text: JSON.stringify(eventToSerialize) }];
   const content: Content = {
-    role: (event.user?.id === context.action.user?.id)
-      ? "model"
-      : "user",
+    role: (event.user?.id === context.action.user?.id) ? "model" : "user",
     parts,
   };
 

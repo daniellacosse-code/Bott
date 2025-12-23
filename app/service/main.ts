@@ -15,6 +15,7 @@ import {
   type BottActionOutputEvent,
   BottEventType,
   BottEvent,
+  type BottActionCallEvent,
 } from "@bott/events";
 import type {
   BottService,
@@ -43,25 +44,26 @@ const settings: BottServiceSettings = {
 }
 
 // Maps each channel ID to the ID of the in-flight response action
-const channelActionIndex = new Map<string, string>();
+const channelResponseActionIndex = new Map<string, BottActionCallEvent>();
 
 export const appService: BottService = createService(
   function () {
     const callResponseAction = (event: BottEvent) => {
       if (!event.channel) return;
 
-      const actionId = channelActionIndex.get(event.channel.id);
+      const currentResponse = channelResponseActionIndex.get(event.channel.id);
 
-      if (actionId) {
+      if (currentResponse) {
         this.dispatchEvent(
           new BottEvent(
             BottEventType.ACTION_ABORT,
             {
               detail: {
-                id: actionId,
+                id: currentResponse.detail.id,
               },
               user: APP_USER,
               channel: event.channel,
+              parent: currentResponse,
             },
           ),
         );
@@ -69,21 +71,21 @@ export const appService: BottService = createService(
 
       const id = crypto.randomUUID();
 
-      channelActionIndex.set(event.channel.id, id);
-
-      this.dispatchEvent(
-        new BottEvent(
-          BottEventType.ACTION_CALL,
-          {
-            detail: {
-              id,
-              name: RESPONSE_ACTION_NAME,
-            },
-            user: APP_USER,
-            channel: event.channel,
+      const responseCall = new BottEvent(
+        BottEventType.ACTION_CALL,
+        {
+          detail: {
+            id,
+            name: RESPONSE_ACTION_NAME,
           },
-        ),
-      );
+          user: APP_USER,
+          channel: event.channel,
+        },
+      ) as BottActionCallEvent;
+
+      channelResponseActionIndex.set(event.channel.id, responseCall);
+
+      this.dispatchEvent(responseCall);
     };
 
     const respondIfNotSelf = (event: BottEvent) => {
@@ -119,26 +121,26 @@ export const appService: BottService = createService(
       },
     );
 
-    const cleanupChannelActionIndex = (event: BottEvent) => {
+    const cleanupChannelResponseActionIndex = (event: BottEvent) => {
       if (!event.channel) return;
 
-      const actionId = channelActionIndex.get(event.channel.id);
+      const responseCall = channelResponseActionIndex.get(event.channel.id);
 
-      if (actionId === event.detail.id) {
-        channelActionIndex.delete(event.channel.id);
+      if (responseCall?.detail.id === event.detail.id) {
+        channelResponseActionIndex.delete(event.channel.id);
       }
     };
 
     this.addEventListener(
       BottEventType.ACTION_COMPLETE,
-      cleanupChannelActionIndex,
+      cleanupChannelResponseActionIndex,
     );
 
     this.addEventListener(
       BottEventType.ACTION_ERROR,
       (event: BottActionErrorEvent) => {
         respondIfNotSelf(event);
-        cleanupChannelActionIndex(event);
+        cleanupChannelResponseActionIndex(event);
       },
     );
   },
