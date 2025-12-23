@@ -1,25 +1,31 @@
 # Chat Spaces
 
-Chat spaces are integrations that connect Bott to external chat platforms like Discord, Slack, or other messaging services.
+Chat spaces are integrations that connect Bott to external chat platforms like
+Discord, Slack, or other messaging services.
 
 ## Requirements
 
-All chat space integrations must adhere to the following standards to ensure proper operation with the Bott system.
+All chat space integrations must adhere to the following standards to ensure
+proper operation with the Bott system.
 
 ### User Mention Format
 
-When converting messages from external platforms to Bott events, user mentions must be formatted as:
+When converting messages from external platforms to Bott events, user mentions
+must be formatted as:
 
 ```
 @<personaId>
 ```
 
-Where `personaId` is the unique identifier for the user's persona in the specific space.
+Where `personaId` is the unique identifier for the user's persona in the
+specific space.
 
 #### Examples
 
-- Discord mention `<@123456789>` should become `@<123456789>` in the BottEvent content
-- Slack mention `<@U12345678>` should become `@<U12345678>` in the BottEvent content
+- Discord mention `<@123456789>` should become `@<123456789>` in the BottEvent
+  content
+- Slack mention `<@U12345678>` should become `@<U12345678>` in the BottEvent
+  content
 
 #### Persona Management
 
@@ -29,7 +35,8 @@ Chat space integrations should:
 2. Store the persona with:
    - `id`: The platform-specific user ID
    - `handle`: The user's handle/username (e.g., "john_doe")
-   - `displayName`: The user's display name if different from handle (e.g., "John Doe")
+   - `displayName`: The user's display name if different from handle (e.g.,
+     "John Doe")
    - `space`: The space the persona belongs to
    - `user`: Optional reference to the canonical Bott user if known
 
@@ -45,7 +52,9 @@ The system automatically transforms mentions:
    - Converts LLM output back to platform format
    - Example: `@john_doe` becomes `@<123456789>`
 
-This transformation happens automatically in the pipeline, so chat spaces only need to ensure incoming mentions use the `@<personaId>` format and personas are properly stored.
+This transformation happens automatically in the pipeline, so chat spaces only
+need to ensure incoming mentions use the `@<personaId>` format and personas are
+properly stored.
 
 ## Integration Checklist
 
@@ -55,4 +64,5 @@ When creating a new chat space integration:
 - [ ] Create/update personas using `upsertPersona()` for all users
 - [ ] Include `handle` and optionally `displayName` in personas
 - [ ] Ensure personas are associated with the correct space
-- [ ] Handle outgoing mentions in platform-specific format (the system provides `@<personaId>`)
+- [ ] Handle outgoing mentions in platform-specific format (the system provides
+      `@<personaId>`)

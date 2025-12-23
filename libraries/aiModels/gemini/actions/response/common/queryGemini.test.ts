@@ -11,7 +11,7 @@
 
 import { BottEvent, BottEventType } from "@bott/events";
 import { BottServicesManager } from "@bott/services";
-import { upsertPersona, eventStorageService } from "@bott/storage";
+import { eventStorageService, upsertPersona } from "@bott/storage";
 import { assertEquals } from "@std/assert/equals";
 import { createMockContext, createMockUser } from "../pipeline/e2e.ts";
 import {
