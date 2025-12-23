@@ -1,9 +1,9 @@
-# Gemini Event Pipeline
+# Gemini Response Pipeline
 
 This directory contains the logic for generating
-[`BottEvent`](../../../model/types/events.ts)s using Google's Gemini models. The
-core of this functionality is exposed via the [`generateEvents`](./generate.ts)
-function.
+[`BottEvent`](../../../../../libraries/system/events/types.ts)s using Google's
+Gemini models. The core of this functionality is exposed via the
+[`generateEvents`](./generate.ts) function.
 
 ## Input Curation
 
@@ -11,10 +11,11 @@ Before invoking the AI model, the `generateEvents` function curates the input
 history to ensure it fits within the model's context window and cost
 constraints.
 
-- **Time Limit**: Events older than `INPUT_EVENT_TIME_LIMIT_MS` are discarded.
+- **Time Limit**: Events older than `ACTION_RESPONSE_HISTORY_SIZE_MS` are
+  discarded.
 - **Token Limit**: Recent events are prioritized. File attachments (images,
   audio, video) are included only if they fit within the
-  `INPUT_FILE_TOKEN_LIMIT`.
+  `ACTION_RESPONSE_FILE_TOKEN_LIMIT`.
 - **File Counts**: Limits are enforced on the number of audio and video files to
   prevent overloading the model.
 
@@ -77,8 +78,7 @@ Each candidate output event is evaluated for quality.
 
 - **Assessment**: A separate "Evaluator" model (or a lightweight check) scores
   the response (e.g., for relevance, safety, personality).
-- **Threshold**: Responses scoring below `CONFIG_ASSESSMENT_SCORE_THRESHOLD` are
-  discarded.
+- **Threshold**: Responses scoring below the configured threshold are discarded.
 
 ### 5. Patch Output ([`05_patchOutput`](./pipeline/05_patchOutput))
 
