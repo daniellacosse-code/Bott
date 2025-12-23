@@ -23,6 +23,7 @@ import {
   type BottEventAttachment,
   BottEventType,
 } from "@bott/events";
+import type { BottSpace } from "@bott/model";
 import { commit, getEvents, sql } from "@bott/storage";
 import type { EventPipelineContext } from "../pipeline/types.ts";
 
@@ -111,7 +112,7 @@ export const prepareInputEvents = (events: BottEvent[]): BottEvent[] => {
  */
 export const _transformHandlesToMentions = async (
   content: string,
-  spaceId: string,
+  space: BottSpace,
 ): Promise<string> => {
   // Match @handle patterns (word characters, underscores, and hyphens)
   const handlePattern = /@([\w-]+)/g;
@@ -130,7 +131,7 @@ export const _transformHandlesToMentions = async (
     sql`
       select id, handle
       from personas
-      where space_id = ${spaceId}
+      where space_id = ${space.id}
         and handle in (${handles})
     `,
   );
@@ -216,7 +217,7 @@ export const resolveOutputEvents = async (
     ) {
       event.detail.content = await _transformHandlesToMentions(
         event.detail.content,
-        event.channel.space.id,
+        event.channel.space,
       );
     }
 

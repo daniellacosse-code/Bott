@@ -118,11 +118,12 @@ export const queryGemini = async <O>(
  * @internal Exported for testing purposes only
  */
 export const _transformMentionsToHandles = async (
-  content: string,
   event: BottEvent,
 ): Promise<string> => {
-  if (!event.channel?.space) {
-    return content;
+  const content = event.detail?.content;
+  
+  if (!content || typeof content !== "string" || !event.channel?.space) {
+    return content || "";
   }
 
   // Match @<personaId> patterns - restricting to alphanumeric, hyphens, and underscores
@@ -186,8 +187,9 @@ export const _transformBottEventToContent = async (
   delete _detail?.shouldForwardOutput;
 
   // Transform mentions from @<personaId> to @handle for better LLM processing
-  if (_detail?.content && typeof _detail.content === "string") {
-    _detail.content = await _transformMentionsToHandles(_detail.content, event);
+  const transformedContent = await _transformMentionsToHandles(event);
+  if (transformedContent && _detail) {
+    _detail = { ..._detail, content: transformedContent };
   }
 
   const eventToSerialize = {

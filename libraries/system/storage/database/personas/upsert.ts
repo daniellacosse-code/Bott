@@ -15,12 +15,49 @@ import { commit } from "../commit.ts";
 import { sql } from "../sql.ts";
 
 export const upsertPersona = (persona: BottPersona): void => {
+  // Upsert space if provided
+  if (persona.space) {
+    const spaceResult = commit(
+      sql`
+        insert into spaces (id, name, description)
+        values (${persona.space.id}, ${persona.space.name}, ${persona.space.description ?? null})
+        on conflict(id) do update set
+          name = excluded.name,
+          description = excluded.description
+      `,
+    );
+
+    if ("error" in spaceResult) {
+      throw spaceResult.error;
+    }
+  }
+
+  // Upsert user if provided (use persona displayName as canonical name if user.name not provided)
+  if (persona.user || persona.displayName) {
+    const userId = persona.user?.id ?? persona.id;
+    const userName = persona.user?.name ?? persona.displayName ?? persona.handle;
+
+    const userResult = commit(
+      sql`
+        insert into users (id, name)
+        values (${userId}, ${userName})
+        on conflict(id) do update set
+          name = excluded.name
+      `,
+    );
+
+    if ("error" in userResult) {
+      throw userResult.error;
+    }
+  }
+
+  // Upsert persona
   const result = commit(
     sql`
       insert into personas (id, user_id, display_name, handle, space_id)
       values (
         ${persona.id},
-        ${persona.user?.id ?? null},
+        ${persona.user?.id ?? persona.id},
         ${persona.displayName ?? null},
         ${persona.handle},
         ${persona.space.id}

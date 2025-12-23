@@ -38,7 +38,6 @@ export interface BottChannel {
 export interface BottUser {
   id: string;
   name?: string;
-  url?: string;
   personas?: Record<string, BottPersona>;
 }
 

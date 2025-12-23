@@ -126,10 +126,7 @@ Deno.test("_transformMentionsToHandles - transforms persona mentions", async () 
     detail: { content: "Hello @<persona1>, can you help @<persona2>?" },
   });
 
-  const result = await _transformMentionsToHandles(
-    "Hello @<persona1>, can you help @<persona2>?",
-    event,
-  );
+  const result = await _transformMentionsToHandles(event);
 
   assertEquals(result, "Hello @john_doe, can you help @alice_smith?");
 });
@@ -145,7 +142,7 @@ Deno.test("_transformMentionsToHandles - no mentions", async () => {
     detail: { content: "Hello world" },
   });
 
-  const result = await _transformMentionsToHandles("Hello world", event);
+  const result = await _transformMentionsToHandles(event);
 
   assertEquals(result, "Hello world");
 });
@@ -171,7 +168,7 @@ Deno.test("_transformHandlesToMentions - transforms handles to persona IDs", asy
 
   const result = await _transformHandlesToMentions(
     "Hey @bob_jones and @carol_white, how are you?",
-    space.id,
+    space,
   );
 
   assertEquals(
@@ -184,9 +181,11 @@ Deno.test("_transformHandlesToMentions - no handles", async () => {
   const _tempDir = Deno.makeTempDirSync();
   createTestManager();
 
+  const space = { id: "space789", name: "Test Space 3" };
+
   const result = await _transformHandlesToMentions(
     "Hello world",
-    "space789",
+    space,
   );
 
   assertEquals(result, "Hello world");
@@ -206,7 +205,7 @@ Deno.test("_transformHandlesToMentions - non-existent handles unchanged", async 
 
   const result = await _transformHandlesToMentions(
     "Hello @existing_user and @nonexistent_user",
-    space.id,
+    space,
   );
 
   assertEquals(result, "Hello @<persona5> and @nonexistent_user");
@@ -233,10 +232,7 @@ Deno.test("_transformMentionsToHandles - multiple occurrences", async () => {
     },
   });
 
-  const result = await _transformMentionsToHandles(
-    "Hey @<persona6>, I need @<persona6> to help!",
-    event,
-  );
+  const result = await _transformMentionsToHandles(event);
 
   assertEquals(result, "Hey @repeat_user, I need @repeat_user to help!");
 });
@@ -255,7 +251,7 @@ Deno.test("_transformHandlesToMentions - multiple occurrences", async () => {
 
   const result = await _transformHandlesToMentions(
     "Call @multi_mention and @multi_mention again!",
-    space.id,
+    space,
   );
 
   assertEquals(result, "Call @<persona7> and @<persona7> again!");

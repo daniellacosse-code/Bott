@@ -22,26 +22,9 @@ specific space.
 
 #### Examples
 
-- Discord mention `<@123456789>` should become `@<123456789>` in the BottEvent
-  content
-- Slack mention `<@U12345678>` should become `@<U12345678>` in the BottEvent
-  content
-
-#### Persona Management
-
-Chat space integrations should:
-
-1. Create or update personas for users when they interact in a space
-2. Store the persona with:
-   - `id`: The platform-specific user ID
-   - `handle`: The user's handle/username (e.g., "john_doe"). Must be unique per
-     space. Should contain only alphanumeric characters, underscores, and
-     hyphens. Platform-specific validations may apply stricter rules (e.g., no
-     leading/trailing hyphens).
-   - `displayName`: The user's display name if different from handle (e.g.,
-     "John Doe")
-   - `space`: The space the persona belongs to
-   - `user`: Optional reference to the canonical Bott user if known
+If a platform formats mentions as `{X}`, convert to `@<personaId>`:
+- Platform: `<@123456789>` → Bott: `@<123456789>`
+- Platform: `<@U12345678>` → Bott: `@<U12345678>`
 
 #### How It Works
 
@@ -64,8 +47,21 @@ properly stored.
 When creating a new chat space integration:
 
 - [ ] Convert platform mentions to `@<personaId>` format
-- [ ] Create/update personas using `upsertPersona()` for all users
-- [ ] Include `handle` and optionally `displayName` in personas
+- [ ] Create/update personas using `upsertPersona()` for all users when they
+      interact in a space
+- [ ] Store persona with:
+  - `id`: The platform-specific user ID
+  - `handle`: The user's handle/username (e.g., "john_doe"). Must be unique per
+    space. Should contain only alphanumeric characters, underscores, and
+    hyphens. Platform-specific validations may apply stricter rules (e.g., no
+    leading/trailing hyphens).
+  - `displayName`: The user's display name if different from handle (e.g.,
+    "John Doe")
+  - `space`: The space the persona belongs to
+  - `user`: Optional reference to the canonical Bott user if known
 - [ ] Ensure personas are associated with the correct space
 - [ ] Handle outgoing mentions in platform-specific format (the system provides
       `@<personaId>`)
+
+**Note**: The Discord integration does not yet implement persona management.
+This is planned for a future update.
