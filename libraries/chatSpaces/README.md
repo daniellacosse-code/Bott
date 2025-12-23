@@ -62,6 +62,3 @@ When creating a new chat space integration:
 - [ ] Ensure personas are associated with the correct space
 - [ ] Handle outgoing mentions in platform-specific format (the system provides
       `@<personaId>`)
-
-**Note**: The Discord integration does not yet implement persona management.
-This is planned for a future update.

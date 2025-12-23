@@ -13,6 +13,7 @@ import type { BottPersona } from "@bott/model";
 
 import { commit } from "../commit.ts";
 import { sql } from "../sql.ts";
+import { getAddUsersSql } from "../common/users.ts";
 
 export const upsertPersona = (persona: BottPersona): void => {
   // Upsert space if provided
@@ -32,23 +33,25 @@ export const upsertPersona = (persona: BottPersona): void => {
     }
   }
 
-  // Upsert user if provided (use persona displayName as canonical name if user.name not provided)
+  // Upsert user if provided (or create a new one with random UUID)
   let userId: string | null = null;
   if (persona.user) {
     userId = persona.user.id;
-    const userName = persona.user.name ?? persona.displayName ?? persona.handle;
+  } else if (!persona.user) {
+    // Create a new user with a random UUID
+    userId = crypto.randomUUID();
+  }
 
-    const userResult = commit(
-      sql`
-        insert into users (id, name)
-        values (${userId}, ${userName})
-        on conflict(id) do update set
-          name = excluded.name
-      `,
-    );
-
-    if ("error" in userResult) {
-      throw userResult.error;
+  if (userId) {
+    const userName = persona.user?.name ?? persona.displayName ?? persona.handle;
+    
+    const userSql = getAddUsersSql({ id: userId, name: userName });
+    if (userSql) {
+      const userResult = commit(userSql);
+      
+      if ("error" in userResult) {
+        throw userResult.error;
+      }
     }
   }
 

@@ -11,7 +11,7 @@
 
 import { BottEvent, BottEventType } from "@bott/events";
 
-import { getEvents, prepareAttachmentFromUrl } from "@bott/storage";
+import { getEvents, prepareAttachmentFromUrl, upsertPersona } from "@bott/storage";
 import type { Message } from "discord.js";
 
 import { getMarkdownLinks } from "./markdown.ts";
@@ -41,11 +41,28 @@ export const messageToEvent = async (
     }
   }
 
+  // Upsert persona for the message author
+  if (message.author) {
+    upsertPersona({
+      id: message.author.id,
+      handle: message.author.username,
+      displayName: message.author.displayName ?? message.author.username,
+      space: {
+        id: message.guild.id,
+        name: message.guild.name,
+      },
+    });
+  }
+
+  // Transform Discord mentions from <@userId> to @<userId>
+  let content = (message.content || message.embeds.at(0)?.description) ?? "";
+  content = content.replace(/<@!?(\d+)>/g, "@<$1>");
+
   const event = new BottEvent(type, {
     id: message.id,
     createdAt: new Date(message.createdTimestamp),
     detail: {
-      content: (message.content || message.embeds.at(0)?.description) ?? "",
+      content,
     },
     channel: {
       id: message.channel.id,

@@ -14,6 +14,7 @@ import type { BottChannel, BottSpace, BottUser } from "@bott/model";
 
 import { commit, type TransactionResults } from "../commit.ts";
 import { sql } from "../sql.ts";
+import { getAddUsersSql } from "../common/users.ts";
 
 const getAddChannelsSql = (
   ...channels: BottChannel[]
@@ -124,21 +125,6 @@ const getAddSpacesSql = (...spaces: BottSpace[]) => {
     do update set
       name = excluded.name,
       description = excluded.description
-  `;
-};
-
-const getAddUsersSql = (...users: BottUser[]) => {
-  if (!users.length) {
-    return;
-  }
-
-  const values = users.map((user) => sql`(${user.id}, ${user.name})`);
-
-  return sql`
-    insert into users (id, name)
-    values ${values}
-    on conflict(id) do update set
-      name = excluded.name
   `;
 };
 

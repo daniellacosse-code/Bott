@@ -26,11 +26,21 @@ export const getPersona = async (
         p.handle as p_handle,
         p.user_id as p_user_id,
         u.id as u_id,
-        u.name as u_name
+        u.name as u_name,
+        op.id as op_id,
+        op.display_name as op_display_name,
+        op.handle as op_handle,
+        op.space_id as op_space_id,
+        s.name as s_name,
+        s.description as s_description
       from
         personas p
       left join
         users u on p.user_id = u.id
+      left join
+        personas op on op.user_id = p.user_id and op.id != p.id
+      left join
+        spaces s on op.space_id = s.id
       where
         p.id = ${personaId}
         and p.space_id = ${space.id}
@@ -43,43 +53,21 @@ export const getPersona = async (
 
   const row = result.reads[0];
 
-  // Get other personas for this user (avoid circular references)
+  // Build personas map from joined results (avoid circular references)
   const personas: Record<string, BottPersona> = {};
-
-  if (row.p_user_id) {
-    const otherPersonasResult = commit(
-      sql`
-        select
-          p.id as p_id,
-          p.display_name as p_display_name,
-          p.handle as p_handle,
-          p.space_id as p_space_id,
-          s.name as s_name,
-          s.description as s_description
-        from
-          personas p
-        left join
-          spaces s on p.space_id = s.id
-        where
-          p.user_id = ${row.p_user_id}
-          and p.id != ${personaId}
-      `,
-    );
-
-    if (!("error" in otherPersonasResult)) {
-      for (const otherRow of otherPersonasResult.reads) {
-        personas[otherRow.p_id] = {
-          id: otherRow.p_id,
-          displayName: otherRow.p_display_name,
-          handle: otherRow.p_handle,
-          space: {
-            id: otherRow.p_space_id,
-            name: otherRow.s_name,
-            description: otherRow.s_description,
-          },
-          // Don't include user to avoid circular reference
-        };
-      }
+  for (const personaRow of result.reads) {
+    if (personaRow.op_id) {
+      personas[personaRow.op_id] = {
+        id: personaRow.op_id,
+        displayName: personaRow.op_display_name,
+        handle: personaRow.op_handle,
+        space: {
+          id: personaRow.op_space_id,
+          name: personaRow.s_name,
+          description: personaRow.s_description,
+        },
+        // Don't include user to avoid circular reference
+      };
     }
   }
 
