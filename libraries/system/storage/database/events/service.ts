@@ -40,7 +40,7 @@ export const eventStorageService: BottService = createService(
 
       if (event.type === BottEventType.ACTION_ERROR) {
         log.error(
-          "eventStorageService: Action error recieved:",
+          "eventStorageService: Action error received:",
           event.id,
           event.detail.error,
         );

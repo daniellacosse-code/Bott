@@ -31,8 +31,7 @@ This is the "brain" of Bott's decision making.
 - **[`BottRatingScale`](../app/settings/ratingScales.ts)**: A 1-5 scale used to
   evaluate an event (e.g., `Urgency`, `Humor`, `Safety`).
 - **[`BottReason`](../app/settings/reasons.ts)**: A rule that combines multiple
-  rating scales to determine if Bott should action (e.g., "Reply if Urgency >
-  4").
+  rating scales to determine if Bott should act (e.g., "Reply if Urgency > 4").
 
 ## Settings
 
