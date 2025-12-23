@@ -1,4 +1,4 @@
-<img src="./gallery/avatar.jpg" width="128" />
+<img src="./docs/gallery/avatar.jpg" width="128" />
 
 # `@Bott`
 
