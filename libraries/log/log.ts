@@ -51,7 +51,9 @@ export const log: Logger = {
   debug(...args: unknown[]): void {
     if (_loggerTopics.includes("debug")) {
       getLogger().debug(
-        `${new Date().toLocaleString()} ${budgetedStringify(args, LOG_CHARACTER_LIMIT)}`,
+        `${new Date().toLocaleString()} ${
+          budgetedStringify(args, LOG_CHARACTER_LIMIT)
+        }`,
       );
     }
   },
@@ -59,7 +61,9 @@ export const log: Logger = {
   info(...args: unknown[]): void {
     if (_loggerTopics.includes("info")) {
       getLogger().info(
-        `${new Date().toLocaleString()} ${budgetedStringify(args, LOG_CHARACTER_LIMIT)}`,
+        `${new Date().toLocaleString()} ${
+          budgetedStringify(args, LOG_CHARACTER_LIMIT)
+        }`,
       );
     }
   },
@@ -67,7 +71,9 @@ export const log: Logger = {
   warn(...args: unknown[]): void {
     if (_loggerTopics.includes("warn")) {
       getLogger().warn(
-        `${new Date().toLocaleString()} ${budgetedStringify(args, LOG_CHARACTER_LIMIT)}`,
+        `${new Date().toLocaleString()} ${
+          budgetedStringify(args, LOG_CHARACTER_LIMIT)
+        }`,
       );
     }
   },
@@ -75,7 +81,9 @@ export const log: Logger = {
   error(...args: unknown[]): void {
     if (_loggerTopics.includes("error")) {
       getLogger().error(
-        `${new Date().toLocaleString()} ${budgetedStringify(args, LOG_CHARACTER_LIMIT)}`,
+        `${new Date().toLocaleString()} ${
+          budgetedStringify(args, LOG_CHARACTER_LIMIT)
+        }`,
       );
     }
   },

@@ -33,4 +33,3 @@ export async function updateEnv(
 
   await Deno.writeTextFile(path, stringify(data));
 }
-

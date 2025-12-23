@@ -173,7 +173,7 @@ const getActionParametersSchema = (
         : undefined,
       description: parameter.type === "file"
         ? parameter.description +
-        " IMPORTANT: This is a 'file' parameter. You must send an attachment ID as the string. The system will automatically resolve the attachment by its ID."
+          " IMPORTANT: This is a 'file' parameter. You must send an attachment ID as the string. The system will automatically resolve the attachment by its ID."
         : parameter.description,
     };
 

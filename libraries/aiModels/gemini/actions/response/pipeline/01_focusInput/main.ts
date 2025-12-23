@@ -106,10 +106,13 @@ export const focusInput: EventPipelineProcessor = async function () {
       );
 
       const ratings: Record<string, number> = {};
-      for (const ratingScale in scoresWithRationale) {
-        const { rating } = scoresWithRationale[ratingScale];
 
-        ratings[ratingScale] = Number(rating);
+      if (scoresWithRationale) {
+        for (const ratingScale in scoresWithRationale) {
+          const { rating } = scoresWithRationale[ratingScale];
+
+          ratings[ratingScale] = Number(rating);
+        }
       }
 
       const triggeredFocusReasons = Object.values(inputReasons)

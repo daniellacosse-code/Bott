@@ -9,7 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { ACTION_RESPONSE_DEBOUNCE_MS, APP_USER, ACTION_RESPONSE_NAME } from "@bott/constants";
+import {
+  ACTION_RESPONSE_DEBOUNCE_MS,
+  ACTION_RESPONSE_NAME,
+  APP_USER,
+} from "@bott/constants";
 import {
   type BottActionCallEvent,
   type BottActionErrorEvent,

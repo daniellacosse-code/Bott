@@ -87,7 +87,8 @@ export const queryGemini = async <O>(
     const geminiError = error as Error;
 
     // Gemini errors are often empty...
-    geminiError.message ||= "queryGemini: Error generating content. Gemini provided no error message: you are likely unauthenticated.";
+    geminiError.message ||=
+      "queryGemini: Error generating content. Gemini provided no error message: you are likely unauthenticated.";
 
     throw geminiError;
   }

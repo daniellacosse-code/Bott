@@ -97,10 +97,12 @@ export const filterOutput: EventPipelineProcessor = async function () {
       );
 
       const ratings: Record<string, number> = {};
-      for (const ratingScale in scoresWithRationale) {
-        const { rating } = scoresWithRationale[ratingScale];
+      if (scoresWithRationale) {
+        for (const ratingScale in scoresWithRationale) {
+          const { rating } = scoresWithRationale[ratingScale];
 
-        ratings[ratingScale] = Number(rating);
+          ratings[ratingScale] = Number(rating);
+        }
       }
 
       const triggeredOutputReasons = Object.values(outputReasons)
