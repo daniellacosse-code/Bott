@@ -31,7 +31,6 @@ Deno.test("applyParameterDefaults", () => {
 
   const result = applyParameterDefaults(schema, parameters);
 
-  assertEquals(result.length, 4);
   assertEquals(result.p1, "value1");
   assertEquals(result.p2, 42);
   assertEquals(result.p3, true);

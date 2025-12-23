@@ -15,10 +15,10 @@ import { log } from "@bott/log";
 import { BottServicesManager } from "@bott/services";
 import { assertEquals, assertExists } from "@std/assert";
 
-import { getEvents } from "./data/events/get.ts";
-import { eventStorageService } from "./data/events/service.ts";
-import { upsertEvents } from "./data/events/upsert.ts";
-import { prepareHtmlAsMarkdown } from "./prepare/html.ts";
+import { prepareHtmlAsMarkdown } from "./attachment/html.ts";
+import { getEvents } from "./database/events/get.ts";
+import { eventStorageService } from "./database/events/service.ts";
+import { upsertEvents } from "./database/events/upsert.ts";
 
 const createTestManager = () => {
   const manager = new BottServicesManager({

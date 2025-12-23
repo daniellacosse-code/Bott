@@ -135,8 +135,8 @@ export const _transformBottEventToContent = async (
   const metadata = context.evaluationState.get(event);
 
   // The system handles these, not Gemini
-  delete _detail.shouldInterpretOutput;
-  delete _detail.shouldForwardOutput;
+  delete _detail?.shouldInterpretOutput;
+  delete _detail?.shouldForwardOutput;
 
   const eventToSerialize = {
     ...rest,
