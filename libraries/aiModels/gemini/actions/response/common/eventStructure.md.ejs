@@ -43,6 +43,10 @@ Then, there are a couple additional properties whose presence and shape depend o
 | `parent` | `object` | A pointer to a relevant parent event.            |
 | `detail` | `object` | An object containing the application data for the event. |
 
+### Mentioning Users
+
+In message content, you can mention users using the `@handle` format (e.g., `@john_doe`). The system will automatically convert these to the correct platform-specific format when sending messages. User handles are derived from their display names/usernames in the chat space.
+
 Let's break down each `BottEvent` `type` you can send and how their type-based properties are structured:
 
 ### `message`
@@ -216,7 +220,7 @@ Definition: <%= ratingScale.definition %>
     "name": "John Doe"
   },
   "detail": {
-    "content": "Hello, world!"
+    "content": "Hello @alice_smith, how are you?"
   },
   "_pipelineEvaluationMetadata": {
     "ratings": {

@@ -17,6 +17,7 @@ import type {
   Part,
   Schema,
 } from "@google/genai";
+import { getPersona } from "@bott/storage";
 import { encodeBase64 } from "@std/encoding/base64";
 import ejs from "ejs";
 import gemini from "../../../client.ts";
@@ -111,6 +112,40 @@ export const queryGemini = async <O>(
   }
 };
 
+/**
+ * Transforms persona mentions from @<personaId> to @handle format for better LLM processing.
+ * @internal Exported for testing purposes only
+ */
+export const _transformMentionsToHandles = async (
+  content: string,
+  event: BottEvent,
+): Promise<string> => {
+  if (!event.channel?.space) {
+    return content;
+  }
+
+  // Match @<personaId> patterns
+  const mentionPattern = /@<([^>]+)>/g;
+  const matches = [...content.matchAll(mentionPattern)];
+
+  let transformedContent = content;
+
+  for (const match of matches) {
+    const personaId = match[1];
+    const persona = await getPersona(personaId, event.channel.space);
+
+    if (persona) {
+      // Replace @<personaId> with @handle
+      transformedContent = transformedContent.replace(
+        match[0],
+        `@${persona.handle}`,
+      );
+    }
+  }
+
+  return transformedContent;
+};
+
 export const _transformBottEventToContent = async (
   event: BottEvent,
   context: EventPipelineContext,
@@ -147,6 +182,11 @@ export const _transformBottEventToContent = async (
   // The system handles these, not Gemini
   delete _detail?.shouldInterpretOutput;
   delete _detail?.shouldForwardOutput;
+
+  // Transform mentions from @<personaId> to @handle for better LLM processing
+  if (_detail?.content && typeof _detail.content === "string") {
+    _detail.content = await _transformMentionsToHandles(_detail.content, event);
+  }
 
   const eventToSerialize = {
     ...rest,

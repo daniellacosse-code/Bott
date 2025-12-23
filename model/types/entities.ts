@@ -37,6 +37,19 @@ export interface BottChannel {
  */
 export interface BottUser {
   id: string;
-  name: string;
+  name?: string;
   url?: string;
+  personas?: Record<string, BottPersona>;
+}
+
+/**
+ * Defines the structure for a "Persona" in Bott.
+ * A Persona represents a user's identity within a specific space.
+ */
+export interface BottPersona {
+  id: string;
+  user?: BottUser;
+  displayName?: string;
+  handle: string;
+  space: BottSpace;
 }

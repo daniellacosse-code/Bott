@@ -25,7 +25,17 @@ create table if not exists channels (
 
 create table if not exists users (
   id varchar(36) primary key not null,
-  name text not null
+  name text
+);
+
+create table if not exists personas (
+  id varchar(36) primary key not null,
+  user_id varchar(36),
+  display_name text,
+  handle text not null,
+  space_id varchar(36) not null,
+  foreign key(user_id) references users(id),
+  foreign key(space_id) references spaces(id)
 );
 
 create table if not exists events (

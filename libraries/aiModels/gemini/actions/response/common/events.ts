@@ -23,7 +23,7 @@ import {
   type BottEventAttachment,
   BottEventType,
 } from "@bott/events";
-import { getEvents } from "@bott/storage";
+import { commit, getEvents, sql } from "@bott/storage";
 import type { EventPipelineContext } from "../pipeline/types.ts";
 
 export const prepareInputEvents = (events: BottEvent[]): BottEvent[] => {
@@ -97,6 +97,63 @@ export const prepareInputEvents = (events: BottEvent[]): BottEvent[] => {
   return preparedInput;
 };
 
+/**
+ * Transforms persona mentions from @handle back to @<personaId> format.
+ * This is done by querying the database for personas matching the handle in the given space.
+ * @internal Exported for testing purposes only
+ */
+export const _transformHandlesToMentions = async (
+  content: string,
+  spaceId: string,
+): Promise<string> => {
+  // Match @handle patterns (word characters, underscores, and hyphens)
+  const handlePattern = /@([\w-]+)/g;
+  const matches = [...content.matchAll(handlePattern)];
+
+  if (matches.length === 0) {
+    return content;
+  }
+
+  // Extract unique handles
+  const handles = [...new Set(matches.map((match) => match[1]))];
+
+  // Query database for all matching personas
+  const result = commit(
+    sql`
+      select id, handle
+      from personas
+      where space_id = ${spaceId}
+        and handle in (${handles})
+    `,
+  );
+
+  if ("error" in result) {
+    throw result.error;
+  }
+
+  // Build a map of handle -> personaId
+  const handleToIdMap = new Map<string, string>();
+  for (const row of result.reads) {
+    handleToIdMap.set(row.handle, row.id);
+  }
+
+  // Replace @handle with @<personaId>
+  let transformedContent = content;
+  for (const match of matches) {
+    const handle = match[1];
+    const personaId = handleToIdMap.get(handle);
+
+    if (personaId) {
+      transformedContent = transformedContent.replace(
+        match[0],
+        `@<${personaId}>`,
+      );
+    }
+  }
+
+  return transformedContent;
+};
+
 export const resolveOutputEvents = async (
   context: EventPipelineContext,
 ): Promise<BottEvent[]> => {
@@ -140,6 +197,18 @@ export const resolveOutputEvents = async (
             attachment?.compressed?.file ?? attachment?.raw?.file;
         }
       }
+    }
+
+    // Transform mentions from @handle back to @<personaId>
+    if (
+      event.detail?.content &&
+      typeof event.detail.content === "string" &&
+      event.channel?.space
+    ) {
+      event.detail.content = await _transformHandlesToMentions(
+        event.detail.content,
+        event.channel.space.id,
+      );
     }
 
     resolvedEvents.push(event);

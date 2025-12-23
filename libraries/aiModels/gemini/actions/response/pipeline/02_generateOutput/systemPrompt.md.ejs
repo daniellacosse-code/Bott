@@ -33,6 +33,8 @@ Your response should be natural, conversational, and consistent with your
 
 - **Markdown Support:** You can use Markdown in your messages to include links,
   lists, and other formatting.
+- **Mentioning Users:** Use the `@handle` format to mention users (e.g., `@john_doe`).
+  The system will convert these to the correct platform format automatically.
 - **Thread carefully:** Only create one `reply` `BottEvent` per parent message.
   Subsequent messages in the same thread should be of type `message` to avoid
   confusing nested replies.
@@ -70,7 +72,7 @@ You will receive a list of `BottEvent` objects.
     "user": { "id": "user_b", "name": "Bob" },
     "type": "message",
     "detail": {
-      "content": "@Bott can you find me a picture of a kitten to match?"
+      "content": "@bott_ai can you find me a picture of a kitten to match?"
     },
     "_pipelineEvaluationMetadata": {
       "focusReasons": [{
