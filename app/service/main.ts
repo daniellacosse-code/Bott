@@ -18,8 +18,9 @@ import {
   BottEventType,
 } from "@bott/events";
 import type { BottService, BottServiceSettings } from "@bott/services";
-
 import { createService } from "@bott/services";
+
+import { debounce } from "@std/async";
 
 import { actions } from "./actions.ts";
 
@@ -40,15 +41,21 @@ const settings: BottServiceSettings = {
   actions,
 };
 
-// Maps each channel ID to the ID of the in-flight response action
-const channelResponseActionIndex = new Map<string, BottActionCallEvent>();
+// Maps each channel ID to its state
+type ChannelResponseState = {
+  currentResponse?: BottActionCallEvent;
+  debouncedCaller?: (event: BottEvent) => void;
+};
+
+const channelResponseStateIndex = new Map<string, ChannelResponseState>();
 
 export const appService: BottService = createService(
   function () {
     const callResponseAction = (event: BottEvent) => {
       if (!event.channel) return;
 
-      const currentResponse = channelResponseActionIndex.get(event.channel.id);
+      const { currentResponse, debouncedCaller } =
+        channelResponseStateIndex.get(event.channel.id) ?? {};
 
       if (currentResponse) {
         this.dispatchEvent(
@@ -66,13 +73,10 @@ export const appService: BottService = createService(
         );
       }
 
-      const id = crypto.randomUUID();
-
       const responseCall = new BottEvent(
         BottEventType.ACTION_CALL,
         {
           detail: {
-            id,
             name: RESPONSE_ACTION_NAME,
           },
           user: APP_USER,
@@ -80,9 +84,31 @@ export const appService: BottService = createService(
         },
       ) as BottActionCallEvent;
 
-      channelResponseActionIndex.set(event.channel.id, responseCall);
+      channelResponseStateIndex.set(event.channel.id, {
+        debouncedCaller,
+        currentResponse: responseCall,
+      });
 
       this.dispatchEvent(responseCall);
+    };
+
+    const debouncedCallResponseAction = (event: BottEvent) => {
+      if (!event.channel) return;
+
+      let { debouncedCaller, currentResponse } =
+        channelResponseStateIndex.get(event.channel.id) ?? {};
+
+      if (debouncedCaller) {
+        return debouncedCaller(event);
+      }
+
+      debouncedCaller = debounce(callResponseAction, 2000);
+
+      channelResponseStateIndex.set(event.channel.id, {
+        debouncedCaller,
+        currentResponse,
+      });
+      debouncedCaller(event);
     };
 
     const respondIfNotSelf = (event: BottEvent) => {
@@ -94,7 +120,7 @@ export const appService: BottService = createService(
         event.parent?.detail?.name === RESPONSE_ACTION_NAME
       ) return;
 
-      callResponseAction(event);
+      debouncedCallResponseAction(event);
     };
 
     this.addEventListener(BottEventType.MESSAGE, respondIfNotSelf);
@@ -108,7 +134,7 @@ export const appService: BottService = createService(
           output.detail;
 
         if (shouldInterpretOutput) {
-          callResponseAction(event);
+          debouncedCallResponseAction(event);
         }
 
         if (shouldForwardOutput) {
@@ -120,10 +146,12 @@ export const appService: BottService = createService(
     const cleanupChannelResponseActionIndex = (event: BottEvent) => {
       if (!event.channel) return;
 
-      const responseCall = channelResponseActionIndex.get(event.channel.id);
+      const channelState = channelResponseStateIndex.get(event.channel.id);
 
-      if (responseCall?.detail.id === event.detail.id) {
-        channelResponseActionIndex.delete(event.channel.id);
+      if (!channelState) return;
+
+      if (channelState.currentResponse?.detail.id === event.detail.id) {
+        channelState.currentResponse = undefined;
       }
     };
 
