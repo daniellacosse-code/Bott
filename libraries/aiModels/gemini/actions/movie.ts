@@ -59,34 +59,36 @@ export const movieAction: BottAction = createAction(
       );
     }
 
-    const mediaFile = media as File;
     let promptString = prompt as string;
+    let mediaData: Image | undefined;
 
-    let mediaData;
-    switch (mediaFile.type) {
-      case "image/jpeg":
-      case "image/png":
-      case "image/gif":
-      case "image/webp":
-      case "image/avif":
-      case "image/bmp":
-      case "image/tiff":
-      case "image/svg+xml":
-        mediaData = {
-          inlineData: {
-            data: encodeBase64(await mediaFile.arrayBuffer()),
-            mimeType: mediaFile.type,
-          },
-        } as Image;
-        break;
-      case "text/plain":
-      case "text/markdown":
-        promptString += `\n\nAttachment: ${await mediaFile.text()}`;
-        break;
-      default:
-        throw new Error(
-          `movieAction: Unsupported media type: ${mediaFile.type}. Only images are supported.`,
-        );
+    if (media) {
+      const mediaFile = media as File;
+      switch (mediaFile.type) {
+        case "image/jpeg":
+        case "image/png":
+        case "image/gif":
+        case "image/webp":
+        case "image/avif":
+        case "image/bmp":
+        case "image/tiff":
+        case "image/svg+xml":
+          mediaData = {
+            inlineData: {
+              data: encodeBase64(await mediaFile.arrayBuffer()),
+              mimeType: mediaFile.type,
+            },
+          } as Image;
+          break;
+        case "text/plain":
+        case "text/markdown":
+          promptString += `\n\nAttachment: ${await mediaFile.text()}`;
+          break;
+        default:
+          throw new Error(
+            `movieAction: Unsupported media type: ${mediaFile.type}. Only images are supported.`,
+          );
+      }
     }
 
     const file = await _doVideoJob({

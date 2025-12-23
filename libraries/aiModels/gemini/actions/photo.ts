@@ -58,33 +58,35 @@ export const photoAction: BottAction = createAction(
     }
 
     const promptString = prompt as string;
-    const mediaFile = media as File;
+    const mediaFile = media as File | undefined;
 
     const parts: Part[] = [{ text: promptString }];
 
-    switch (mediaFile.type) {
-      case "image/jpeg":
-      case "image/png":
-      case "image/webp":
-      case "image/gif":
-      case "image/bmp":
-      case "image/tiff":
-      case "image/svg+xml":
-        parts.push({
-          inlineData: {
-            data: encodeBase64(await mediaFile.arrayBuffer()),
-            mimeType: mediaFile.type,
-          },
-        });
-        break;
-      case "text/plain":
-      case "text/markdown":
-        parts.push({ text: await mediaFile.text() });
-        break;
-      default:
-        throw new Error(
-          `photoAction: Unsupported media type: ${mediaFile.type}. Only images and text are supported.`,
-        );
+    if (mediaFile) {
+      switch (mediaFile.type) {
+        case "image/jpeg":
+        case "image/png":
+        case "image/webp":
+        case "image/gif":
+        case "image/bmp":
+        case "image/tiff":
+        case "image/svg+xml":
+          parts.push({
+            inlineData: {
+              data: encodeBase64(await mediaFile.arrayBuffer()),
+              mimeType: mediaFile.type,
+            },
+          });
+          break;
+        case "text/plain":
+        case "text/markdown":
+          parts.push({ text: await mediaFile.text() });
+          break;
+        default:
+          throw new Error(
+            `photoAction: Unsupported media type: ${mediaFile.type}. Only images and text are supported.`,
+          );
+      }
     }
 
     const request: GenerateContentParameters = {
