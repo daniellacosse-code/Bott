@@ -144,8 +144,9 @@ export const _transformHandlesToMentions = async (
     const personaId = handleToIdMap.get(handle);
 
     if (personaId) {
-      transformedContent = transformedContent.replace(
-        match[0],
+      const handleToReplace = `@${handle}`;
+      transformedContent = transformedContent.replaceAll(
+        handleToReplace,
         `@<${personaId}>`,
       );
     }

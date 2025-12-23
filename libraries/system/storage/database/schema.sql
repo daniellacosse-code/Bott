@@ -35,7 +35,8 @@ create table if not exists personas (
   handle text not null,
   space_id varchar(36) not null,
   foreign key(user_id) references users(id),
-  foreign key(space_id) references spaces(id)
+  foreign key(space_id) references spaces(id),
+  unique(handle, space_id)
 );
 
 create table if not exists events (

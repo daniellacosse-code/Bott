@@ -211,3 +211,52 @@ Deno.test("_transformHandlesToMentions - non-existent handles unchanged", async 
 
   assertEquals(result, "Hello @<persona5> and @nonexistent_user");
 });
+
+Deno.test("_transformMentionsToHandles - multiple occurrences", async () => {
+  const _tempDir = Deno.makeTempDirSync();
+  createTestManager();
+
+  const space = { id: "space111", name: "Test Space 4" };
+  const channel = { id: "channel111", name: "general", space };
+
+  upsertPersona({
+    id: "persona6",
+    handle: "repeat_user",
+    space,
+  });
+
+  const event = new BottEvent(BottEventType.MESSAGE, {
+    user: createMockUser(),
+    channel,
+    detail: {
+      content: "Hey @<persona6>, I need @<persona6> to help!",
+    },
+  });
+
+  const result = await _transformMentionsToHandles(
+    "Hey @<persona6>, I need @<persona6> to help!",
+    event,
+  );
+
+  assertEquals(result, "Hey @repeat_user, I need @repeat_user to help!");
+});
+
+Deno.test("_transformHandlesToMentions - multiple occurrences", async () => {
+  const _tempDir = Deno.makeTempDirSync();
+  createTestManager();
+
+  const space = { id: "space222", name: "Test Space 5" };
+
+  upsertPersona({
+    id: "persona7",
+    handle: "multi_mention",
+    space,
+  });
+
+  const result = await _transformHandlesToMentions(
+    "Call @multi_mention and @multi_mention again!",
+    space.id,
+  );
+
+  assertEquals(result, "Call @<persona7> and @<persona7> again!");
+});

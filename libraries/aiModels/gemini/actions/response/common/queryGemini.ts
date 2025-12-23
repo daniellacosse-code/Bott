@@ -135,9 +135,10 @@ export const _transformMentionsToHandles = async (
     const persona = await getPersona(personaId, event.channel.space);
 
     if (persona) {
-      // Replace @<personaId> with @handle
-      transformedContent = transformedContent.replace(
-        match[0],
+      // Replace all occurrences of @<personaId> with @handle
+      const mentionToReplace = `@<${personaId}>`;
+      transformedContent = transformedContent.replaceAll(
+        mentionToReplace,
         `@${persona.handle}`,
       );
     }
