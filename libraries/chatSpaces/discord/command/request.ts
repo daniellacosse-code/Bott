@@ -10,17 +10,16 @@
  */
 
 import {
-  BottEvent,
-  BottEventType,
   type BottActionCallEvent,
-  type BottEventActionParameterEntry,
+  BottEvent,
+  type BottEventActionParameterRecord,
+  BottEventType,
 } from "@bott/events";
 import type { BottChannel } from "@bott/model";
 import {
   ApplicationCommandOptionType,
   ChannelType,
   type ChatInputCommandInteraction,
-  type CommandInteractionOption,
   type GuildTextBasedChannel,
 } from "discord.js";
 
@@ -32,15 +31,15 @@ export async function resolveCommandRequestEvent(
   if (
     interaction.channel && interaction.channel.type === ChannelType.GuildText
   ) {
-    const _channel = interaction.channel as GuildTextBasedChannel;
-    const _space = interaction.guild!;
+    const actionChannel = interaction.channel as GuildTextBasedChannel;
+    const actionSpace = interaction.guild!;
 
     channel = {
-      id: _channel.id,
-      name: _channel.name,
+      id: actionChannel.id,
+      name: actionChannel.name,
       space: {
-        id: _space.id,
-        name: _space.name,
+        id: actionSpace.id,
+        name: actionSpace.name,
       },
     };
   }
@@ -51,7 +50,6 @@ export async function resolveCommandRequestEvent(
       name: interaction.commandName,
       parameters: await extractResolvedOptions(
         interaction,
-        interaction.options.data,
       ),
     },
     user: {
@@ -63,68 +61,34 @@ export async function resolveCommandRequestEvent(
 }
 
 async function extractResolvedOptions(
-  interaction: ChatInputCommandInteraction,
-  optionList: readonly CommandInteractionOption[],
-): Promise<BottEventActionParameterEntry[]> {
-  const options: BottEventActionParameterEntry[] = [];
+  interaction: ChatInputCommandInteraction): Promise<BottEventActionParameterRecord> {
+  const parameters: BottEventActionParameterRecord = {};
 
-  for (const opt of optionList) {
-    switch (opt.type) {
-      case ApplicationCommandOptionType.SubcommandGroup:
-      case ApplicationCommandOptionType.Subcommand:
-        if (opt.options) {
-          options.push(
-            ...(await extractResolvedOptions(interaction, opt.options)),
-          );
-        }
-        break;
+  for (const option of interaction.options.data) {
+    switch (option.type) {
       case ApplicationCommandOptionType.String:
-        {
-          const value = interaction.options.getString(opt.name);
-          if (value !== null) {
-            options.push({ name: opt.name, value, type: "string" });
-          }
-        }
-        break;
       case ApplicationCommandOptionType.Integer:
-        {
-          const value = interaction.options.getInteger(opt.name);
-          if (value !== null) {
-            options.push({ name: opt.name, value, type: "number" });
-          }
-        }
-        break;
       case ApplicationCommandOptionType.Boolean:
-        {
-          const value = interaction.options.getBoolean(opt.name);
-          if (value !== null) {
-            options.push({ name: opt.name, value, type: "boolean" });
-          }
-        }
-        break;
       case ApplicationCommandOptionType.Number:
-        {
-          const value = interaction.options.getNumber(opt.name);
-          if (value !== null) {
-            options.push({ name: opt.name, value, type: "number" });
-          }
+        if (option.value !== undefined) {
+          parameters[option.name] = option.value;
         }
         break;
       case ApplicationCommandOptionType.Attachment:
         {
-          const attachment = interaction.options.getAttachment(opt.name);
-          if (attachment !== null) {
+          const attachment = interaction.options.getAttachment(option.name);
+          if (attachment) {
             const response = await fetch(attachment.url);
             const blob = await response.blob();
             const file = new File([blob], attachment.name, {
               type: attachment.contentType ?? undefined,
             });
 
-            options.push({ name: opt.name, value: file, type: "file" });
+            parameters[option.name] = file;
           }
         }
         break;
     }
   }
-  return options;
+  return parameters;
 }

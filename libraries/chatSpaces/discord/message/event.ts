@@ -42,15 +42,17 @@ export const resolveEventFromMessage = async (
   }
 
   const event = new BottEvent(type, {
+    id: message.id,
+    createdAt: new Date(message.createdTimestamp),
     detail: {
       content: (message.content || message.embeds.at(0)?.description) ?? "",
     },
     channel: {
       id: message.channel.id,
-      name: message.channel.name as string,
+      name: message.channel.name,
       space: {
-        id: message.guild?.id as string,
-        name: message.guild?.name as string,
+        id: message.guild.id,
+        name: message.guild.name,
       },
     },
     user: message.author
@@ -60,12 +62,6 @@ export const resolveEventFromMessage = async (
       }
       : undefined,
     parent,
-  });
-
-  // TODO
-  Object.assign(event, {
-    id: message.id,
-    createdAt: new Date(message.createdTimestamp),
   });
 
   const urls = [

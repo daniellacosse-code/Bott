@@ -26,7 +26,7 @@ type SlashCommandOption =
   | SlashCommandNumberOption
   | SlashCommandAttachmentOption;
 
-export function getCommandJson({
+export function actionToCommandJSON({
   name,
   instructions,
   parameters,
