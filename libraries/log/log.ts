@@ -55,8 +55,9 @@ export const formatter = (record: LogRecord): string => {
     return `${record.levelName} ${metadata.join(" ")} ${formattedArgs}`;
   }
 
-  return `${record.levelName} ${metadata.join(" ")} ${budgetedJoin(allArgs, LOG_CHARACTER_LIMIT)
-    }`;
+  return `${record.levelName} ${metadata.join(" ")} ${
+    budgetedJoin(allArgs, LOG_CHARACTER_LIMIT)
+  }`;
 };
 
 const getCircularReplacer = () => {
