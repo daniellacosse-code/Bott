@@ -67,9 +67,7 @@ export const queryGemini = async <O>(
     systemInstruction: {
       parts,
     },
-    tools: [
-      { googleSearch: {} },
-    ],
+    // TODO: Google Search
   };
 
   if (responseSchema) {
@@ -98,7 +96,13 @@ export const queryGemini = async <O>(
 
   try {
     return JSON.parse(cleanedResult) as O;
-  } catch {
+  } catch (error) {
+    if (responseSchema) {
+      throw new Error(
+        `queryGemini: Failed to parse JSON response: ${cleanedResult || "(empty)"}`,
+        { cause: error },
+      );
+    }
     return result as O;
   }
 };

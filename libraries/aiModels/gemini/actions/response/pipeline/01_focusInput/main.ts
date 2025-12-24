@@ -66,6 +66,7 @@ export const focusInput: EventPipelineProcessor = async function () {
     type: string;
     detail: AnyShape;
     focusReasons: string[];
+    ratings: Record<string, { rating: string; rationale: string | undefined }>;
   }[] = [];
 
   let pointer = 0;
@@ -137,6 +138,7 @@ export const focusInput: EventPipelineProcessor = async function () {
           type: event.type,
           detail: event.detail,
           focusReasons: triggeredFocusReasons.map((reason) => reason.name),
+          ratings: scoresWithRationale ?? {},
         });
       }
     })());

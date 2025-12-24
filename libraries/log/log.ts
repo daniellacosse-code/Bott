@@ -40,9 +40,36 @@ export const formatter = (record: LogRecord): string => {
 
   const allArgs = record.msg ? [record.msg, ...record.args] : record.args;
 
-  return `${record.levelName} ${metadata.join(" ")} ${
-    budgetedJoin(allArgs, LOG_CHARACTER_LIMIT)
-  }`;
+  // TODO: add to budgetedJoin
+  if (record.levelName === "DEBUG") {
+    const formattedArgs = allArgs.map((arg) => {
+      try {
+        return typeof arg === "string"
+          ? arg
+          : JSON.stringify(arg, getCircularReplacer(), 2);
+      } catch {
+        return String(arg); // validation/fallback
+      }
+    }).join(" ");
+
+    return `${record.levelName} ${metadata.join(" ")} ${formattedArgs}`;
+  }
+
+  return `${record.levelName} ${metadata.join(" ")} ${budgetedJoin(allArgs, LOG_CHARACTER_LIMIT)
+    }`;
+};
+
+const getCircularReplacer = () => {
+  const seen = new WeakSet();
+  return (_key: string, value: unknown) => {
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) {
+        return "[Circular]";
+      }
+      seen.add(value);
+    }
+    return value;
+  };
 };
 
 export interface Logger {

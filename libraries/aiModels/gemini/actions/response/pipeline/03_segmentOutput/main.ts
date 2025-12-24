@@ -39,8 +39,10 @@ export const segmentOutput: EventPipelineProcessor = async function () {
       continue;
     }
 
+    // TODO: allow to be set as "user" event dynamically
+    // Pass as JSON string to treat as data/user input, avoiding "continuation" bias.
     segmentPromises.push(queryGemini<BottEvent[]>(
-      output.slice(0, pointer + 1),
+      JSON.stringify([event]),
       {
         systemPrompt,
         responseSchema: getEventSchema(this.action.service.settings),

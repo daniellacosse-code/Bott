@@ -29,7 +29,7 @@ export const eventStorageService: BottService = createService(
       const result = upsertEvents(event);
 
       if (event.type === BottEventType.ACTION_ERROR) {
-        log.error("Action error received:", event);
+        log.error("Action error received:", event.detail.error);
       }
 
       // Not important enough for the system to know about.

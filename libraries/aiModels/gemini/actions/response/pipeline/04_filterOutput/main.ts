@@ -13,6 +13,7 @@ import { GEMINI_RATING_MODEL } from "@bott/constants";
 
 import { BottEventType } from "@bott/events";
 import { log } from "@bott/log";
+import type { AnyShape } from "@bott/model";
 import { type Schema, Type } from "@google/genai";
 import { resolveOutputEvents } from "../../common/events.ts";
 import { queryGemini } from "../../common/queryGemini.ts";
@@ -65,6 +66,13 @@ export const filterOutput: EventPipelineProcessor = async function () {
   };
 
   const geminiCalls: Promise<void>[] = [];
+  const outputLogQueue: {
+    id: string;
+    type: string;
+    detail: AnyShape;
+    output: false;
+    ratings: Record<string, { rating: string; rationale: string | undefined }>;
+  }[] = [];
 
   let pointer = 0;
   while (pointer < output.length) {
@@ -113,7 +121,15 @@ export const filterOutput: EventPipelineProcessor = async function () {
         outputReasons: triggeredOutputReasons,
       });
 
-      log.debug(event, scoresWithRationale, triggeredOutputReasons);
+      if (!triggeredOutputReasons.length) {
+        outputLogQueue.push({
+          id: event.id,
+          type: event.type,
+          detail: event.detail,
+          ratings: scoresWithRationale ?? {},
+          output: false
+        });
+      }
     })());
 
     pointer++;
@@ -124,5 +140,5 @@ export const filterOutput: EventPipelineProcessor = async function () {
   this.data.output = output;
   this.data.output = await resolveOutputEvents(this);
 
-  log.debug(this.data.output);
+  log.debug(this.action.id, outputLogQueue);
 };
