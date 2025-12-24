@@ -20,12 +20,12 @@ const deploymentNonce = crypto.randomUUID();
 Deno.mkdirSync(STORAGE_ROOT, { recursive: true });
 Deno.writeTextFileSync(STORAGE_DEPLOY_NONCE_LOCATION, deploymentNonce);
 
+// TODO: this should be the system manager
 export class BottServicesManager {
   private nonce: string;
   private app: BottResponseSettings;
   private services: Map<string, BottService> = new Map();
   private actions: Map<string, BottAction> = new Map();
-  private events: Set<BottEventType> = new Set();
 
   constructor(app: BottResponseSettings) {
     this.nonce = deploymentNonce;
@@ -42,6 +42,7 @@ export class BottServicesManager {
       },
       dispatchEvent: this.dispatchEvent.bind(this),
       addEventListener: this.addEventListener.bind(this),
+      removeEventListener: this.removeEventListener.bind(this),
     };
   }
 
@@ -72,24 +73,52 @@ export class BottServicesManager {
     log.info(`Service "${serviceName}" started`);
   }
 
-  addEventListener<E extends BottEvent>(
+  private listeners = new Map<
+    (
+      event: BottEvent,
+      context?: BottServiceContext,
+    ) => unknown | Promise<unknown>,
+    EventListener
+  >();
+
+  addEventListener(
     eventType: BottEventType,
     handler: (
-      event: E,
+      event: BottEvent,
       context?: BottServiceContext,
     ) => unknown | Promise<unknown>,
   ): void {
-    globalThis.addEventListener(eventType, async (event) => {
-      const bottEvent = event as E;
+    const listener = async (event: Event) => {
+      const bottEvent = event as BottEvent;
 
       if (this.nonce !== this.getCurrentDeployNonce()) return;
 
       try {
         await handler(bottEvent, this.rootContext);
-      } catch (error) {
-        log.warn("Failed to handle event", error);
+      } catch (_error) {
+        const error = _error instanceof Error
+          ? _error
+          : new Error("Unknown error.");
+
+        log.warn("Failed to handle event:", { event, error });
       }
-    });
+    };
+
+    this.listeners.set(handler, listener);
+    globalThis.addEventListener(eventType, listener);
+  }
+
+  removeEventListener(
+    eventType: BottEventType,
+    handler: (
+      event: BottEvent,
+      context?: BottServiceContext,
+    ) => unknown | Promise<unknown>,
+  ): void {
+    if (!this.listeners.has(handler)) return;
+
+    globalThis.removeEventListener(eventType, this.listeners.get(handler)!);
+    this.listeners.delete(handler);
   }
 
   dispatchEvent(event: BottEvent) {
@@ -103,6 +132,7 @@ export class BottServicesManager {
       if (error instanceof Deno.errors.NotFound) {
         return null;
       }
+
       throw error;
     }
   }

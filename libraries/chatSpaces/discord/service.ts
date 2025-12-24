@@ -134,13 +134,35 @@ export const discordService: BottService = createService(
 
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-      this.dispatchEvent(
-        await commandInteractionToActionCallEvent(
-          interaction,
-        ),
+      const actionCallEvent = await commandInteractionToActionCallEvent(
+        interaction,
       );
 
-      // TODO: wait for the first action event to be dispatched
+      const outputOrStopType = [
+        BottEventType.ACTION_OUTPUT,
+        BottEventType.ACTION_COMPLETE,
+        BottEventType.ACTION_ERROR,
+      ];
+
+      this.dispatchEvent(actionCallEvent);
+
+      // Wait for the action to begin output or complete
+      await new Promise<void>((resolve) => {
+        const resolveIfCurrentAction = (event: BottEvent) => {
+          if (event.detail.id !== actionCallEvent.detail.id) return;
+
+          for (const eventType of outputOrStopType) {
+            this.removeEventListener(eventType, resolveIfCurrentAction);
+          }
+
+          resolve();
+        };
+
+        for (const eventType of outputOrStopType) {
+          this.addEventListener(eventType, resolveIfCurrentAction);
+        }
+      });
+
       await interaction.deleteReply();
     });
 
