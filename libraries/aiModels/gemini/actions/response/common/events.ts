@@ -111,7 +111,6 @@ export const resolveOutputEvents = async (
   const resolvedEvents: BottEvent[] = [];
 
   for (const unresolvedEvent of outputEvents) {
-    // TODO: create a new BottEvent instead of cloning so we don't have to force assign parent
     const event = cloneBottEvent(unresolvedEvent);
 
     // Ensure full parent object is fetched
@@ -119,6 +118,7 @@ export const resolveOutputEvents = async (
       const [fetchedParent] = await getEvents(event.parent.id);
 
       // Force read-only assignment
+      // TODO: avoid this
       Object.assign(event.parent, fetchedParent);
     }
 

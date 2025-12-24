@@ -9,6 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { BottEvent } from "./event.ts";
+
 /**
  * cloning a BottEvent is non-trivial because structuredClone destroys File objects.
  * This function handles deep cloning while preserving File instances.
@@ -45,6 +47,36 @@ export const cloneBottEvent = <T>(
       (clone as unknown as unknown[])[i] = cloneBottEvent(value[i], memo);
     }
     return clone;
+  }
+
+  if (value instanceof BottEvent) {
+    const clone = new BottEvent(value.type, {
+      id: value.id,
+      createdAt: new Date(value.createdAt.getTime()),
+      lastProcessedAt: value.lastProcessedAt
+        ? new Date(value.lastProcessedAt.getTime())
+        : undefined,
+      channel: value.channel,
+      user: value.user,
+    });
+
+    memo.set(value, clone);
+
+    if (value.parent) {
+      Object.assign(clone, { parent: cloneBottEvent(value.parent, memo) });
+    }
+
+    if (value.attachments) {
+      clone.attachments = cloneBottEvent(value.attachments, memo);
+    }
+
+    Object.defineProperty(clone, "detail", {
+      value: cloneBottEvent(value.detail, memo),
+      enumerable: true,
+      writable: true,
+    });
+
+    return clone as T;
   }
 
   const clone = Object.create(Object.getPrototypeOf(value)) as T;
