@@ -46,7 +46,6 @@ export async function commandInteractionToActionCallEvent(
 
   return new BottEvent(BottEventType.ACTION_CALL, {
     detail: {
-      id: crypto.randomUUID(),
       name: interaction.commandName,
       parameters: await extractResolvedOptions(
         interaction,

@@ -123,7 +123,6 @@ export type BottEventActionParameterRecord = Record<
 >;
 
 export type BottActionCallEvent = BottEvent<BottEventType.ACTION_CALL, {
-  id: string;
   name: string;
   parameters: BottEventActionParameterRecord;
 }>;

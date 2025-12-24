@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { GEMINI_EVENT_MODEL } from "@bott/constants";
+import { APP_USER, GEMINI_EVENT_MODEL } from "@bott/constants";
 import type { BottEvent } from "@bott/events";
 import type {
   Content,
@@ -166,8 +166,13 @@ export const _transformBottEventToContent = async (
   };
 
   const parts: Part[] = [{ text: JSON.stringify(eventToSerialize) }];
+
+  // TODO: check all service users
+  const isModel = event.user.id === APP_USER.id ||
+    event.user.id === "service:action";
+
   const content: Content = {
-    role: (event.user?.id === context.action.user?.id) ? "model" : "user",
+    role: isModel ? "model" : "user",
     parts,
   };
 

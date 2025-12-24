@@ -150,7 +150,7 @@ export const discordService: BottService = createService(
       // Wait for the action to begin output or complete
       await new Promise<void>((resolve) => {
         const resolveIfCurrentAction = (event: BottEvent) => {
-          if (event.detail.id !== actionCallEvent.detail.id) return;
+          if (event.detail.id !== actionCallEvent.id) return;
 
           for (const eventType of outputOrStopType) {
             this.removeEventListener(eventType, resolveIfCurrentAction);

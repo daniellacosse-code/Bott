@@ -38,14 +38,14 @@ export const actionService: BottService = createService(
   function () {
     const controllerMap = new Map<string, AbortController>();
 
-    const handleActionCall = async (event: BottActionCallEvent) => {
+    const handleActionCall = async (callEvent: BottActionCallEvent) => {
       const controller = new AbortController();
+      const callId = callEvent.id;
       const {
-        id: actionCallId,
-        name: actionCallName,
-        parameters: actionCallParameters,
-      } = event.detail;
-      const actionCallLocation = event.channel;
+        name: callName,
+        parameters: callParameters,
+      } = callEvent.detail;
+      const callLocation = callEvent.channel;
 
       const _dispatch = (
         type: BottEventType,
@@ -54,37 +54,37 @@ export const actionService: BottService = createService(
         this.dispatchEvent(
           new BottEvent(type, {
             detail: {
-              id: actionCallId,
+              id: callId,
               ...detail,
             },
             user: actionUser,
-            channel: actionCallLocation,
-            parent: event,
+            channel: callLocation,
+            parent: callEvent,
           }),
         );
       };
 
-      if (controllerMap.has(actionCallId)) {
+      if (controllerMap.has(callId)) {
         return _dispatch(BottEventType.ACTION_ERROR, {
           error: new Error(
-            `An action with id ${actionCallId} is already in progress`,
+            `An action with id ${callId} is already in progress`,
           ),
         });
       }
 
-      if (!actionCallLocation) {
+      if (!callLocation) {
         return _dispatch(BottEventType.ACTION_ERROR, {
           error: new Error(
-            `Can't call action ${actionCallName}: missing call location`,
+            `Can't call action ${callName}: missing call location`,
           ),
         });
       }
 
-      const action = this.settings.actions[actionCallName];
+      const action = this.settings.actions[callName];
       if (!action) {
         return _dispatch(BottEventType.ACTION_ERROR, {
           error: new Error(
-            `Can't call action ${actionCallName}: there's no action with that name registered`,
+            `Can't call action ${callName}: there's no action with that name registered`,
           ),
         });
       }
@@ -118,12 +118,12 @@ export const actionService: BottService = createService(
         }
       }
 
-      controllerMap.set(actionCallId, controller);
+      controllerMap.set(callEvent.id, controller);
 
       try {
         const parameters = applyParameterDefaults(
           action.parameters,
-          actionCallParameters,
+          callParameters,
         );
 
         validateParameters(action.parameters, parameters);
@@ -132,12 +132,12 @@ export const actionService: BottService = createService(
 
         const actionOutputIterator = action.call(
           {
-            id: event.detail.id,
+            id: callId,
             signal: controller.signal,
             settings: action,
             service: this,
-            user: event.user,
-            channel: event.channel,
+            user: callEvent.user,
+            channel: callEvent.channel,
           },
           parameters,
         );
@@ -157,7 +157,7 @@ export const actionService: BottService = createService(
         });
       }
 
-      controllerMap.delete(event.detail.id);
+      controllerMap.delete(callId);
     };
 
     this.addEventListener(
