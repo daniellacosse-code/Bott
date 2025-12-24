@@ -19,9 +19,9 @@ import { getEventSchema } from "../../common/getSchema.ts";
 import { queryGemini } from "../../common/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
-const systemPromptTemplate = await Deno.readTextFile(
+const systemPromptTemplate = (await Deno.readTextFile(
   new URL("./systemPrompt.md.ejs", import.meta.url),
-);
+)).replaceAll("<!-- deno-fmt-ignore-file -->\n", "");
 
 export const generateOutput: EventPipelineProcessor = async function () {
   // If there's nothing to focus on, skip this step.

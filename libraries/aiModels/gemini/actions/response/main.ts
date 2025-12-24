@@ -26,7 +26,7 @@ import pipelineProcess, { type EventPipelineContext } from "./pipeline/main.ts";
 
 const settings: BottActionSettings = {
   name: ACTION_RESPONSE_NAME,
-  instructions: "Simulate a response for a channel.",
+  instructions: "Trigger a response for this channel.",
   shouldForwardOutput: true,
 };
 

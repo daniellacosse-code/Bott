@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottAction } from "@bott/actions";
+import type { BottAction, BottActionSettings } from "@bott/actions";
 import { createAction } from "@bott/actions";
 import {
   APP_USER,
@@ -50,25 +50,28 @@ if (GEMINI_AVAILABLE) {
   }
 }
 
-const helpMessage = await Deno.readTextFile(
+const helpMessage = (await Deno.readTextFile(
   new URL("./help.md.ejs", import.meta.url),
-);
+)).replaceAll("<!-- deno-fmt-ignore-file -->\n", "");
+
+const helpSettings: BottActionSettings = {
+  name: "help",
+  instructions: "Show the help menu.",
+  shouldForwardOutput: true,
+};
 
 _actions.help = createAction(async function* () {
   yield new BottEvent(BottEventType.MESSAGE, {
     detail: {
       content: ejs.render(helpMessage, {
         actions: _actions,
-        currentVersion: getVersion(),
+        currentVersion: await getVersion(),
       }),
     },
     user: APP_USER,
     channel: this.channel,
   });
-}, {
-  name: "help",
-  instructions: "Show help information.",
-});
+}, helpSettings);
 
 export const actions = _actions;
 

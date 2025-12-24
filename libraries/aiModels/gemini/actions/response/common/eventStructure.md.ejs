@@ -82,21 +82,9 @@ In a `BottEvent` of `type: "action:call"`, the `detail.name` and `detail.paramet
 
 These are the actions currently available to you:
 
-<% for (const action of Object.values(service.settings.actions)) { %>
-##### Action: `<%= action.name %>`
-
-<%= action.instructions %>
-
-<% if (action.parameters && action.parameters.length > 0) { %>
-| Parameter | Description | Type | Allowed Values | Required |
-| --------- | ----------- | ---- | -------------- | -------- |
-<% for (const param of action.parameters) { %>| `<%= param.name %>` | <%= param.description ?? '-' %> | `<%= param.type %>` | <% if (param.type !== 'file' && param.allowedValues) { %>`<%= param.allowedValues.join(", ") %>`<% } else { %>-<% } %> | <%= param.required ? 'Yes' : 'No' %> |
-<% } %>
-<% } else { %>
-*This action takes no parameters.*
-<% } %>
-<% } %>
-
+<%_ for (const action of Object.values(service.settings.actions)) { _%>
+  <%- include('./partials/actions.md.ejs', { action }) %>
+<%_ } _%>
 
 ### `action:abort`
 
@@ -170,35 +158,17 @@ This metadata is separate from the core `BottEvent` data model and contains eval
 
 The `ratings` object contains scores based on these definitions:
 
-<% for (const reason of service.app.reasons.input) { %>
-<% for (const ratingScale of reason.ratingScales ?? []) { %>
-#### <%= ratingScale.name %>
+<%_ for (const reason of service.app.reasons.input) { _%>
+  <%_ for (const ratingsScale of reason.ratingScales) { _%>
+    <%- include('./partials/ratingScales.md.ejs', { ratingScale }) %>
+  <%_ } _%>
+<%_ } _%>
 
-Definition: <%= ratingScale.definition %>
-
-<% for (const key of Object.keys(ratingScale.examples)) { %>
-- **Examples of a rating of `<%= key %>`**:
-<% for (const example of ratingScale.examples[key]) { %>
-  - <%= example %>
-<% } %>
-<% } %>
-<% } %>
-<% } %>
-
-<% for (const reason of service.app.reasons.output) { %>
-<% for (const ratingScale of reason.ratingScales ?? []) { %>
-#### <%= ratingScale.name %>
-
-Definition: <%= ratingScale.definition %>
-
-<% for (const key of Object.keys(ratingScale.examples)) { %>
-- **Examples of a rating of `<%= key %>`**:
-<% for (const example of ratingScale.examples[key]) { %>
-  - <%= example %>
-<% } %>
-<% } %>
-<% } %>
-<% } %>
+<%_ for (const reason of service.app.reasons.output) { _%>
+  <%_ for (const ratingsScale of reason.ratingScales) { _%>
+    <%- include('./partials/ratingScales.md.ejs', { ratingScale }) %>
+  <%_ } _%>
+<%_ } _%>
 
 ---
 

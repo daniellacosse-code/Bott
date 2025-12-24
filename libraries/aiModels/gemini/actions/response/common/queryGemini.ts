@@ -22,9 +22,9 @@ import ejs from "ejs";
 import gemini from "../../../client.ts";
 import type { EventPipelineContext } from "../pipeline/types.ts";
 
-const eventStructure = await Deno.readTextFile(
+const eventStructure = (await Deno.readTextFile(
   new URL("./eventStructure.md.ejs", import.meta.url),
-);
+)).replaceAll("<!-- deno-fmt-ignore-file -->\n", "");
 
 export interface QueryGeminiOptions {
   model?: string;
@@ -55,7 +55,9 @@ export const queryGemini = async <O>(
     : [];
 
   parts = [...parts, { text: systemPrompt }, {
-    text: ejs.render(eventStructure, pipeline.action),
+    text: ejs.render(eventStructure, pipeline.action, {
+      filename: new URL("./eventStructure.md.ejs", import.meta.url).pathname,
+    }),
   }];
 
   const config: GenerateContentConfig = {

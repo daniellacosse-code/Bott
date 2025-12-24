@@ -1,20 +1,13 @@
 <!-- deno-fmt-ignore-file -->
-# Help Menu
+### About
+`@Bott` _(they/them)_ is a helpful agent that responds to your messages and generates media for you: photos, songs and videos.
 
-## About
+### Commands
+<%_ for (const action of Object.values(actions)) { _%>
+- `/<%= action.name %>`: <%= action.instructions %>
+<%_ } _%>
 
-`@Bott` (they/them) is a helpful agent that responds to your messages and generates media for you: photos, songs and videos.
-
-## Commands
-
-<% for (const action of Object.values(actions)) { %>
-- `/<%= action.name %>`: <%= action.description %>
-<% } %>
-
-## Limitations
-
+### Limitations
 Bott may sometimes things that are not correct.
 
----
-
-<% if (currentVersion) { %> <%= currentVersion %> . <% } %> written by DanielLaCos.se
+-# <% if (currentVersion) { _%> `<%= currentVersion %>` · <% } _%> written by DanielLaCos.se

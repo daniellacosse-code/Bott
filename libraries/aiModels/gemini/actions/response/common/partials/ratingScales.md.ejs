@@ -1,0 +1,9 @@
+<!-- deno-fmt-ignore-file -->
+#### <%= ratingScale.name %>
+Definition: <%= ratingScale.definition %>
+<%_ for (const key of Object.keys(ratingScale.examples)) { _%>
+- **Examples of a rating of `<%= key %>`**:
+  <%_ for (const example of ratingScale.examples[key]) { _%>
+    - <%= example %>
+  <%_ } _%>
+<%_ } _%>

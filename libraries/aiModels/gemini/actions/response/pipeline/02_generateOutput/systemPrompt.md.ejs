@@ -15,14 +15,13 @@ into context the other events provided.
 Each generated output event will be evaluated against the following criteria. Pay
 close attention to these rules to ensure high-quality responses:
 
-<% for (const reason of action.service.app.reasons.output) { %>
-
-### <%= reason.name %>
-
-<%= reason.description %> <% if (reason.instruction) { %> **Instruction:** <%=
-reason.instruction %> <% } %>
-
-<% } %>
+<%_ for (const reason of action.service.app.reasons.output) { _%>
+  ### <%= reason.name %>
+  <%= reason.description %>
+  <%_ if (reason.instruction) { _%>
+    **Instruction:** <%= reason.instruction %>
+  <%_ } _%>
+<%_ } _%>
 
 Your response should be natural, conversational, and consistent with your
 `Identity`.

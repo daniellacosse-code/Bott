@@ -61,6 +61,10 @@ export const eventStorageService: BottService = createService(
       saveEvent,
     );
     this.addEventListener(
+      BottEventType.ACTION_OUTPUT,
+      saveEvent,
+    );
+    this.addEventListener(
       BottEventType.ACTION_START,
       saveEvent,
     );

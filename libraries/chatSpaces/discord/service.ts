@@ -24,6 +24,7 @@ import {
   Events as DiscordEvents,
   GatewayIntentBits,
   type Message,
+  MessageFlags,
   REST,
   Routes,
 } from "discord.js";
@@ -77,6 +78,7 @@ export const discordService: BottService = createService(
     // Forward messages from Discord to the system
     client.on(DiscordEvents.MessageCreate, async (message) => {
       if (message.channel.type !== ChannelType.GuildText) return;
+      if (message.author.id === client.user?.id) return;
 
       this.dispatchEvent(
         await messageToEvent(
@@ -130,7 +132,7 @@ export const discordService: BottService = createService(
 
       if (!action) return;
 
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       this.dispatchEvent(
         await commandInteractionToActionCallEvent(
@@ -138,7 +140,7 @@ export const discordService: BottService = createService(
         ),
       );
 
-      // TODO: wait for the first action event to be dispatched 
+      // TODO: wait for the first action event to be dispatched
       await interaction.deleteReply();
     });
 

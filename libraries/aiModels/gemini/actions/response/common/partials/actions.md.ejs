@@ -1,0 +1,37 @@
+<!-- deno-fmt-ignore-file -->
+##### Action: `<%= action.name %>`
+
+<%= action.instructions %>
+
+<%_ if (action.parameters && action.parameters.length > 0) { _%>
+  <table>
+    <thead>
+      <tr>
+        <th>Parameter</th>
+        <th>Description</th>
+        <th>Type</th>
+        <th>Allowed Values</th>
+        <th>Required</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%_ for (const param of action.parameters) { _%>
+        <tr>
+          <td><code><%= param.name %></code></td>
+          <td><%= param.description ?? '-' %></td>
+          <td><code><%= param.type %></code></td>
+          <td>
+            <%_ if (param.type !== 'file' && param.allowedValues) { _%>
+              <code><%= param.allowedValues.join(", ") %></code>
+            <%_ } else { _%>
+              -
+            <%_ } _%>
+          </td>
+          <td><%= param.required ? 'Yes' : 'No' %></td>
+        </tr>
+      <%_ } _%>
+    </tbody>
+  </table>
+<%_ } else { _%>
+  *This action takes no parameters.*
+<%_ } _%>
