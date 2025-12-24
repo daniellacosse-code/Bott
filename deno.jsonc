@@ -4,7 +4,10 @@
     "lineWidth": 80,
     "proseWrap": "always",
     "semiColons": true,
-    "singleQuote": false
+    "singleQuote": false,
+    "exclude": [
+      "**/*.md.ejs"
+    ]
   },
   "lint": {
     "plugins": [

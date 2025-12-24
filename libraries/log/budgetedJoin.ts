@@ -11,8 +11,10 @@
 
 import type { AnyShape } from "@bott/model";
 
-const MAX_RECURSION_DEPTH = 100;
 const ELLIPSIS = "…";
+const LAYER_BIAS = 0.5; // Bias for shallow-object preference
+const KEY_ALLOCATION_RATIO = 0.25; // Ratio of key-to-value allocation
+const RECURSION_DEPTH_LIMIT = 100;
 
 interface EstimationNode {
   size: number;
@@ -28,50 +30,96 @@ export function budgetedJoin(
   values: unknown[],
   totalBudget: number,
 ): string {
-  // 1. Build estimation trees for all values
+  // Build estimation trees for all values
   const nodes = values.map((value) => {
     if (typeof value === "string") {
       return { size: value.length };
     }
+
     return buildEstimationTree(value, 0);
   });
 
-  // Calculate overhead
+  // Calculate overhead (spaces between items)
   const overhead = Math.max(0, values.length - 1);
   const available = totalBudget - overhead;
 
   if (available < 0) return ELLIPSIS;
 
-  const totalSize = nodes.reduce((sum, n) => sum + n.size, 0);
-  const ratio = totalSize > 0 ? available / totalSize : 0;
+  // Weighted allocation
+  let totalWeight = 0;
+  const weights = nodes.map((n) => {
+    const w = Math.pow(n.size, LAYER_BIAS);
+    totalWeight += w;
+    return w;
+  });
+
+  const ratio = totalWeight > 0 ? available / totalWeight : 0;
 
   const parts = values.map((v, i) => {
-    const node = nodes[i];
-    const budget = Math.floor(node.size * ratio);
+    const weight = weights[i];
+    const budget = Math.floor(weight * ratio);
 
     if (typeof v === "string") {
-      if (node.size <= budget) return v;
-      if (budget < ELLIPSIS.length) return ELLIPSIS;
-
-      const availableForText = budget - ELLIPSIS.length;
-      if (availableForText < 2) return v.substring(0, budget - 1) + ELLIPSIS;
-
-      const startLen = Math.ceil(availableForText / 2);
-      const endLen = Math.floor(availableForText / 2);
-
-      return v.substring(0, startLen) + ELLIPSIS +
-        v.substring(v.length - endLen);
+      return truncateString(v, budget);
     }
 
     // Use regular balancedSerialize for non-strings
-    return balancedSerialize(v, node, budget);
+    return balancedSerialize(v, nodes[i], budget);
   });
 
   return parts.join(" ");
 }
 
+/**
+ * Helper to truncate string string to fit budget.
+ * Handles quoting if requested.
+ */
+function truncateString(
+  value: string,
+  budget: number,
+  quote: boolean = false,
+): string {
+  const quoteLen = quote ? 2 : 0;
+  if (value.length + quoteLen <= budget) {
+    return quote ? JSON.stringify(value) : value;
+  }
+
+  if (budget < ELLIPSIS.length) return ELLIPSIS;
+
+  const contentBudget = budget - quoteLen;
+  if (contentBudget < ELLIPSIS.length) {
+    if (quote) return `"${ELLIPSIS}"`.substring(0, budget);
+
+    return ELLIPSIS;
+  }
+
+  if (quote) {
+    const availableForText = contentBudget - ELLIPSIS.length;
+
+    // Center truncation
+    const startLen = Math.ceil(availableForText / 2);
+    const endLen = Math.floor(availableForText / 2);
+
+    const truncated = value.substring(0, startLen) + ELLIPSIS +
+      value.substring(value.length - endLen);
+    return JSON.stringify(truncated);
+  } else {
+    // No quotes, raw string
+    const availableForText = budget - ELLIPSIS.length;
+    if (availableForText < `a${ELLIPSIS}`.length) {
+      return value[0] + ELLIPSIS;
+    }
+
+    const startLen = Math.ceil(availableForText / 2);
+    const endLen = Math.floor(availableForText / 2);
+
+    return value.substring(0, startLen) + ELLIPSIS +
+      value.substring(value.length - endLen);
+  }
+}
+
 function buildEstimationTree(value: unknown, depth: number): EstimationNode {
-  if (depth > MAX_RECURSION_DEPTH) {
+  if (depth > RECURSION_DEPTH_LIMIT) {
     return { size: "[Max Depth]".length };
   }
 
@@ -90,8 +138,8 @@ function buildEstimationTree(value: unknown, depth: number): EstimationNode {
   let size = 0;
 
   if (Array.isArray(value)) {
-    size += 2; // [] characters
-    if (value.length > 1) size += value.length - 1; // commas
+    size += "[]".length;
+    if (value.length > 1) size += value.length - ",".length;
 
     const children: EstimationNode[] = [];
     for (const item of value) {
@@ -102,9 +150,9 @@ function buildEstimationTree(value: unknown, depth: number): EstimationNode {
     return { size, children };
   }
 
-  size += 2; // {} characters
+  size += "{}".length;
   const keys = Object.keys(value as object);
-  if (keys.length > 1) size += keys.length - 1; // commas
+  if (keys.length > 1) size += keys.length - ",".length;
 
   const children: Record<string, EstimationNode> = {};
   for (const key of keys) {
@@ -131,28 +179,11 @@ function balancedSerialize(
   if (typeof value === "number") return String(value);
 
   if (typeof value === "string") {
-    if (estimation.size <= budget) return JSON.stringify(value);
-
-    if (budget < ELLIPSIS.length) return ELLIPSIS;
-    const contentBudget = budget - ELLIPSIS.length;
-    if (contentBudget < ELLIPSIS.length) return `"${ELLIPSIS}"`;
-    if (contentBudget < `"a${ELLIPSIS}a"`.length) {
-      const truncated = value.substring(0, Math.max(0, contentBudget - 1)) +
-        ELLIPSIS;
-      return JSON.stringify(truncated);
-    }
-
-    const availableForText = contentBudget - ELLIPSIS.length;
-    const startLen = Math.ceil(availableForText / 2);
-    const endLen = Math.floor(availableForText / 2);
-
-    const truncated = value.substring(0, startLen) + ELLIPSIS +
-      value.substring(value.length - endLen);
-    return JSON.stringify(truncated);
+    return truncateString(value, budget, true);
   }
 
   if (Array.isArray(value)) {
-    if (!estimation.children) return "[…]"; // Max depth reached
+    if (!estimation.children) return "[…]";
 
     const children = estimation.children as EstimationNode[];
 
@@ -162,48 +193,118 @@ function balancedSerialize(
 
     if (available < 0) return "[…]";
 
-    const totalSize = children.reduce((sum, c) => sum + c.size, 0);
-    const ratio = totalSize > 0 ? available / totalSize : 0;
+    // Weighted allocation
+    let totalWeight = 0;
+    const weights = children.map((c) => {
+      const w = Math.pow(c.size, LAYER_BIAS);
+      totalWeight += w;
+      return w;
+    });
+    const ratio = totalWeight > 0 ? available / totalWeight : 0;
 
     const items = value.map((item, i) => {
       const childNode = children[i];
       if (item === undefined) return "null";
 
-      const allocated = Math.floor(childNode.size * ratio);
-
+      const allocated = Math.floor(weights[i] * ratio);
       return balancedSerialize(item, childNode, allocated);
     });
     return `[${items.join(",")}]`;
   }
 
   if (typeof value === "object" && value !== null) {
-    if (!estimation.children) return "{…}"; // Max depth reached
+    if (!estimation.children) return "{…}";
 
     const childMap = estimation.children as Record<string, EstimationNode>;
     const keys = Object.keys(childMap);
 
-    // Overhead: {} (2) + commas (N-1) + key formatting ("key":)
-    let overhead = 2 + Math.max(0, keys.length - 1);
-    for (const key of keys) overhead += key.length + 3;
+    // Structural Overhead: {} (2) + commas (N-1)
+    const overhead = 2 + Math.max(0, keys.length - 1);
 
     const available = budget - overhead;
     if (available < 0) return "{…}";
 
-    let totalSize = 0;
-    for (const key of keys) totalSize += childMap[key].size;
+    let totalWeight = 0;
+    const entryWeights: number[] = [];
 
-    const ratio = totalSize > 0 ? available / totalSize : 0;
+    for (const key of keys) {
+      const keySize = key.length + `"":`.length;
+      const valSize = childMap[key].size;
+      const entrySize = keySize + valSize;
+      const w = Math.pow(entrySize, LAYER_BIAS);
+      totalWeight += w;
+      entryWeights.push(w);
+    }
+
+    const ratio = totalWeight > 0 ? available / totalWeight : 0;
 
     const entries: string[] = [];
-    for (const key of keys) {
+    keys.forEach((key, i) => {
       const childNode = childMap[key];
-      const val = (value as AnyShape)[key];
-      if (val === undefined) continue;
+      const propertyValue = (value as AnyShape)[key];
+      if (propertyValue === undefined) return;
 
-      const allocated = Math.floor(childNode.size * ratio);
-      const serializedVal = balancedSerialize(val, childNode, allocated);
-      entries.push(`"${key}":${serializedVal}`);
-    }
+      const entryAllocated = Math.floor(entryWeights[i] * ratio);
+
+      // Strategy: Bias towards Value..
+      const fullKey = `"${key}":`;
+      if (fullKey.length <= entryAllocated) {
+        // Try to allocate rest to value
+        const valBudget = entryAllocated - fullKey.length;
+        const minKeyLength = `"a${ELLIPSIS}a"`.length;
+
+        const neededForValue = childNode.size;
+        const missingForValue = Math.max(0, neededForValue - valBudget);
+
+        if (missingForValue > 0 && fullKey.length > minKeyLength) {
+          const stealable = fullKey.length - minKeyLength;
+          const toSteal = Math.min(stealable, missingForValue);
+
+          const keyBudget = fullKey.length - toSteal;
+          const finalValueBudget = entryAllocated - keyBudget;
+
+          const rawKeyBudget = keyBudget - `"":`.length;
+          const rawTruncatedKey = truncateString(key, rawKeyBudget);
+
+          const valueString = balancedSerialize(
+            propertyValue,
+            childNode,
+            finalValueBudget,
+          );
+
+          entries.push(`"${rawTruncatedKey}":${valueString}`);
+          return;
+        }
+
+        // Default: Full Key
+        const valueString = balancedSerialize(
+          propertyValue,
+          childNode,
+          valBudget,
+        );
+        entries.push(`${fullKey}${valueString}`);
+      } else {
+        const keyBudget = Math.max(
+          `"a${ELLIPSIS}a":`.length,
+          Math.floor(entryAllocated * KEY_ALLOCATION_RATIO),
+        );
+        const valBudget = Math.max(`""`.length, entryAllocated - keyBudget);
+
+        const rawKeyBudget = Math.max(
+          ELLIPSIS.length + 1,
+          keyBudget - `"":`.length,
+        );
+
+        const rawTruncatedKey = truncateString(key, rawKeyBudget);
+        const valueString = balancedSerialize(
+          propertyValue,
+          childNode,
+          valBudget,
+        );
+        entries.push(`"${rawTruncatedKey}":${valueString}`);
+      }
+    });
+
     return `{${entries.join(",")}}`;
   }
 

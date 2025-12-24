@@ -12,16 +12,17 @@
 import type { BottEvent } from "@bott/events";
 
 import { log } from "@bott/log";
-import ejs from "ejs";
+import { join } from "@std/path";
 
+import ejs from "ejs";
 import { resolveOutputEvents } from "../../common/events.ts";
 import { getEventSchema } from "../../common/getSchema.ts";
 import { queryGemini } from "../../common/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
-const systemPromptTemplate = (await Deno.readTextFile(
+const systemPromptTemplate = await Deno.readTextFile(
   new URL("./systemPrompt.md.ejs", import.meta.url),
-)).replaceAll("<!-- deno-fmt-ignore-file -->\n", "");
+);
 
 export const generateOutput: EventPipelineProcessor = async function () {
   // If there's nothing to focus on, skip this step.
@@ -33,7 +34,9 @@ export const generateOutput: EventPipelineProcessor = async function () {
     return;
   }
 
-  const systemPrompt = ejs.render(systemPromptTemplate, this);
+  const systemPrompt = ejs.render(systemPromptTemplate, this, {
+    filename: join(import.meta.url, "./systemPrompt.md.ejs"),
+  });
 
   this.data.output = await queryGemini<BottEvent[]>(
     this.data.input,

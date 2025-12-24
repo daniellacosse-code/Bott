@@ -75,21 +75,21 @@ export class BottServicesManager {
 
   private listeners = new Map<
     (
-      event: BottEvent,
+      event: never,
       context?: BottServiceContext,
     ) => unknown | Promise<unknown>,
     EventListener
   >();
 
-  addEventListener(
+  addEventListener<E extends BottEvent>(
     eventType: BottEventType,
     handler: (
-      event: BottEvent,
+      event: E,
       context?: BottServiceContext,
     ) => unknown | Promise<unknown>,
   ): void {
     const listener = async (event: Event) => {
-      const bottEvent = event as BottEvent;
+      const bottEvent = event as E;
 
       if (this.nonce !== this.getCurrentDeployNonce()) return;
 
@@ -108,10 +108,10 @@ export class BottServicesManager {
     globalThis.addEventListener(eventType, listener);
   }
 
-  removeEventListener(
+  removeEventListener<E extends BottEvent>(
     eventType: BottEventType,
     handler: (
-      event: BottEvent,
+      event: E,
       context?: BottServiceContext,
     ) => unknown | Promise<unknown>,
   ): void {

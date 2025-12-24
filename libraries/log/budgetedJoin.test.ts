@@ -45,10 +45,13 @@ Deno.test("budgetedJoin - object with single long string exceeds budget", () => 
 
   assert(result.length <= MAX_LENGTH);
   const parsedTruncated = JSON.parse(result);
+  const keys = Object.keys(parsedTruncated);
+  const key = keys[0];
+  const val = parsedTruncated[key];
 
-  assertEquals(parsedTruncated.key.startsWith("thi"), true);
-  assertEquals(parsedTruncated.key.endsWith("ated"), true);
-  assertEquals(parsedTruncated.key.includes("…"), true);
+  assertEquals(val.startsWith("thi"), true);
+  assertEquals(val.endsWith("ated"), true);
+  assertEquals(val.includes("…"), true);
 });
 
 Deno.test("budgetedJoin - nested object with proportional truncation", () => {
@@ -83,4 +86,56 @@ Deno.test("budgetedJoin - max depth exceeded", () => {
   const result = budgetedJoin([obj], 1000);
   // Should return JSON with "{…}" at depth
   assert(result.includes("{…}"));
+});
+
+Deno.test("budgetedJoin - bias values over keys", () => {
+  // Input with long key and small value
+  const input = { "thisIsAVeryLongKeyThatCouldBeTruncated": "value" };
+  // Budget:
+  // Full size:
+  // Key: 38 chars + quotes + colon = 41?? (JSON is "key":) -> 41.
+  // Value: "value" (5) + quotes = 7.
+  // {} = 2.
+  // Total = 50.
+
+  // Set budget to 30.
+  // Expectation: Key should be truncated significantly to allow "value" to show.
+  // "value" needs 7 chars.
+  // Key needs 41.
+  // Available 28 (after {}).
+  // If we prioritize value, value gets 7.
+  // Key can get 21.
+
+  const result = budgetedJoin([input], 30);
+  console.log("Values Over Keys Result:", result);
+
+  const parsed = JSON.parse(result);
+  const keys = Object.keys(parsed);
+  const key = keys[0];
+  const val = parsed[key];
+
+  assertEquals(val, "value"); // Value preserved
+  assert(key.includes("…")); // Key truncated
+  assert(key.length < 35);
+});
+
+Deno.test("budgetedJoin - bias higher layer values (small) over lower layer (large)", () => {
+  const input = [
+    "short", // size 5
+    {
+      nested:
+        "this is a very long string that is nested deep inside the object and should take the hit",
+    },
+  ];
+
+  const result = budgetedJoin(input, 40);
+  console.log("Higher Layer Bias Result:", result);
+
+  // Expect "short" to be present fully.
+  assert(result.includes("short"));
+  assert(!result.includes("s…"));
+
+  // Expect object to be present but truncated
+  assert(result.includes("{"));
+  assert(result.includes("…"));
 });
