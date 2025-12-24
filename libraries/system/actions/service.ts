@@ -27,14 +27,6 @@ import { commit, sql } from "@bott/storage";
 
 const settings: BottServiceSettings = {
   name: "action",
-  events: new Set([
-    BottEventType.ACTION_CALL,
-    BottEventType.ACTION_ABORT,
-    BottEventType.ACTION_START,
-    BottEventType.ACTION_OUTPUT,
-    BottEventType.ACTION_COMPLETE,
-    BottEventType.ACTION_ERROR,
-  ]),
 };
 
 const actionUser: BottUser = {

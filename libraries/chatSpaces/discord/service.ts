@@ -42,11 +42,6 @@ const REQUIRED_INTENTS = [
 
 const settings: BottServiceSettings = {
   name: "discord",
-  events: new Set([
-    BottEventType.MESSAGE,
-    BottEventType.REPLY,
-    BottEventType.REACTION,
-  ]),
 };
 
 export const discordService: BottService = createService(

@@ -12,6 +12,7 @@
 import type { BottAction } from "@bott/actions";
 import { createAction } from "@bott/actions";
 import {
+  APP_USER,
   GEMINI_AVAILABLE,
   GEMINI_EVENT_MODEL,
   GEMINI_MOVIE_MODEL,
@@ -19,12 +20,15 @@ import {
   GEMINI_RATING_MODEL,
   GEMINI_SONG_MODEL,
 } from "@bott/constants";
+import { BottEvent, BottEventType } from "@bott/events";
 import {
   movieAction,
   photoAction,
   responseAction,
   songAction,
 } from "@bott/gemini";
+import { log } from "@bott/log";
+import ejs from "ejs";
 
 const _actions: Record<string, BottAction> = {};
 
@@ -46,11 +50,43 @@ if (GEMINI_AVAILABLE) {
   }
 }
 
+const helpMessage = await Deno.readTextFile(
+  new URL("./help.md.ejs", import.meta.url),
+);
+
 _actions.help = createAction(async function* () {
-  // TODO
+  yield new BottEvent(BottEventType.MESSAGE, {
+    detail: {
+      content: ejs.render(helpMessage, {
+        actions: _actions,
+        currentVersion: getVersion(),
+      }),
+    },
+    user: APP_USER,
+    channel: this.channel,
+  });
 }, {
   name: "help",
   instructions: "Show help information.",
 });
 
 export const actions = _actions;
+
+// Common
+let _versionCache: string | undefined;
+async function getVersion(): Promise<string | undefined> {
+  if (_versionCache) return _versionCache;
+
+  try {
+    const configText = await Deno.readTextFile(
+      new URL("../deno.jsonc", import.meta.url),
+    );
+    const appDenoConfig = JSON.parse(configText);
+    _versionCache = appDenoConfig.version;
+  } catch (error) {
+    log.warn("Failed to read version from deno.jsonc:", error);
+    return;
+  }
+
+  return _versionCache;
+}

@@ -22,7 +22,6 @@ export interface BottServiceFunction {
 export interface BottServiceSettings {
   name: string;
   actions?: Record<string, BottAction>;
-  events?: Set<BottEventType>;
 }
 
 export interface BottServiceContext {

@@ -39,7 +39,6 @@ export class BottServicesManager {
       settings: {
         name: "root",
         actions: Object.fromEntries(this.actions),
-        events: this.events,
       },
       dispatchEvent: this.dispatchEvent.bind(this),
       addEventListener: this.addEventListener.bind(this),
@@ -53,10 +52,6 @@ export class BottServicesManager {
       Object.entries(service.actions).forEach(([name, action]) => {
         this.actions.set(name, action);
       });
-    }
-
-    if (service.events) {
-      this.events = new Set([...this.events, ...service.events]);
     }
 
     log.info(`Service "${service.name}" registered`);
@@ -84,12 +79,6 @@ export class BottServicesManager {
       context?: BottServiceContext,
     ) => unknown | Promise<unknown>,
   ): void {
-    if (!this.events.has(eventType)) {
-      log.warn(
-        `Event type "${eventType}" is not declared by any registered service.`,
-      );
-    }
-
     globalThis.addEventListener(eventType, async (event) => {
       const bottEvent = event as E;
 
@@ -104,13 +93,6 @@ export class BottServicesManager {
   }
 
   dispatchEvent(event: BottEvent) {
-    if (!this.events.has(event.type)) {
-      log.warn(
-        `Event type "${event.type}" is not declared by any registered service. Refusing to dispatch.`,
-      );
-      return;
-    }
-
     globalThis.dispatchEvent(event);
   }
 

@@ -30,20 +30,10 @@ import { actions } from "./actions.ts";
 
 const settings: BottServiceSettings = {
   name: APP_USER.name,
-  events: new Set([
-    BottEventType.MESSAGE,
-    BottEventType.REPLY,
-    BottEventType.REACTION,
-    BottEventType.ACTION_CALL,
-    BottEventType.ACTION_ABORT,
-    BottEventType.ACTION_OUTPUT,
-    BottEventType.ACTION_COMPLETE,
-    BottEventType.ACTION_ERROR,
-  ]),
   actions,
 };
 
-// Maps each channel ID to its state
+// Maps each channel ID to its response state
 type ChannelResponseState = {
   currentResponse?: BottActionCallEvent;
   debouncedCaller?: (event: BottEvent) => void;

@@ -21,16 +21,6 @@ import { upsertEvents } from "./upsert.ts";
 
 const settings: BottServiceSettings = {
   name: "eventStorage",
-  events: new Set([
-    BottEventType.MESSAGE,
-    BottEventType.REPLY,
-    BottEventType.REACTION,
-    BottEventType.ACTION_CALL,
-    BottEventType.ACTION_START,
-    BottEventType.ACTION_COMPLETE,
-    BottEventType.ACTION_ERROR,
-    BottEventType.ACTION_ABORT,
-  ]),
 };
 
 export const eventStorageService: BottService = createService(
