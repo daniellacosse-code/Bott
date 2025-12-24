@@ -9,7 +9,6 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { Buffer } from "node:buffer";
 import { APP_USER, SERVICE_DISCORD_TOKEN } from "@bott/constants";
 import { BottEvent, BottEventType } from "@bott/events";
 import { log } from "@bott/log";
@@ -213,14 +212,12 @@ export const discordService: BottService = createService(
 
       const files = [];
 
-      for (const attachment of attachments) {
-        const file = attachment.raw.file ?? attachment.compressed.file;
-
+      for (const { raw: attachment } of attachments) {
         files.push(
           new AttachmentBuilder(
-            Buffer.from(await file.arrayBuffer()),
+            attachment.path,
             {
-              name: file.name,
+              name: attachment.file.name,
             },
           ),
         );
@@ -229,7 +226,10 @@ export const discordService: BottService = createService(
       return targetChannel.send({
         content,
         files,
-        reply: event.type === BottEventType.REPLY && event.parent
+        // TODO: ensure we have the original discord message id
+        // to reply to
+        reply: event.type === BottEventType.REPLY && event.parent &&
+          /^\d+$/.test(event.parent.id)
           ? { messageReference: event.parent.id }
           : undefined,
       });

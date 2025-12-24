@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BottEvent, type BottEventAttachment } from "@bott/events";
+import type { BottEvent, BottEventAttachment } from "@bott/events";
 import type { BottChannel, BottSpace, BottUser } from "@bott/model";
 
 import { commit, type TransactionResults } from "../commit.ts";
