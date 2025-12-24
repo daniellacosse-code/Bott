@@ -63,6 +63,11 @@ export function budgetedJoin(
       return truncateString(v, budget);
     }
 
+    if (v instanceof Error) {
+      const message = v.stack || v.message || String(v);
+      return truncateString(message, budget);
+    }
+
     // Use regular balancedSerialize for non-strings
     return balancedSerialize(v, nodes[i], budget);
   });
@@ -135,6 +140,21 @@ function buildEstimationTree(value: unknown, depth: number): EstimationNode {
     typeof value === "symbol"
   ) return { size: 0 };
 
+  if (value instanceof Error) {
+    const message = value.stack || value.message || String(value);
+    return { size: message.length };
+  }
+
+  if (
+    typeof value === "object" && value !== null &&
+    "toJSON" in value && typeof value.toJSON === "function"
+  ) {
+    return buildEstimationTree(
+      value.toJSON(),
+      depth,
+    );
+  }
+
   let size = 0;
 
   if (Array.isArray(value)) {
@@ -177,6 +197,22 @@ function balancedSerialize(
   if (value === undefined) return "undefined";
   if (typeof value === "boolean") return String(value);
   if (typeof value === "number") return String(value);
+
+  if (value instanceof Error) {
+    const message = value.stack || value.message || String(value);
+    return truncateString(message, budget, true);
+  }
+
+  if (
+    typeof value === "object" && value !== null &&
+    "toJSON" in value && typeof value.toJSON === "function"
+  ) {
+    return balancedSerialize(
+      value.toJSON(),
+      estimation,
+      budget,
+    );
+  }
 
   if (typeof value === "string") {
     return truncateString(value, budget, true);

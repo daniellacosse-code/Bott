@@ -95,12 +95,8 @@ export class BottServicesManager {
 
       try {
         await handler(bottEvent, this.rootContext);
-      } catch (_error) {
-        const error = _error instanceof Error
-          ? _error
-          : new Error("Unknown error.");
-
-        log.warn("Failed to handle event:", { event, error });
+      } catch (error) {
+        log.warn("Failed to handle event:", event, error);
       }
     };
 

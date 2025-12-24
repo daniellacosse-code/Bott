@@ -164,7 +164,7 @@ export const LOG_TOPICS = readEnv(
   "LOG_TOPICS",
   ["info", "warn", "error"],
 );
-export const LOG_CHARACTER_LIMIT = 1024;
+export const LOG_CHARACTER_LIMIT = 4096;
 
 // -- Common --
 function readEnv<T>(key: string, defaultValue: T): T {
