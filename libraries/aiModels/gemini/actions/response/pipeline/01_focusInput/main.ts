@@ -28,8 +28,14 @@ export const focusInput: EventPipelineProcessor = async function () {
     ...new Set(inputReasons.flatMap((reason) => reason.ratingScales ?? [])),
   ];
 
-  // If we have no way to determine focus, skip this step.
+  // If we have no rating scales, just mark all events as focused.
   if (inputRatingScales.length === 0) {
+    for (const event of input) {
+      this.evaluationState.set(event, {
+        focusReasons: Object.values(inputReasons)
+          .filter((reason) => reason.validator()),
+      });
+    }
     return;
   }
 

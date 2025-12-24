@@ -33,7 +33,14 @@ export const filterOutput: EventPipelineProcessor = async function () {
     ...new Set(outputReasons.flatMap((reason) => reason.ratingScales ?? [])),
   ];
 
-  if (!outputRatingScales.length) {
+  // If we have no rating scales, just mark all events as focused.
+  if (outputRatingScales.length === 0) {
+    for (const event of output) {
+      this.evaluationState.set(event, {
+        outputReasons: Object.values(outputReasons)
+          .filter((reason) => reason.validator()),
+      });
+    }
     return;
   }
 

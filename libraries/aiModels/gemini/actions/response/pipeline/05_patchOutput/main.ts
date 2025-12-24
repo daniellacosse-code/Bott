@@ -53,11 +53,11 @@ export const patchOutput: EventPipelineProcessor = async function () {
   }
 
   const reactions = this.data.output.filter(
-    (event) => event.type === BottEventType.REACTION,
+    (event) => event.type === BottEventType.REACTION || event.type === BottEventType.ACTION_CALL,
   );
 
   const nonReactions = this.data.output.filter(
-    (event) => event.type !== BottEventType.REACTION,
+    (event) => event.type !== BottEventType.REACTION && event.type !== BottEventType.ACTION_CALL,
   );
 
   const eventsToPatch = nonReactions.map((event) => {

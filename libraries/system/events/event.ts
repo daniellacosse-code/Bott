@@ -68,9 +68,12 @@ export class BottEvent<
       createdAt: this.createdAt,
       lastProcessedAt: this.lastProcessedAt,
       channel: this.channel,
-      parent: this.parent,
+      parent: this.parent ? { id: this.parent.id } : undefined,
       user: this.user,
-      attachments: this.attachments,
+      attachments: this.attachments?.map((attachment) => ({
+        ...attachment,
+        parent: { id: attachment.parent.id },
+      })),
     };
   }
 }

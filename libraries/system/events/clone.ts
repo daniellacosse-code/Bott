@@ -40,6 +40,10 @@ export const cloneBottEvent = <T>(
     return new Date(value.getTime()) as T;
   }
 
+  if (value instanceof URL) {
+    return new URL(value.href) as T;
+  }
+
   if (Array.isArray(value)) {
     const clone = [] as unknown as T;
     memo.set(value, clone as object);

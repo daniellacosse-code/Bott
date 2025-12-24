@@ -32,3 +32,24 @@ export const settings: BottResponseSettings = {
     ],
   },
 };
+
+// test settings
+export const testSettings: BottResponseSettings = {
+  identity: `You're a test bot in a general chat. We are simply testing the system.`,
+  reasons: {
+    input: [
+      {
+        name: "Test Input Reason",
+        description: "Focuses all incoming events",
+        validator: () => true,
+      },
+    ],
+    output: [
+      {
+        name: "Test Output Reason",
+        description: "Allows all outgoing events.",
+        validator: () => true,
+      },
+    ],
+  },
+};
