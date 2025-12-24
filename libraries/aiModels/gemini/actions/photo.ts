@@ -44,7 +44,7 @@ const settings: BottActionSettings = {
     name: "media",
     type: "file",
     description:
-      "Optional reference media for the image generation (image or text).",
+      "Optional reference media for the image generation (image, pdf, or text).",
     required: false,
   }],
 };
@@ -71,6 +71,7 @@ export const photoAction: BottAction = createAction(
         case "image/bmp":
         case "image/tiff":
         case "image/svg+xml":
+        case "application/pdf":
           parts.push({
             inlineData: {
               data: encodeBase64(await mediaFile.arrayBuffer()),

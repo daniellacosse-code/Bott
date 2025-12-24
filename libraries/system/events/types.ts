@@ -68,6 +68,7 @@ export type BottEventAttachment = {
  * Enumerates the different types of attachments that can be associated with a BottEvent.
  */
 export enum BottEventAttachmentType {
+  PDF = "application/pdf",
   GIF = "image/gif",
   HTML = "text/html",
   JPEG = "image/jpeg",

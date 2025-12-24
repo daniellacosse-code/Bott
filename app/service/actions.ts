@@ -18,14 +18,14 @@ import {
   GEMINI_MOVIE_MODEL,
   GEMINI_PHOTO_MODEL,
   GEMINI_RATING_MODEL,
-  GEMINI_SONG_MODEL,
+  // GEMINI_SONG_MODEL,
 } from "@bott/constants";
 import { BottEvent, BottEventType } from "@bott/events";
 import {
   movieAction,
   photoAction,
   responseAction,
-  songAction,
+  // songAction,
 } from "@bott/gemini";
 import { log } from "@bott/log";
 import ejs from "ejs";
@@ -37,9 +37,10 @@ if (GEMINI_AVAILABLE) {
     _actions[responseAction.name] = responseAction;
   }
 
-  if (GEMINI_SONG_MODEL) {
-    _actions[songAction.name] = songAction;
-  }
+  // TODO: fix
+  // if (GEMINI_SONG_MODEL) {
+  //   _actions[songAction.name] = songAction;
+  // }
 
   if (GEMINI_PHOTO_MODEL) {
     _actions[photoAction.name] = photoAction;
