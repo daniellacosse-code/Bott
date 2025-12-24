@@ -11,13 +11,13 @@
 
 import { GEMINI_EVENT_MODEL } from "@bott/constants";
 import type { BottEvent } from "@bott/events";
+import { getPersona } from "@bott/storage";
 import type {
   Content,
   GenerateContentConfig,
   Part,
   Schema,
 } from "@google/genai";
-import { getPersona } from "@bott/storage";
 import { encodeBase64 } from "@std/encoding/base64";
 import ejs from "ejs";
 import gemini from "../../../client.ts";
@@ -121,7 +121,7 @@ export const _transformMentionsToHandles = async (
   event: BottEvent,
 ): Promise<string> => {
   const content = event.detail?.content;
-  
+
   if (typeof content !== "string" || !event.channel?.space) {
     return "";
   }
@@ -134,7 +134,7 @@ export const _transformMentionsToHandles = async (
 
   for (const match of matches) {
     const personaId = match[1];
-    const persona = await getPersona(personaId, event.channel.space);
+    const persona = await getPersona(personaId);
 
     if (persona) {
       // Replace all occurrences of @<personaId> with @handle
@@ -186,14 +186,7 @@ export const _transformBottEventToContent = async (
   delete _detail?.shouldInterpretOutput;
   delete _detail?.shouldForwardOutput;
 
-  // Transform mentions from @<personaId> to @handle for better LLM processing
-  const transformedContent = await _transformMentionsToHandles(event);
-  if (transformedContent && _detail) {
-    _detail = { ..._detail, content: transformedContent };
-  } else if (transformedContent === "" && _detail?.content) {
-    // Handle empty string transformation (valid case)
-    _detail = { ..._detail, content: "" };
-  }
+  _detail.content = await _transformMentionsToHandles(event);
 
   const eventToSerialize = {
     ...rest,

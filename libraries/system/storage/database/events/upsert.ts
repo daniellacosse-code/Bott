@@ -10,11 +10,10 @@
  */
 
 import type { BottEvent, BottEventAttachment } from "@bott/events";
-import type { BottChannel, BottSpace, BottUser } from "@bott/model";
+import type { BottChannel, BottSpace, BottUser, BottPersona } from "@bott/model";
 
 import { commit, type TransactionResults } from "../commit.ts";
 import { sql } from "../sql.ts";
-import { getAddUsersSql } from "../common/users.ts";
 
 const getAddChannelsSql = (
   ...channels: BottChannel[]
@@ -24,9 +23,8 @@ const getAddChannelsSql = (
   }
 
   const values = channels.map((channel) =>
-    sql`(${channel.id}, ${channel.space.id}, ${channel.name}, ${channel.description}, ${
-      JSON.stringify({})
-    })`
+    sql`(${channel.id}, ${channel.space.id}, ${channel.name}, ${channel.description}, ${JSON.stringify({})
+      })`
   );
 
   return sql`
@@ -40,17 +38,46 @@ const getAddChannelsSql = (
   `;
 };
 
+const getAddUsersSql = (...users: BottUser[]) => {
+  if (!users.length) {
+    return;
+  }
+
+  const values = users.map((user) => sql`(${user.id}, ${user.name})`);
+
+  return sql`
+    insert into users (id, name)
+    values ${values}
+    on conflict(id) do update set
+      name = excluded.name
+  `;
+};
+
+const getAddPersonasSql = (...personas: BottPersona[]) => {
+  if (!personas.length) {
+    return;
+  }
+
+  const values = personas.map((persona) => sql`(${persona.id}, ${persona.user!.id}, ${persona.displayName}, ${persona.handle}, ${persona.space.id})`)
+
+  return sql`
+    insert into personas (id, user_id, display_name, handle, space_id)
+    values ${values}
+    on conflict(id, space_id) do update set
+      name = excluded.name
+
+  `;
+}
+
 const getAddEventsSql = (...events: BottEvent[]) => {
   if (!events.length) {
     return;
   }
 
   const values = events.map((event) =>
-    sql`(${event.id}, ${event.type}, ${
-      JSON.stringify(event.detail)
-    }, ${event.parent?.id}, ${event.channel?.id}, ${event.user?.id}, ${event.createdAt.toISOString()}, ${
-      event.lastProcessedAt?.toISOString() ?? null
-    })`
+    sql`(${event.id}, ${event.type}, ${JSON.stringify(event.detail)
+      }, ${event.parent?.id}, ${event.channel?.id}, ${event.user?.id}, ${event.createdAt.toISOString()}, ${event.lastProcessedAt?.toISOString() ?? null
+      })`
   );
 
   return sql`
@@ -154,6 +181,7 @@ export const upsertEvents = (
   const spaces = new Map<string, BottSpace>();
   const channels = new Map<string, BottChannel>();
   const users = new Map<string, BottUser>();
+  const personas = new Map<string, BottPersona>();
   const attachments: BottEventAttachment[] = [];
   const files = [];
 
@@ -165,6 +193,12 @@ export const upsertEvents = (
 
     if (event.user) {
       users.set(event.user.id, event.user);
+
+      if (event.user.personas) {
+        for (const personaId of personas.keys()) {
+          personas.set(personaId, personas.get(personaId)!);
+        }
+      }
     }
 
     if (event.attachments) {
@@ -179,6 +213,7 @@ export const upsertEvents = (
     getAddSpacesSql(...spaces.values()),
     getAddChannelsSql(...channels.values()),
     getAddUsersSql(...users.values()),
+    getAddPersonasSql(...personas.values()),
     getAddFilesSql(...files),
     getAddEventsSql(...topologicallySortEvents(...events.values())),
     getAddAttachmentsSql(...attachments),

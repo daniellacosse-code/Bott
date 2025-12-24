@@ -20,15 +20,10 @@ must be formatted as:
 Where `personaId` is the unique identifier for the user's persona in the
 specific space.
 
-#### Examples
-
-If a platform formats mentions as `{X}`, convert to `@<personaId>`:
-- Platform: `<@123456789>` → Bott: `@<123456789>`
-- Platform: `<@U12345678>` → Bott: `@<U12345678>`
-
 #### How It Works
 
-The system automatically transforms mentions:
+The system automatically transforms mentions so it's easier for the LLM to
+understand:
 
 1. **Incoming (Platform → LLM)**: `@<personaId>` → `@handle`
    - Makes mentions more readable for the LLM
@@ -55,8 +50,8 @@ When creating a new chat space integration:
     space. Should contain only alphanumeric characters, underscores, and
     hyphens. Platform-specific validations may apply stricter rules (e.g., no
     leading/trailing hyphens).
-  - `displayName`: The user's display name if different from handle (e.g.,
-    "John Doe")
+  - `displayName`: The user's display name if different from handle (e.g., "John
+    Doe")
   - `space`: The space the persona belongs to
   - `user`: Optional reference to the canonical Bott user if known
 - [ ] Ensure personas are associated with the correct space

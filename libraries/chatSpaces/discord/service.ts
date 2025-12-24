@@ -153,18 +153,13 @@ export const discordService: BottService = createService(
       }
 
       // Reaction
-      let content = event.detail.content as string;
+      const content = event.detail.content as string;
       if (event.type === BottEventType.REACTION && event.parent) {
         const message = await targetChannel.messages.fetch(
           event.parent.id,
         );
 
         return message.react(content);
-      }
-
-      // Message or Reply - Transform mentions from @<userId> to <@userId>
-      if (content) {
-        content = content.replace(/@<(\d+)>/g, "<@$1>");
       }
 
       const attachments = event.attachments ?? [];

@@ -15,7 +15,6 @@ export { getEventHistory, getEvents } from "./database/events/get.ts";
 export { getPersona } from "./database/personas/get.ts";
 export { sql } from "./database/sql.ts";
 export { upsertEvents } from "./database/events/upsert.ts";
-export { upsertPersona } from "./database/personas/upsert.ts";
 export {
   prepareAttachmentFromFile,
   prepareAttachmentFromUrl,

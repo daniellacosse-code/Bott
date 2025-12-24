@@ -15,7 +15,7 @@ import type { BottRatingScale } from "@bott/model";
 export const directedAt: BottRatingScale = {
   name: `directedAt${APP_NAME}`,
   definition:
-    `Whether the message is directly addressed to "${APP_NAME}". A high score indicates a direct request or question. Mentions using @${APP_NAME.toLowerCase()} or @handle format are considered direct addresses.`,
+    `Whether the message is directly addressed to "${APP_NAME}". A high score indicates a direct request or question. Mentions using the @${APP_NAME} format are considered direct addresses.`,
   examples: {
     1: ["Hey other user, how are you this evening?"],
     3: [
