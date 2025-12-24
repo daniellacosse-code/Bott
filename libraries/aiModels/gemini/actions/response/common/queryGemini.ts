@@ -20,6 +20,7 @@ import type {
 import { encodeBase64 } from "@std/encoding/base64";
 import ejs from "ejs";
 import gemini from "../../../client.ts";
+import { cloneBottEvent } from "@bott/events";
 import type { EventPipelineContext } from "../pipeline/types.ts";
 
 const eventStructure = (await Deno.readTextFile(
@@ -76,24 +77,13 @@ export const queryGemini = async <O>(
     config.responseMimeType = "application/json";
   }
 
-  let response;
-  try {
-    response = await gemini.models.generateContent({
-      model,
-      contents: typeof input === "string" ? [input] : await Promise.all(
-        input.map((event) => _transformBottEventToContent(event, pipeline)),
-      ),
-      config,
-    });
-  } catch (error) {
-    const geminiError = error as Error;
-
-    // Gemini errors are often empty...
-    geminiError.message ||=
-      "queryGemini: Error generating content. Gemini provided no error message: you are likely unauthenticated.";
-
-    throw geminiError;
-  }
+  const response = await gemini.models.generateContent({
+    model,
+    contents: typeof input === "string" ? [input] : await Promise.all(
+      input.map((event) => _transformBottEventToContent(event, pipeline)),
+    ),
+    config,
+  });
 
   const result = response.candidates?.[0]?.content?.parts
     ?.filter((part: Part) => "text" in part && typeof part.text === "string")
@@ -130,7 +120,7 @@ export const _transformBottEventToContent = async (
     detail: _detail,
     createdAt,
     ...rest
-  } = structuredClone(event);
+  } = cloneBottEvent(event);
 
   let parent;
 

@@ -17,3 +17,4 @@ export {
 export * from "./event.ts";
 export * from "./attachment.ts";
 export * from "./validation.ts";
+export * from "./clone.ts";

@@ -24,6 +24,7 @@ import {
   BottEventType,
 } from "@bott/events";
 import { getEvents } from "@bott/storage";
+import { cloneBottEvent } from "@bott/events";
 import type { EventPipelineContext } from "../pipeline/types.ts";
 
 export const prepareInputEvents = (events: BottEvent[]): BottEvent[] => {
@@ -46,7 +47,7 @@ export const prepareInputEvents = (events: BottEvent[]): BottEvent[] => {
       break;
     }
 
-    const event = structuredClone(events[i]);
+    const event = cloneBottEvent(events[i]);
 
     if (!event.attachments) {
       preparedInput.unshift(event);
@@ -106,7 +107,7 @@ export const resolveOutputEvents = async (
 
   for (const unresolvedEvent of outputEvents) {
     // TODO: create a new BottEvent instead of cloning so we don't have to force assign parent
-    const event = structuredClone(unresolvedEvent);
+    const event = cloneBottEvent(unresolvedEvent);
 
     // Ensure full parent object is fetched
     if (event.parent) {
