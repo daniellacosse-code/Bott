@@ -36,7 +36,7 @@ cp .env.example .env.local
 ```
 
 2. Open the `.env.local` file and add the relevant credentials.
-3. Run `./exec` to start the application.
+3. Run `./run` to start the application.
 
 ### Pull Requests
 
@@ -64,7 +64,7 @@ cp .env.example .env.production
 3. Execute the deployment task:
 
 ```sh
-ENV=production ./exec deno task deploy_gcp
+ENV=production ./run deno task deploy_gcp
 ```
 
 > [!TIP]
@@ -72,13 +72,13 @@ ENV=production ./exec deno task deploy_gcp
 > variable to `docker` or `podman`:
 >
 > ```sh
-> RUNTIME=podman ./exec deno task deploy_gcp
+> RUNTIME=podman ./run deno task deploy_gcp
 > ```
 
 4. Verify your new deployment by tailing the logs:
 
 ```sh
-ENV=production ./exec deno task logs
+ENV=production ./run deno task logs
 ```
 
 ### Releasing

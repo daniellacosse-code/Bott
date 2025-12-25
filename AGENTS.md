@@ -21,7 +21,7 @@ content generation capabilities.
 
 ### Development Workflow
 
-- Run `./exec` to start Bott locally.
+- Run `./run` to start Bott locally.
 - NEVER CANCEL initial startup - dependency downloads take 2-5 minutes
 - The development server watches for changes in `app/`, `libraries/`, and
   `model/` directories
@@ -30,8 +30,8 @@ content generation capabilities.
 
 ### Manual Validation Steps
 
-- Container builds successfully when running `./exec`
-- Format check passes: `./exec deno fmt --check` reports "Checked X files" with
+- Container builds successfully when running `./run`
+- Format check passes: `./run deno fmt --check` reports "Checked X files" with
   exit code 0
 - Application starts automatically in the devcontainer without TypeScript
   compilation errors
@@ -40,14 +40,14 @@ content generation capabilities.
 
 ### Testing Requirements
 
-- ALWAYS run `./exec deno fmt --check` and `./exec deno lint` before committing
+- ALWAYS run `./run deno fmt --check` and `./run deno lint` before committing
   changes
-- ALWAYS run `./exec deno test --allow-all` to validate unit tests
+- ALWAYS run `./run deno test --allow-all` to validate unit tests
 - Test files are located in: `**/**.test.ts`
 
 ### CI/CD Validation
 
-- Always run `./exec deno fmt --check && ./exec deno lint` before committing -
+- Always run `./run deno fmt --check && ./run deno lint` before committing -
   this matches the GitHub Actions workflow
 - License header check: All `.ts` and `.sql` files must contain "This project is
   dual-licensed:" in their header
