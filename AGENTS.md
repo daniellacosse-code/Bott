@@ -60,7 +60,7 @@ ensure consistency and proper environment setup.
 Set `RUNNER` environment variable to choose container runtime:
 
 ```sh
-RUNNER=podman ./run deno fmt --check  # Use Podman instead of Docker
+RUNNER=podman ./run deno fmt --check      # Use Podman instead of Docker
 ```
 
 **Environment selection:**
@@ -68,7 +68,7 @@ RUNNER=podman ./run deno fmt --check  # Use Podman instead of Docker
 Set `ENV` to use different environment configurations:
 
 ```sh
-ENV=production ./run deno task logs  # Use .env.production
+ENV=production ./run deno task logs       # Use .env.production
 ```
 
 ## Validation
