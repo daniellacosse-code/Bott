@@ -99,8 +99,7 @@ export const queryGemini = async <O>(
   } catch (error) {
     if (responseSchema) {
       throw new Error(
-        `queryGemini: Failed to parse JSON response: ${
-          cleanedResult || "(empty)"
+        `queryGemini: Failed to parse JSON response: ${cleanedResult || "(empty)"
         }`,
         { cause: error },
       );
@@ -161,7 +160,19 @@ export const _transformBottEventToContent = async (
     },
   };
 
-  const parts: Part[] = [{ text: JSON.stringify(eventToSerialize) }];
+  // TODO: better inform the model about what is and isn't a system event
+  let eventJson = JSON.stringify(eventToSerialize);
+
+  // Label system events to prevent model confusion about authorship
+  if (
+    event.type === "action:start" ||
+    event.type === "action:complete" ||
+    event.type === "action:error"
+  ) {
+    eventJson = `[SYSTEM EVENT] ${eventJson}`;
+  }
+
+  const parts: Part[] = [{ text: eventJson }];
 
   // TODO: check all service users
   const isModel = event.user.id === APP_USER.id ||
