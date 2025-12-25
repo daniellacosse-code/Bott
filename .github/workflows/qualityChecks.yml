@@ -42,7 +42,8 @@ jobs:
           deno coverage .output/cov_profile --lcov --output=.output/coverage/lcov.info \
             --include="^file://.*/app/.*\.ts$" \
             --include="^file://.*/libraries/.*\.ts$" \
-            --include="^file://.*/model/.*\.ts$"
+            --include="^file://.*/model/.*\.ts$" \
+            --include="^file://.*/scripts/.*\.ts$"
 
       - name: Upload Coverage
         uses: qltysh/qlty-action/coverage@v2
