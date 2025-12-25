@@ -26,6 +26,51 @@ content generation capabilities.
 - The development server watches for changes in `app/`, `libraries/`, and
   `model/` directories
 
+### Using `./run` - Container Execution
+
+The `./run` script is the primary interface for executing commands in this
+project. **All commands should be run through `./run` whenever possible** to
+ensure consistency and proper environment setup.
+
+**How it works:**
+
+- `./run` builds a Docker/Podman container with all dependencies pre-installed
+- Commands are executed inside the container, not on the host system
+- The workspace directory is mounted at `/workspace` inside the container
+- Environment variables are loaded from `.env.$ENV` files (default: `.env.local`)
+
+**Why use it:**
+
+- **Consistency**: Everyone works with the same dependencies and environment
+- **No local installation**: You don't need Deno or other tools installed on
+  your host
+- **Isolation**: Container ensures no conflicts with your local system
+
+**Examples:**
+
+```sh
+./run deno fmt --check        # Format check
+./run deno lint              # Lint code
+./run deno test --allow-all  # Run tests
+./run deno task deploy_gcp   # Deploy to GCP
+```
+
+**Container runtime:**
+
+Set `RUNNER` environment variable to choose container runtime:
+
+```sh
+RUNNER=podman ./run deno fmt --check  # Use Podman instead of Docker
+```
+
+**Environment selection:**
+
+Set `ENV` to use different environment configurations:
+
+```sh
+ENV=production ./run deno task logs  # Use .env.production
+```
+
 ## Validation
 
 ### Manual Validation Steps
