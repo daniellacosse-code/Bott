@@ -37,7 +37,8 @@ ensure consistency and proper environment setup.
 - `./run` builds a Docker/Podman container with all dependencies pre-installed
 - Commands are executed inside the container, not on the host system
 - The workspace directory is mounted at `/workspace` inside the container
-- Environment variables are loaded from `.env.$ENV` files (default: `.env.local`)
+- Environment variables are loaded from `.env.$ENV` files (default:
+  `.env.local`)
 
 **Why use it:**
 
