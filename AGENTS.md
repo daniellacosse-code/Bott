@@ -21,17 +21,63 @@ content generation capabilities.
 
 ### Development Workflow
 
-- Run `./exec` to start Bott locally.
+- Run `./run` to start Bott locally.
 - NEVER CANCEL initial startup - dependency downloads take 2-5 minutes
 - The development server watches for changes in `app/`, `libraries/`, and
   `model/` directories
+
+### Using `./run` - Container Execution
+
+The `./run` script is the primary interface for executing commands in this
+project. **All commands should be run through `./run` whenever possible** to
+ensure consistency and proper environment setup.
+
+**How it works:**
+
+- `./run` builds a Docker/Podman container with all dependencies pre-installed
+- Commands are executed inside the container, not on the host system
+- The workspace directory is mounted at `/workspace` inside the container
+- Environment variables are loaded from `.env.$ENV` files (default:
+  `.env.local`)
+
+**Why use it:**
+
+- **Consistency**: Everyone works with the same dependencies and environment
+- **No local installation**: You don't need Deno or other tools installed on
+  your host
+- **Isolation**: Container ensures no conflicts with your local system
+
+**Examples:**
+
+```sh
+./run deno fmt --check        # Format check
+./run deno lint              # Lint code
+./run deno test --allow-all  # Run tests
+./run deno task deploy_gcp   # Deploy to GCP
+```
+
+**Container runtime:**
+
+Set `RUNNER` environment variable to choose container runtime:
+
+```sh
+RUNNER=podman ./run deno fmt --check      # Use Podman instead of Docker
+```
+
+**Environment selection:**
+
+Set `ENV` to use different environment configurations:
+
+```sh
+ENV=production ./run deno task logs       # Use .env.production
+```
 
 ## Validation
 
 ### Manual Validation Steps
 
-- Container builds successfully when running `./exec`
-- Format check passes: `./exec deno fmt --check` reports "Checked X files" with
+- Container builds successfully when running `./run`
+- Format check passes: `./run deno fmt --check` reports "Checked X files" with
   exit code 0
 - Application starts automatically in the devcontainer without TypeScript
   compilation errors
@@ -40,14 +86,14 @@ content generation capabilities.
 
 ### Testing Requirements
 
-- ALWAYS run `./exec deno fmt --check` and `./exec deno lint` before committing
+- ALWAYS run `./run deno fmt --check` and `./run deno lint` before committing
   changes
-- ALWAYS run `./exec deno test --allow-all` to validate unit tests
+- ALWAYS run `./run deno test --allow-all` to validate unit tests
 - Test files are located in: `**/**.test.ts`
 
 ### CI/CD Validation
 
-- Always run `./exec deno fmt --check && ./exec deno lint` before committing -
+- Always run `./run deno fmt --check && ./run deno lint` before committing -
   this matches the GitHub Actions workflow
 - License header check: All `.ts` and `.sql` files must contain "This project is
   dual-licensed:" in their header

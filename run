@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # @license
 # This file is part of Bott.
@@ -18,7 +18,7 @@ TARGET_ENV="${ENV:-local}"
 GCLOUD_HOST_DIR="$PWD/.output/gcloud"
 mkdir -p "$GCLOUD_HOST_DIR"
 
-$RUNNER build -t $IMAGE .
+$RUNNER build -f Containerfile -t $IMAGE .
 
 if [ "$TARGET_ENV" = "local" ]; then
   if [ ! -f "$GCLOUD_HOST_DIR/application_default_credentials.json" ]; then
