@@ -21,6 +21,16 @@ import { settings } from "./settings/main.ts";
 // import { testSettings } from "./settings/main.ts";
 
 if (import.meta.main) {
+  addEventListener("unhandledrejection", (event) => {
+    event.preventDefault();
+    log.error("Unhandled rejection:", event.reason);
+  });
+
+  addEventListener("error", (event) => {
+    event.preventDefault();
+    log.error("Uncaught exception:", event.error);
+  });
+
   const servicesManager = new BottServicesManager(settings);
   // const servicesManager = new BottServicesManager(testSettings);
 

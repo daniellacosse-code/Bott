@@ -50,7 +50,11 @@ export const responseAction: BottAction = createAction(
     }
 
     // Update processed input events
-    await upsertEvents(...pipeline.data.input);
+    const result = await upsertEvents(...pipeline.data.input);
+
+    if ("error" in result) {
+      log.error("Failed to update processed events", result.error);
+    }
 
     for (const event of pipeline.data.output) {
       if (!pipeline.evaluationState.get(event)?.outputReasons?.length) {

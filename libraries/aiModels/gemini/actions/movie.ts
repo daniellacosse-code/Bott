@@ -35,19 +35,20 @@ import { generateFilename } from "./common.ts";
 
 const settings: BottActionSettings = {
   name: "movie",
-  instructions: "Generate a movie based on the prompt.",
+  instructions: "Generate a movie based on a prompt.",
   limitPerMonth: ACTION_RATE_LIMIT_VIDEOS,
   shouldForwardOutput: true,
   parameters: [{
     name: "prompt",
     type: "string",
-    description: "Description of the movie scene",
+    description:
+      "Direct the AI, lay out your vision for the scene; be as specific as possible. **LIMITATION:** Explicitly instruct the AI to avoid excessive captions in the video, as it will appear distorted or misspelled.",
     required: true,
   }, {
     name: "media",
     type: "file",
     description:
-      "Optional reference media for the video generation (image or text)",
+      "Refer to an Attachment (image or text) that will be used as a reference for the movie.",
     required: false,
   }],
 };

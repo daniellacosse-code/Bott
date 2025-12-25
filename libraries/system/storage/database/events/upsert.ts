@@ -170,7 +170,9 @@ export const upsertEvents = (
   while (_queue.length > 0) {
     const currentEvent = _queue.shift()!;
 
-    events.set(currentEvent.id, currentEvent);
+    if (!events.has(currentEvent.id)) {
+      events.set(currentEvent.id, currentEvent);
+    }
     _seenEvents.add(currentEvent.id);
 
     if (

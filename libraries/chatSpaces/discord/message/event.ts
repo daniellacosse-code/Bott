@@ -11,6 +11,7 @@
 
 import { BottEvent, BottEventType } from "@bott/events";
 
+import { log } from "@bott/log";
 import { getEvents, prepareAttachmentFromUrl } from "@bott/storage";
 import type { Message } from "discord.js";
 
@@ -69,10 +70,14 @@ export const messageToEvent = async (
     ...getMarkdownLinks(message.content),
   ];
 
-  if (urls.length) {
-    event.attachments = await Promise.all(
-      urls.map((url) => prepareAttachmentFromUrl(new URL(url), event)),
-    );
+  try {
+    if (urls.length) {
+      event.attachments = await Promise.all(
+        urls.map((url) => prepareAttachmentFromUrl(new URL(url), event)),
+      );
+    }
+  } catch (error) {
+    log.error(error);
   }
 
   return event;

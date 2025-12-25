@@ -15,7 +15,7 @@ import type { BottRatingScale } from "@bott/model";
 export const directedAt: BottRatingScale = {
   name: `directedAt${APP_NAME}`,
   definition:
-    `Whether the message is directly addressed to "${APP_NAME}". A high score indicates a direct request, question, or reply.`,
+    `The degree to which the message is addressed directly at "${APP_NAME}". A high score indicates the message is intended for ${APP_NAME}: regardless of if it is a request, question, statement, or apology.`,
   examples: {
     1: ["Hey other user, how are you this evening?"],
     3: [
@@ -30,6 +30,8 @@ export const directedAt: BottRatingScale = {
     5: [
       `Hey ${APP_NAME.toLocaleLowerCase()}, do a dance for me.`,
       `@${APP_NAME}, can you write me a story?`,
+      `I'm sorry ${APP_NAME}, I didn't mean that.`,
+      `You're doing a great job, ${APP_NAME}.`,
     ],
   },
 };

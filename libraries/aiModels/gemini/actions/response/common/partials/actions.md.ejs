@@ -17,7 +17,12 @@
       <%_ for (const param of action.parameters) { _%>
         <tr>
           <td><code><%= param.name %></code></td>
-          <td><%= param.description ?? '-' %></td>
+          <td>
+            <%= param.description ?? '-' %>
+            <%_ if (param.type === 'file') { _%>
+              <br/><strong>IMPORTANT: For <code>file</code> parameters, you must provide the Attachment ID of a file present in the conversation history.</strong>
+            <%_ } _%>
+          </td>
           <td><code><%= param.type %></code></td>
           <td>
             <%_ if (param.type !== 'file' && param.allowedValues) { _%>

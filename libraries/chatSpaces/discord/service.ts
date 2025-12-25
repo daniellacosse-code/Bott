@@ -9,7 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { APP_USER, SERVICE_DISCORD_TOKEN } from "@bott/constants";
+import {
+  APP_USER,
+  SERVICE_DISCORD_ATTACHMENT_SIZE_LIMIT,
+  SERVICE_DISCORD_TOKEN,
+} from "@bott/constants";
 import { BottEvent, BottEventType } from "@bott/events";
 import { log } from "@bott/log";
 import type { BottUser } from "@bott/model";
@@ -18,6 +22,7 @@ import {
   type BottServiceSettings,
   createService,
 } from "@bott/services";
+import { retry } from "@std/async";
 import {
   AttachmentBuilder,
   ChannelType,
@@ -210,28 +215,46 @@ export const discordService: BottService = createService(
 
       if (!content && attachments.length === 0) return;
 
-      const files = [];
+      const files: AttachmentBuilder[] = [];
 
-      for (const { raw: attachment } of attachments) {
+      for (const { raw, compressed } of attachments) {
+        let fileToSend = raw;
+
+        const { size: rawSize } = await Deno.stat(raw.path);
+        const { size: compressedSize } = await Deno.stat(compressed.path);
+
+        if (
+          rawSize > SERVICE_DISCORD_ATTACHMENT_SIZE_LIMIT &&
+          compressedSize > SERVICE_DISCORD_ATTACHMENT_SIZE_LIMIT
+        ) {
+          continue;
+        }
+
+        if (rawSize > SERVICE_DISCORD_ATTACHMENT_SIZE_LIMIT) {
+          fileToSend = compressed;
+        }
+
         files.push(
           new AttachmentBuilder(
-            attachment.path,
+            fileToSend.path,
             {
-              name: attachment.file.name,
+              name: fileToSend.file.name,
             },
           ),
         );
       }
 
-      return targetChannel.send({
-        content,
-        files,
-        // TODO: ensure we have the original discord message id
-        // to reply to
-        reply: event.type === BottEventType.REPLY && event.parent &&
-            /^\d+$/.test(event.parent.id)
-          ? { messageReference: event.parent.id }
-          : undefined,
+      return retry(async () => {
+        return await targetChannel.send({
+          content,
+          files,
+          // TODO: ensure we have the original discord message id
+          // to reply to
+          reply: event.type === BottEventType.REPLY && event.parent &&
+              /^\d+$/.test(event.parent.id)
+            ? { messageReference: event.parent.id }
+            : undefined,
+        });
       });
     };
 

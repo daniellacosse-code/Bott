@@ -68,6 +68,10 @@ export function budgetedJoin(
       return truncateString(message, budget);
     }
 
+    if (v instanceof File) {
+      return truncateString(v.name, budget);
+    }
+
     // Use regular balancedSerialize for non-strings
     return balancedSerialize(v, nodes[i], budget);
   });

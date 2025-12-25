@@ -110,12 +110,14 @@ export const focusInput: EventPipelineProcessor = async function () {
       continue;
     }
 
+    const currentPointer = pointer;
+
     geminiCalls.push((async () => {
       const scoresWithRationale = await queryGemini<
         Record<string, { rating: string; rationale: string | undefined }>
       >(
-        // Provide the current event and all subsequent events as context for scoring.
-        input.slice(pointer),
+        // Provide the history and current input events up to this point as context.
+        [...input.slice(0, currentPointer + 1)],
         {
           systemPrompt,
           responseSchema,

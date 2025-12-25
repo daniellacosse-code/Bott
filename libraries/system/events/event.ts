@@ -131,6 +131,7 @@ export type BottActionCallEvent = BottEvent<BottEventType.ACTION_CALL, {
 }>;
 
 export type BottActionStartEvent = BottEvent<BottEventType.ACTION_START, {
+  name: string; // required for rate limiting
   id: string;
 }>;
 
