@@ -32,15 +32,15 @@ if (import.meta.main) {
   for (const serviceName of SERVICE_LIST) {
     servicesManager.start(serviceName);
   }
-}
 
-// Need to respond to GCP health probe:
-Deno.serve(
-  {
-    port: PORT,
-    onListen: ({ port, hostname }) => {
-      log.info(`main: Listening on ${hostname}:${port}`);
+  // Need to respond to GCP health probe:
+  Deno.serve(
+    {
+      port: PORT,
+      onListen: ({ port, hostname }) => {
+        log.info(`main: Listening on ${hostname}:${port}`);
+      },
     },
-  },
-  () => new Response("OK", { status: 200 }),
-);
+    () => new Response("OK", { status: 200 }),
+  );
+}
