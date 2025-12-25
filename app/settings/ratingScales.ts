@@ -15,7 +15,7 @@ import type { BottRatingScale } from "@bott/model";
 export const directedAt: BottRatingScale = {
   name: `directedAt${APP_NAME}`,
   definition:
-    `Whether the message is directly addressed to "${APP_NAME}". A high score indicates a direct request or question.`,
+    `Whether the message is directly addressed to "${APP_NAME}". A high score indicates a direct request, question, or reply.`,
   examples: {
     1: ["Hey other user, how are you this evening?"],
     3: [
@@ -24,6 +24,7 @@ export const directedAt: BottRatingScale = {
     ],
     4: [
       "<message of an ongoing conversation with you>",
+      "<directly replies to your message>",
       "That makes sense, but what about the cost?",
     ],
     5: [
@@ -161,6 +162,26 @@ export const potentialImpact: BottRatingScale = {
       "Hey @everyone, we're planning a game night for this Friday!",
       "BREAKING: The event has been cancelled, we need to reschedule",
       "Important: We're updating the community rules, please read the announcement",
+    ],
+  },
+};
+
+export const helpfulness: BottRatingScale = {
+  name: "helpfulness",
+  definition:
+    "How helpful the message is to the user. A low score indicates the message is unhelpful or distracting, while a high score indicates the message provides exactly what the user is looking for.",
+  examples: {
+    1: [
+      "User: 'What's the weather?' Bott: 'I like turtles.'",
+      "User: 'Help me debug this.' Bott: 'No.'",
+    ],
+    4: [
+      "User: 'I'm sad.' Bott: 'Here's a poem to cheer you up.' (Anticipated user need, helpful but not explicitly requested)",
+      "User: 'Write me a poem about dogs.' Bott: 'Here is a haiku about a cat.' (Relevant and creative, but not exactly what was asked)",
+    ],
+    5: [
+      "User: 'What is 2+2?' Bott: '2+2 is 4.'",
+      "User: 'Generate an image of a cat.' Bott: <Generates image of a cat>",
     ],
   },
 };

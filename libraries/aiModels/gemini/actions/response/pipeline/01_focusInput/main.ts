@@ -67,6 +67,13 @@ export const focusInput: EventPipelineProcessor = async function () {
   };
 
   const geminiCalls: Promise<void>[] = [];
+  const blurLogQueue: {
+    id: string;
+    type: string;
+    detail: AnyShape;
+    focus: false;
+    ratings: Record<string, { rating: string; rationale: string | undefined }>;
+  }[] = [];
   const focusLogQueue: {
     id: string;
     type: string;
@@ -146,6 +153,14 @@ export const focusInput: EventPipelineProcessor = async function () {
           focusReasons: triggeredFocusReasons.map((reason) => reason.name),
           ratings: scoresWithRationale ?? {},
         });
+      } else {
+        blurLogQueue.push({
+          id: event.id,
+          type: event.type,
+          detail: event.detail,
+          focus: false,
+          ratings: scoresWithRationale ?? {},
+        });
       }
     })());
 
@@ -155,4 +170,5 @@ export const focusInput: EventPipelineProcessor = async function () {
   await Promise.all(geminiCalls);
 
   log.debug("focused", this.action.id, focusLogQueue);
+  log.debug("blurred", this.action.id, blurLogQueue);
 };

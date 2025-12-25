@@ -1,4 +1,5 @@
 <!-- deno-fmt-ignore-file -->
+<!-- TODO: rewrite this, it's a bit contradictory -->
 # Task: Audit a Potential Series of Events
 
 You are an expert **Conversation Reviewer**. Your goal is to review the proposed

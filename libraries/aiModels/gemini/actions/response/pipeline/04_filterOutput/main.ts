@@ -113,7 +113,7 @@ export const filterOutput: EventPipelineProcessor = async function () {
         Record<string, { rating: string; rationale: string | undefined }>
       >(
         // Provide the current event and all subsequent events as context for scoring.
-        output.slice(pointer),
+        [...this.data.input, ...output.slice(pointer)],
         {
           systemPrompt,
           responseSchema,

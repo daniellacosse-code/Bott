@@ -28,6 +28,7 @@ export const settings: BottResponseSettings = {
       reasons.checkFacts,
     ],
     output: [
+      reasons.answerRequest,
       reasons.ensurePotentialImpact,
     ],
   },

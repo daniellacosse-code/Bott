@@ -14,6 +14,7 @@ import type { BottReason } from "@bott/model";
 
 import {
   directedAt,
+  helpfulness,
   objectivity,
   potentialImpact,
   relevance,
@@ -73,8 +74,7 @@ export const checkFacts: BottReason = {
 
 export const ensurePotentialImpact: BottReason = {
   name: "ensurePotentialImpact",
-  description:
-    "You should only send events with a `potentialImpact` 4 or greater.",
+  description: "You should send events with a `potentialImpact` 4 or greater.",
   ratingScales: [potentialImpact],
   validator: (metadata) => {
     const ratings = metadata?.ratings;
@@ -84,5 +84,22 @@ export const ensurePotentialImpact: BottReason = {
     }
 
     return ratings.potentialImpact >= 4;
+  },
+};
+
+export const answerRequest: BottReason = {
+  name: "answerRequest",
+  description: "You should send events that address users' requests.",
+  ratingScales: [helpfulness, relevance],
+  validator: (metadata) => {
+    const ratings = metadata?.ratings;
+
+    if (!ratings) {
+      return false;
+    }
+
+    const { helpfulness, relevance } = ratings;
+
+    return helpfulness >= 4 && relevance >= 4;
   },
 };
