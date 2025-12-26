@@ -43,9 +43,9 @@ export const responseAction: BottAction = createAction(
     };
 
     for (const step of pipelineProcess) {
-      console.info(step.name);
+      console.time(step.name);
       await step.call(pipeline);
-      console.info(step.name);
+      console.timeEnd(step.name);
     }
 
     // Update processed input events

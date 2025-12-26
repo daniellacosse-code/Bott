@@ -29,7 +29,7 @@ import { patchOutput } from "./05_patchOutput/main.ts";
 import type { EventPipelineContext, EventPipelineProcessor } from "./types.ts";
 
 if (import.meta.main) {
-  console.info("pipeline");
+  console.time("pipeline");
 
   const pipelineToTest: EventPipelineProcessor[] = [
     focusInput,
@@ -42,11 +42,11 @@ if (import.meta.main) {
   let result: EventPipelineContext | object = {};
 
   for (const processor of pipelineToTest) {
-    console.info(processor.name);
+    console.time(processor.name);
     const context = createMockContext();
     await processor.call(context);
     result = context;
-    console.info(processor.name);
+    console.timeEnd(processor.name);
   }
 
   if (!("data" in result)) {
@@ -55,7 +55,7 @@ if (import.meta.main) {
 
   console.debug(result.data);
 
-  console.info("pipeline");
+  console.timeEnd("pipeline");
 }
 
 // ---
