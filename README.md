@@ -41,13 +41,22 @@ Bott: the autonomous groupchat agent!
 ## Observability
 
 Bott uses standard console logging that can be integrated with OpenTelemetry for
-monitoring and tracing. See the [Observability Guide](./docs/OBSERVABILITY.md)
-for details on:
+monitoring and tracing.
+
+**Quick Start**: Spin up local observability stack with Jaeger and Prometheus:
+
+```bash
+docker compose up -d
+```
+
+Then view traces at http://localhost:16686 and metrics at http://localhost:9090.
+
+See the [Observability Guide](./docs/OBSERVABILITY.md) for details on:
 
 - Configuring OpenTelemetry with Deno
 - Exporting logs, traces, and metrics
 - Integration with cloud platforms (GCP, AWS, Azure)
-- Local development with Jaeger and Prometheus
+- Advanced configuration and troubleshooting
 
 ## Contributing
 

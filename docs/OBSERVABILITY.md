@@ -3,6 +3,37 @@
 Bott uses standard `console` methods for logging, which makes it easy to
 integrate with OpenTelemetry and other observability platforms.
 
+## Quick Start
+
+The easiest way to get started with observability for local development:
+
+1. Start the observability stack:
+
+   ```bash
+   docker compose up -d
+   ```
+
+2. Configure Bott to send telemetry (add to `.env.local`):
+
+   ```bash
+   OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+   OTEL_SERVICE_NAME=bott
+   ```
+
+3. Access the UIs:
+   - **Jaeger** (traces): http://localhost:16686
+   - **Prometheus** (metrics): http://localhost:9090
+
+4. Stop the stack when done:
+   ```bash
+   docker compose down
+   ```
+
+The `compose.yml` file includes:
+
+- **Jaeger**: Distributed tracing UI and backend
+- **Prometheus**: Metrics collection and storage
+
 ## Overview
 
 Starting with the removal of the custom `@bott/log` library, Bott now uses
@@ -234,37 +265,55 @@ requestCounter.add(1, { status: "success" });
 
 ## Local Development
 
-### Running with Jaeger (Local Tracing)
+The repository includes a `compose.yml` file that sets up a complete local
+observability stack with Jaeger and Prometheus.
 
-1. Start Jaeger using Docker:
+### Using Docker Compose (Recommended)
+
+1. Start the observability stack:
+
    ```bash
-   docker run -d --name jaeger \
-     -e COLLECTOR_OTLP_ENABLED=true \
-     -p 16686:16686 \
-     -p 4318:4318 \
-     jaegertracing/all-in-one:latest
+   docker compose up -d
    ```
 
-2. Configure Bott to send traces to Jaeger:
+   This starts:
+   - **Jaeger** on ports 16686 (UI), 4318 (OTLP HTTP), and 4317 (OTLP gRPC)
+   - **Prometheus** on port 9090
+
+2. Configure Bott to send telemetry:
+
    ```bash
    # In .env.local
    OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+   OTEL_SERVICE_NAME=bott
    ```
 
-3. View traces at http://localhost:16686
+3. Access the UIs:
+   - Jaeger (traces): http://localhost:16686
+   - Prometheus (metrics): http://localhost:9090
 
-### Running with Prometheus (Local Metrics)
-
-1. Create `prometheus.yml`:
-   ```yaml
-   global:
-     scrape_interval: 15s
-
-   scrape_configs:
-     - job_name: "bott"
-       static_configs:
-         - targets: ["host.docker.internal:8888"]
+4. Stop the stack:
+   ```bash
+   docker compose down
    ```
+
+### Manual Setup (Alternative)
+
+If you prefer to run services individually:
+
+#### Running Jaeger Only
+
+```bash
+docker run -d --name jaeger \
+  -e COLLECTOR_OTLP_ENABLED=true \
+  -p 16686:16686 \
+  -p 4318:4318 \
+  jaegertracing/all-in-one:latest
+```
+
+#### Running Prometheus Only
+
+1. The repository includes a `prometheus.yml` configuration file.
 
 2. Start Prometheus:
    ```bash
@@ -273,8 +322,6 @@ requestCounter.add(1, { status: "success" });
      -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml \
      prom/prometheus
    ```
-
-3. View metrics at http://localhost:9090
 
 ## Production Deployment
 

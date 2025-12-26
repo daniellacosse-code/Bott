@@ -39,7 +39,9 @@ cp .env.example .env.local
 3. Run `./run` to start the application.
 
 > [!TIP]
-> For information on logging and observability with OpenTelemetry, see the
+> **Local Observability Stack**: Start Jaeger and Prometheus with
+> `docker compose up -d`. View traces at http://localhost:16686 and metrics at
+> http://localhost:9090. For more details, see the
 > [Observability Guide](./docs/OBSERVABILITY.md).
 
 ### Pull Requests
