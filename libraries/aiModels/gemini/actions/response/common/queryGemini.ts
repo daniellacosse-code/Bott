@@ -210,8 +210,8 @@ const parseResult = <O>(response: GenerateContentResponse): O => {
  */
 export const formatTimestampAsRelative = (
   timestamp: string | undefined,
-): string => {
-  if (!timestamp) return "never";
+): string | undefined => {
+  if (!timestamp) return undefined;
   const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
