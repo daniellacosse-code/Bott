@@ -150,7 +150,7 @@ export const upsertEvents = (
 ): TransactionResults => {
   // Extract all unique entities (events, spaces, channels, users)
   const events = new Map<string, BottEvent>();
-  const _queue: BottEvent[] = bottEvents;
+  const _queue: BottEvent[] = [...bottEvents];
   const _seenEvents = new Set<string>();
 
   while (_queue.length > 0) {
