@@ -38,6 +38,10 @@ cp .env.example .env.local
 2. Open the `.env.local` file and add the relevant credentials.
 3. Run `./run` to start the application.
 
+> [!TIP]
+> For information on logging and observability with OpenTelemetry, see the
+> [Observability Guide](./docs/OBSERVABILITY.md).
+
 ### Pull Requests
 
 There are numerous issues tracked in the

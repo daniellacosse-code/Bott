@@ -38,6 +38,17 @@ Bott: the autonomous groupchat agent!
 
 - [Discord](./libraries/chatSpaces/discord)
 
+## Observability
+
+Bott uses standard console logging that can be integrated with OpenTelemetry for
+monitoring and tracing. See the [Observability Guide](./docs/OBSERVABILITY.md)
+for details on:
+
+- Configuring OpenTelemetry with Deno
+- Exporting logs, traces, and metrics
+- Integration with cloud platforms (GCP, AWS, Azure)
+- Local development with Jaeger and Prometheus
+
 ## Contributing
 
 **Interested in contributing?** See our [Contribution Guide](./CONTRIBUTING.md)!
