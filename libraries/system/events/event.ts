@@ -18,6 +18,13 @@ import type {
 } from "./types.ts";
 import { BottEventType } from "./types.ts";
 
+type BottEventConstructorProperties<
+  T extends BottEventType,
+  D extends AnyShape,
+> = Partial<Omit<BottEventInterface<T, D>, "type">> & {
+  user: BottUser;
+};
+
 /**
  * Represents a generic event in Bott.
  */
@@ -41,9 +48,7 @@ export class BottEvent<
 
   constructor(
     type: T,
-    properties: Partial<Omit<BottEventInterface<T, D>, "type">> & {
-      user: BottUser;
-    },
+    properties: BottEventConstructorProperties<T, D>,
   ) {
     super(type, { detail: properties.detail });
     this.id = properties.id ?? crypto.randomUUID();
@@ -75,38 +80,39 @@ export class BottEvent<
           content: this.detail.content,
         };
         break;
-      case BottEventType.ACTION_CALL: {
-        const parameters: Record<
-          string,
-          string | number | boolean | {
-            name: string;
-            size: number;
-            type: string;
-          }
-        > = {};
+      case BottEventType.ACTION_CALL:
+        {
+          const parameters: Record<
+            string,
+            string | number | boolean | {
+              name: string;
+              size: number;
+              type: string;
+            }
+          > = {};
 
-        for (
-          const [key, value] of Object.entries(
-            this.detail.parameters as BottEventActionParameterRecord,
-          )
-        ) {
-          if (value instanceof File) {
-            parameters[key] = {
-              name: value.name,
-              size: value.size,
-              type: value.type,
-            };
-          } else if (value) {
-            parameters[key] = value;
+          for (
+            const [key, value] of Object.entries(
+              this.detail.parameters as BottEventActionParameterRecord,
+            )
+          ) {
+            if (value instanceof File) {
+              parameters[key] = {
+                name: value.name,
+                size: value.size,
+                type: value.type,
+              };
+            } else if (value) {
+              parameters[key] = value;
+            }
           }
+
+          result.detail = {
+            name: this.detail.name,
+            parameters,
+          };
         }
-
-        result.detail = {
-          name: this.detail.name,
-          parameters,
-        };
         break;
-      }
       case BottEventType.ACTION_OUTPUT:
         result.detail = {
           id: this.detail.id,
@@ -201,5 +207,60 @@ export class BottEvent<
     }
 
     return result;
+  }
+
+  static async fromShallow<T extends BottEventType, D extends AnyShape>(
+    shallow: ShallowBottEvent,
+  ): Promise<BottEvent<T, D>> {
+    // Recursively hydrate parent if present
+    const parent = shallow.parent
+      ? await BottEvent.fromShallow(shallow.parent as ShallowBottEvent)
+      : undefined;
+
+    const properties: BottEventConstructorProperties<T, D> = {
+      id: shallow.id,
+      createdAt: new Date(shallow.createdAt),
+      lastProcessedAt: shallow.lastProcessedAt
+        ? new Date(shallow.lastProcessedAt)
+        : undefined,
+      detail: shallow.detail as D,
+      user: shallow.user,
+      channel: shallow.channel,
+      parent,
+    };
+
+    const event = new BottEvent(shallow.type as T, properties);
+
+    if (shallow.attachments) {
+      event.attachments = [];
+      for (const attachment of shallow.attachments) {
+        event.attachments.push({
+          id: attachment.id,
+          type: attachment.type,
+          originalSource: new URL(attachment.originalSource),
+          parent: event,
+          raw: {
+            id: attachment.raw.id,
+            path: attachment.raw.path,
+            file: new File(
+              [await Deno.readFile(attachment.raw.path)],
+              attachment.raw.file.name,
+              { type: attachment.raw.file.type },
+            ),
+          },
+          compressed: {
+            id: attachment.compressed.id,
+            path: attachment.compressed.path,
+            file: new File(
+              [await Deno.readFile(attachment.compressed.path)],
+              attachment.compressed.file.name,
+              { type: attachment.compressed.file.type },
+            ),
+          },
+        });
+      }
+    }
+
+    return event;
   }
 }

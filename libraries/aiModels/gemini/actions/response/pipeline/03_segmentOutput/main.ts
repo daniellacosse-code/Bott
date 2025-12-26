@@ -9,9 +9,9 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottEvent } from "@bott/events";
+import type { ShallowBottEvent } from "@bott/events";
+import { BottEventType } from "@bott/events";
 import { log } from "@bott/log";
-import { resolveOutputEvents } from "../../common/events.ts";
 import { getEventSchema } from "../../common/getSchema.ts";
 import { queryGemini } from "../../common/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
@@ -26,30 +26,32 @@ export const segmentOutput: EventPipelineProcessor = async function () {
   }
 
   const output = this.data.output;
-  const segmentPromises: Promise<BottEvent[]>[] = [];
+  const segmentPromises: Promise<ShallowBottEvent[]>[] = [];
 
   let pointer = 0;
   while (pointer < output.length) {
     const event = output[pointer];
 
     // We only want to segment message/reply events.
-    if (event.type !== "message" && event.type !== "reply") {
+    if (
+      event.type !== BottEventType.MESSAGE && event.type !== BottEventType.REPLY
+    ) {
       segmentPromises.push(Promise.resolve([event]));
       pointer++;
       continue;
     }
 
-    // TODO: allow to be set as "user" event dynamically
-    // Pass as JSON string to treat as data/user input, avoiding "continuation" bias.
-    segmentPromises.push(queryGemini<BottEvent[]>(
-      JSON.stringify([event]),
-      {
-        systemPrompt,
-        responseSchema: getEventSchema(this.action.service.settings),
-        pipeline: this,
-        useIdentity: false,
-      },
-    ));
+    segmentPromises.push(
+      queryGemini<ShallowBottEvent[]>(
+        [event],
+        {
+          systemPrompt,
+          responseSchema: getEventSchema(this.action.service.settings),
+          pipeline: this,
+          useIdentity: false,
+        },
+      ),
+    );
 
     pointer++;
   }
@@ -57,7 +59,6 @@ export const segmentOutput: EventPipelineProcessor = async function () {
   const segments = await Promise.all(segmentPromises);
 
   this.data.output = segments.flat();
-  this.data.output = await resolveOutputEvents(this);
 
   log.debug(this.data.output);
 };

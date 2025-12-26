@@ -11,8 +11,6 @@
 
 import { APP_USER, GEMINI_RATING_MODEL } from "@bott/constants";
 import { BottEventType } from "@bott/events";
-import { log } from "@bott/log";
-import type { AnyShape } from "@bott/model";
 import { type Schema, Type } from "@google/genai";
 import { queryGemini } from "../../common/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
@@ -31,7 +29,7 @@ export const focusInput: EventPipelineProcessor = async function () {
   // If we have no rating scales, just mark all events as focused.
   if (inputRatingScales.length === 0) {
     for (const event of input) {
-      this.evaluationState.set(event, {
+      this.evaluationState.set(event.id, {
         focusReasons: Object.values(inputReasons)
           .filter((reason) => reason.validator()),
       });
@@ -67,21 +65,6 @@ export const focusInput: EventPipelineProcessor = async function () {
   };
 
   const geminiCalls: Promise<void>[] = [];
-  const blurLogQueue: {
-    id: string;
-    type: string;
-    detail: AnyShape;
-    focus: false;
-    ratings: Record<string, { rating: string; rationale: string | undefined }>;
-  }[] = [];
-  const focusLogQueue: {
-    id: string;
-    type: string;
-    detail: AnyShape;
-    focusReasons: string[];
-    ratings: Record<string, { rating: string; rationale: string | undefined }>;
-  }[] = [];
-
   let pointer = 0;
   while (pointer < input.length) {
     const event = input[pointer];
@@ -104,20 +87,18 @@ export const focusInput: EventPipelineProcessor = async function () {
         BottEventType.ACTION_OUTPUT,
         BottEventType.ACTION_COMPLETE,
         BottEventType.ACTION_ABORT,
-      ].includes(event.type)
+      ].includes(event.type as BottEventType)
     ) {
       pointer++;
       continue;
     }
 
-    const currentPointer = pointer;
-
     geminiCalls.push((async () => {
+      const currentPointer = pointer;
       const scoresWithRationale = await queryGemini<
         Record<string, { rating: string; rationale: string | undefined }>
       >(
-        // Provide the history and current input events up to this point as context.
-        [...input.slice(0, currentPointer + 1)],
+        input.slice(0, currentPointer + 1),
         {
           systemPrompt,
           responseSchema,
@@ -140,37 +121,15 @@ export const focusInput: EventPipelineProcessor = async function () {
       const triggeredFocusReasons = Object.values(inputReasons)
         .filter((reason) => reason.validator({ ratings }));
 
-      this.evaluationState.set(event, {
+      this.evaluationState.set(event.id, {
+        evaluationTime: new Date(),
         ratings,
         focusReasons: triggeredFocusReasons,
       });
-
-      event.lastProcessedAt = new Date();
-
-      if (triggeredFocusReasons.length) {
-        focusLogQueue.push({
-          id: event.id,
-          type: event.type,
-          detail: event.detail,
-          focusReasons: triggeredFocusReasons.map((reason) => reason.name),
-          ratings: scoresWithRationale ?? {},
-        });
-      } else {
-        blurLogQueue.push({
-          id: event.id,
-          type: event.type,
-          detail: event.detail,
-          focus: false,
-          ratings: scoresWithRationale ?? {},
-        });
-      }
     })());
 
     pointer++;
   }
 
   await Promise.all(geminiCalls);
-
-  log.debug("focused", this.action.id, focusLogQueue);
-  log.debug("blurred", this.action.id, blurLogQueue);
 };

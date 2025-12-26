@@ -10,7 +10,7 @@
  */
 
 import type { BottActionContext } from "@bott/actions";
-import type { BottEvent } from "@bott/events";
+import type { ShallowBottEvent } from "@bott/events";
 import type { BottReason } from "@bott/model";
 
 /**
@@ -18,6 +18,7 @@ import type { BottReason } from "@bott/model";
  * This data is ephemeral and not persisted to the database.
  */
 export interface PipelineEvaluationMetadata {
+  evaluationTime?: Date;
   ratings?: Record<string, number>;
   focusReasons?: BottReason[];
   outputReasons?: BottReason[];
@@ -26,11 +27,11 @@ export interface PipelineEvaluationMetadata {
 export interface EventPipelineContext {
   action: BottActionContext;
   data: {
-    input: BottEvent[];
-    output: BottEvent[];
+    input: ShallowBottEvent[];
+    output: ShallowBottEvent[];
   };
   /** Ephemeral evaluation state for events in the pipeline. */
-  evaluationState: Map<BottEvent, PipelineEvaluationMetadata>;
+  evaluationState: Map<string, PipelineEvaluationMetadata>;
 }
 
 export type EventPipelineProcessor = (

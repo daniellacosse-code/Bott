@@ -30,11 +30,11 @@ export interface BottServiceContext {
   app: BottResponseSettings;
   dispatchEvent: (event: BottEvent) => void;
   addEventListener<E extends BottEvent>(
-    type: BottEventType,
+    type: E["type"],
     listener: (event: E, context?: BottServiceContext) => unknown,
   ): void;
   removeEventListener<E extends BottEvent>(
-    type: BottEventType,
+    type: E["type"],
     listener: (event: E, context?: BottServiceContext) => unknown,
   ): void;
 }

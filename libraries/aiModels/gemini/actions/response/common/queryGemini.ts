@@ -9,12 +9,19 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { APP_USER, GEMINI_EVENT_MODEL } from "@bott/constants";
-import type { BottEvent } from "@bott/events";
-import { cloneBottEvent } from "@bott/events";
+import {
+  ACTION_RESPONSE_AUDIO_COUNT_LIMIT,
+  ACTION_RESPONSE_EVENT_COUNT_LIMIT,
+  ACTION_RESPONSE_FILE_TOKEN_LIMIT,
+  ACTION_RESPONSE_HISTORY_SIZE_MS,
+  ACTION_RESPONSE_VIDEO_COUNT_LIMIT,
+  APP_USER,
+  GEMINI_EVENT_MODEL,
+} from "@bott/constants";
+import { BottAttachmentType, type ShallowBottEvent } from "@bott/events";
 import type {
   Content,
-  GenerateContentConfig,
+  GenerateContentResponse,
   Part,
   Schema,
 } from "@google/genai";
@@ -23,20 +30,22 @@ import ejs from "ejs";
 import gemini from "../../../client.ts";
 import type { EventPipelineContext } from "../pipeline/types.ts";
 
-const eventStructure = (await Deno.readTextFile(
-  new URL("./eventStructure.md.ejs", import.meta.url),
-)).replaceAll("<!-- deno-fmt-ignore-file -->\n", "");
+const eventStructureLocation = new URL(
+  "./eventStructure.md.ejs",
+  import.meta.url,
+);
+const eventStructureContents = await Deno.readTextFile(eventStructureLocation);
 
 export interface QueryGeminiOptions {
   model?: string;
   pipeline: EventPipelineContext;
-  responseSchema?: Schema;
+  responseSchema: Schema;
   systemPrompt: string;
   useIdentity?: boolean;
 }
 
 export const queryGemini = async <O>(
-  input: BottEvent[] | string,
+  input: ShallowBottEvent[],
   {
     systemPrompt,
     responseSchema,
@@ -47,165 +56,151 @@ export const queryGemini = async <O>(
 ): Promise<O> => {
   if (!model) {
     throw new Error(
-      "queryGemini: No model provided. Ensure `GEMINI_EVENT_MODEL` is set in your environment.",
+      "No model provided. Ensure `GEMINI_EVENT_MODEL` is set in your environment.",
     );
   }
 
-  let parts: Part[] = useIdentity
-    ? [{ text: pipeline.action.service.app.identity }]
-    : [];
-
-  parts = [...parts, { text: systemPrompt }, {
-    text: ejs.render(eventStructure, pipeline.action, {
-      filename: new URL("./eventStructure.md.ejs", import.meta.url).pathname,
-    }),
-  }];
-
-  const config: GenerateContentConfig = {
-    abortSignal: pipeline.action.signal,
-    candidateCount: 1,
-    systemInstruction: {
-      parts,
-    },
-    // TODO: Google Search
+  const systemInstruction: { parts: Part[] } = {
+    parts: [],
   };
 
-  if (responseSchema) {
-    config.responseSchema = responseSchema;
-    config.responseMimeType = "application/json";
+  if (useIdentity) {
+    systemInstruction.parts.push({
+      text: pipeline.action.service.app.identity,
+    });
   }
 
-  const response = await gemini.models.generateContent({
+  systemInstruction.parts.push(
+    { text: systemPrompt },
+    {
+      text: ejs.render(eventStructureContents, pipeline.action, {
+        filename: eventStructureLocation.pathname,
+      }),
+    },
+  );
+
+  const contents = await prepareContents(input, pipeline, useIdentity);
+
+  const result = await gemini.models.generateContent({
     model,
-    contents: typeof input === "string" ? [input] : await Promise.all(
-      input.map((event) => _transformBottEventToContent(event, pipeline)),
-    ),
-    config,
+    contents,
+    config: {
+      abortSignal: pipeline.action.signal,
+      candidateCount: 1,
+      systemInstruction,
+      responseSchema,
+      responseMimeType: "application/json",
+      // TODO: Google Search
+    },
   });
 
-  const result = response.candidates?.[0]?.content?.parts
-    ?.filter((part: Part) => "text" in part && typeof part.text === "string")
-    .map((part: Part) => (part as { text: string }).text)
-    .join("") ?? "";
-
-  // Despite the schema, Gemini may still return a code block.
-  const cleanedResult = result.replace(/^```json\s*/i, "").replace(
-    /^```\s*/,
-    "",
-  ).replace(/```\s*$/, "");
-
-  try {
-    return JSON.parse(cleanedResult) as O;
-  } catch (error) {
-    if (responseSchema) {
-      throw new Error(
-        `queryGemini: Failed to parse JSON response: ${
-          cleanedResult || "(empty)"
-        }`,
-        { cause: error },
-      );
-    }
-    return result as O;
-  }
+  return parseResult<O>(result);
 };
 
-export const _transformBottEventToContent = async (
-  event: BottEvent,
+export const prepareContents = async (
+  events: ShallowBottEvent[],
   context: EventPipelineContext,
-): Promise<Content> => {
-  if (!event.user) {
-    throw new Error(
-      "_transformBottEventToContent: Event must have a user",
-    );
-  }
+  hasIdentity: boolean = true,
+): Promise<Content[]> => {
+  const preparedInput: Content[] = [];
+  const timeCutoff = Date.now() - ACTION_RESPONSE_HISTORY_SIZE_MS;
+  const resourceAccumulator = {
+    tokens: 0,
+    audioFiles: 0,
+    videoFiles: 0,
+  };
 
-  const {
-    attachments: _attachments,
-    parent: _parent,
-    channel: _channel, // don't need this
-    detail: _detail,
-    createdAt,
-    ...rest
-  } = cloneBottEvent(event);
+  // Iterate backwards to prioritize the most recent events
+  for (
+    let i = events.length - 1;
+    i >= 0 && preparedInput.length < ACTION_RESPONSE_EVENT_COUNT_LIMIT &&
+    new Date(events[i].createdAt).getTime() > timeCutoff;
+    i--
+  ) {
+    const event = events[i];
 
-  let parent;
-
-  if (_parent) {
-    parent = {
-      ..._parent,
-      createdAt: _formatTimestampAsRelative(_parent.createdAt),
+    const eventPart = {
+      ...event,
+      createdAt: formatTimestampAsRelative(event.createdAt),
+      lastProcessedAt: formatTimestampAsRelative(event.lastProcessedAt),
+      _pipelineEvaluationMetadata: context?.evaluationState.get(event.id),
     };
 
-    delete parent.parent;
-    delete parent.attachments;
-  }
+    if (event.parent) {
+      eventPart.parent = {
+        ...event.parent,
+        createdAt: formatTimestampAsRelative(event.parent.createdAt),
+        lastProcessedAt: formatTimestampAsRelative(
+          event.parent.lastProcessedAt,
+        ),
+      };
+    }
 
-  const metadata = context.evaluationState.get(event);
+    const parts: Part[] = [{ text: JSON.stringify(eventPart) }];
+    for (const attachment of eventPart?.attachments ?? []) {
+      const newTotalTokens = resourceAccumulator.tokens +
+        attachment.compressed.file.size;
 
-  // The system handles these, not Gemini
-  delete _detail?.shouldInterpretOutput;
-  delete _detail?.shouldForwardOutput;
+      if (newTotalTokens > ACTION_RESPONSE_FILE_TOKEN_LIMIT) continue;
 
-  const eventToSerialize = {
-    ...rest,
-    createdAt: _formatTimestampAsRelative(createdAt),
-    parent,
-    detail: _detail,
-    _pipelineEvaluationMetadata: {
-      focusReasons: metadata?.focusReasons?.map(({ name, instruction }) => ({
-        name,
-        instruction,
-      })),
-      outputReasons: metadata?.outputReasons?.map(({ name }) => name),
-      ratings: metadata?.ratings,
-    },
-  };
+      const isAudio =
+        attachment.compressed.file.type === BottAttachmentType.MP3 ||
+        attachment.compressed.file.type === BottAttachmentType.OPUS ||
+        attachment.compressed.file.type === BottAttachmentType.WAV;
 
-  // TODO: better inform the model about what is and isn't a system event
-  let eventJson = JSON.stringify(eventToSerialize);
+      if (
+        isAudio &&
+        resourceAccumulator.audioFiles >= ACTION_RESPONSE_AUDIO_COUNT_LIMIT
+      ) continue;
 
-  // Label system events to prevent model confusion about authorship
-  if (
-    event.type === "action:start" ||
-    event.type === "action:complete" ||
-    event.type === "action:error"
-  ) {
-    eventJson = `[SYSTEM EVENT] ${eventJson}`;
-  }
+      const isVideo =
+        attachment.compressed.file.type === BottAttachmentType.MP4;
 
-  const parts: Part[] = [{ text: eventJson }];
+      if (
+        isVideo &&
+        resourceAccumulator.videoFiles >= ACTION_RESPONSE_VIDEO_COUNT_LIMIT
+      ) continue;
 
-  // TODO: check all service users
-  const isModel = event.user.id === APP_USER.id ||
-    event.user.id === "service:action";
-
-  const content: Content = {
-    role: isModel ? "model" : "user",
-    parts,
-  };
-
-  if (event.attachments && event.attachments.length) {
-    parts.push({ text: "--- Attachments ---" });
-
-    for (const attachment of event.attachments) {
-      if (!attachment.compressed?.file) {
-        continue;
-      }
-
-      parts.push({ text: `Attachment ID: ${attachment.id}` });
+      const fileData = await Deno.readFile(attachment.compressed.path);
 
       parts.push({
+        text: `AttachmentID: ${attachment.id}`,
         inlineData: {
           mimeType: attachment.compressed.file.type,
-          data: encodeBase64(
-            new Uint8Array(await attachment.compressed.file.arrayBuffer()),
-          ),
+          data: encodeBase64(fileData),
         },
       });
+
+      resourceAccumulator.tokens = newTotalTokens;
+      if (isAudio) resourceAccumulator.audioFiles++;
+      if (isVideo) resourceAccumulator.videoFiles++;
+    }
+
+    const isModel = eventPart.user.id === APP_USER.id ||
+      eventPart.user.id === "service:action";
+
+    preparedInput.unshift({
+      role: isModel ? hasIdentity ? "model" : "user" : "user",
+      parts,
+    });
+  }
+
+  return preparedInput;
+};
+
+const parseResult = <O>(response: GenerateContentResponse): O => {
+  const [candidate] = response.candidates ?? [];
+  const { parts } = candidate.content ?? {};
+
+  let text = "";
+  for (const part of parts ?? []) {
+    if ("text" in part && typeof part.text === "string") {
+      text += part.text;
     }
   }
 
-  return content;
+  // Despite the schema, Gemini may still return a code block.
+  return JSON.parse(text.replaceAll(/^```(?:json)?\s*|```\s*$/gi, "")) as O;
 };
 
 /**
@@ -213,14 +208,11 @@ export const _transformBottEventToContent = async (
  * Examples: "just now", "2 minutes ago", "3 hours ago", "5 days ago"
  * @internal Exported for testing purposes only
  */
-export const _formatTimestampAsRelative = (
-  timestamp: Date | string | undefined,
-): string | undefined => {
-  if (!timestamp) {
-    return undefined;
-  }
-
-  const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
+export const formatTimestampAsRelative = (
+  timestamp: string | undefined,
+): string => {
+  if (!timestamp) return "never";
+  const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffSeconds = Math.floor(diffMs / 1000);
@@ -234,7 +226,7 @@ export const _formatTimestampAsRelative = (
     return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
   } else if (diffHours < 24) {
     return diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
-  } else {
-    return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
   }
+
+  return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
 };

@@ -94,12 +94,10 @@ export const getEvents = async (
           },
         }
         : undefined,
-      user: rowData.u_id
-        ? {
-          id: rowData.u_id,
-          name: rowData.u_name,
-        }
-        : undefined,
+      user: {
+        id: rowData.u_id,
+        name: rowData.u_name,
+      },
     });
 
     events.set(id, event);

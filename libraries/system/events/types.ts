@@ -32,7 +32,7 @@ export enum BottEventType {
 export interface BottEvent<
   T extends BottEventType = BottEventType,
   D extends AnyShape = AnyShape,
-> {
+> extends CustomEvent<D> {
   id: string;
   type: T;
   detail: D;
@@ -42,6 +42,7 @@ export interface BottEvent<
   channel?: BottChannel;
   parent?: BottEvent;
   attachments?: BottEventAttachment[];
+  toJSON(): ShallowBottEvent;
 }
 
 /**
@@ -119,7 +120,7 @@ export type ShallowBottEvent = {
   };
   attachments?: {
     id: string;
-    type: string;
+    type: BottEventAttachmentType;
     originalSource: string;
     raw: {
       id: string;

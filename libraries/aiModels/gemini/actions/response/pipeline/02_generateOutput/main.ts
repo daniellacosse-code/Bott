@@ -9,13 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottEvent } from "@bott/events";
-
+import type { ShallowBottEvent } from "@bott/events";
 import { log } from "@bott/log";
-import { join } from "@std/path";
 
+import { join } from "@std/path";
 import ejs from "ejs";
-import { resolveOutputEvents } from "../../common/events.ts";
 import { getEventSchema } from "../../common/getSchema.ts";
 import { queryGemini } from "../../common/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
@@ -28,7 +26,7 @@ export const generateOutput: EventPipelineProcessor = async function () {
   // If there's nothing to focus on, skip this step.
   if (
     !this.data.input.some((event) =>
-      this.evaluationState.get(event)?.focusReasons?.length
+      this.evaluationState.get(event.id)?.focusReasons?.length
     )
   ) {
     return;
@@ -38,7 +36,7 @@ export const generateOutput: EventPipelineProcessor = async function () {
     filename: join(import.meta.url, "./systemPrompt.md.ejs"),
   });
 
-  this.data.output = await queryGemini<BottEvent[]>(
+  this.data.output = await queryGemini<ShallowBottEvent[]>(
     this.data.input,
     {
       systemPrompt,
@@ -46,8 +44,6 @@ export const generateOutput: EventPipelineProcessor = async function () {
       pipeline: this,
     },
   );
-
-  this.data.output = await resolveOutputEvents(this);
 
   log.debug(this.data.output);
 };
