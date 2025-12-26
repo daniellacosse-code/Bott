@@ -41,12 +41,20 @@ cp .env.example .env.local
 #### Viewing Logs
 
 When running locally (`ENV=local`), console output is automatically written to
-`.output/logs/bott.log` in JSONL format.
+`.output/logs/local/{timestamp}_{sessionid}.log` in JSONL format. Each run
+creates a new log file with a unique session ID and timestamp.
 
 **VS Code Extension**: For an interactive log viewing experience, install the
 [OpenTelemetry Log Viewer](https://marketplace.visualstudio.com/items?itemName=TobiasStreng.vscode-opentelemetry-log-viewer)
-extension. Then open `.output/logs/bott.log` in VS Code to view logs in a
-filterable AG Grid table.
+extension. Then open any log file from `.output/logs/local/` in VS Code to view
+logs in a filterable AG Grid table.
+
+**Log Format**: Logs use compact keys for data savings:
+
+- `ts`: Timestamp (ISO 8601 format)
+- `l`: Level (d=debug, i=info, w=warn, e=error)
+- `m`: Message
+- `c`: Call location (file:line:col) when available
 
 ### Pull Requests
 
