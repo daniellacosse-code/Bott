@@ -11,6 +11,7 @@
 
 import { STORAGE_FILE_SIZE_LIMIT } from "@bott/constants";
 import { BottAttachmentType } from "@bott/events";
+// @deno-types="npm:@types/pdf-parse@^1.1.4"
 import pdfParse from "pdf-parse";
 
 export const preparePdfAsText = async (
@@ -20,6 +21,10 @@ export const preparePdfAsText = async (
   const pdfData = await file.arrayBuffer();
 
   const parsed = await pdfParse(pdfData);
+
+  if (!parsed || !parsed.text) {
+    throw new Error("No text extracted from PDF.");
+  }
 
   let result = parsed.text;
 
