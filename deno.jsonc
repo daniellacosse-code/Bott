@@ -37,6 +37,7 @@
     "ejs": "npm:ejs@^3.1.7",
     "mdast-util-from-markdown": "npm:mdast-util-from-markdown@^2.0.2",
     "mdast": "npm:mdast@^3",
+    "pdf-parse": "npm:pdf-parse@^1.1.1",
     "turndown": "npm:turndown@^7.2.0",
     "unist-util-visit": "npm:unist-util-visit@^5.0.0"
   },
