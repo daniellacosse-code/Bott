@@ -9,6 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import { Buffer } from "node:buffer";
 import { STORAGE_FILE_SIZE_LIMIT } from "@bott/constants";
 import { BottAttachmentType } from "@bott/events";
 // @deno-types="npm:@types/pdf-parse@^1.1.4"
