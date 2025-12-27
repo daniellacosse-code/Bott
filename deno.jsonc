@@ -7,7 +7,7 @@
     "singleQuote": false,
     "exclude": [
       "**/*.md.ejs",
-      "docs/index.html"
+      "docs/index.html" // contains mermaid syntax, which Deno fmt doesn't understand
     ]
   },
   "lint": {
