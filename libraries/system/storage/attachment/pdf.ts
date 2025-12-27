@@ -11,7 +11,7 @@
 
 import { STORAGE_FILE_SIZE_LIMIT } from "@bott/constants";
 import { BottAttachmentType } from "@bott/events";
-import pdfParse from "npm:pdf-parse@1.1.1";
+import pdfParse from "pdf-parse";
 
 export const preparePdfAsText = async (
   file: File,
@@ -19,7 +19,7 @@ export const preparePdfAsText = async (
 ): Promise<File> => {
   const pdfData = await file.arrayBuffer();
 
-  const parsed = await pdfParse(Buffer.from(pdfData));
+  const parsed = await pdfParse(pdfData);
 
   let result = parsed.text;
 
