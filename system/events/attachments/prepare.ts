@@ -17,10 +17,9 @@ import {
 } from "@bott/common";
 import { join } from "@std/path";
 import {
-  BOTT_ATTACHMENT_TYPE_LOOKUP,
-  type BottEventInterface as BottEvent,
   type BottEventAttachment,
   BottEventAttachmentType,
+  type BottEventInterface as BottEvent,
 } from "../../types.ts";
 
 import { throwIfUnsafeFileSize, throwIfUnsafeUrl } from "../validation.ts";
@@ -30,6 +29,7 @@ import {
   prepareStaticImageAsWebp,
 } from "./ffmpeg.ts";
 import { prepareHtmlAsMarkdown } from "./html.ts";
+import { BOTT_ATTACHMENT_TYPE_LOOKUP } from "./main.ts";
 
 const UNNAMED_FILE_PREFIX = "unnamed";
 
@@ -152,8 +152,9 @@ export async function prepareAttachmentFromFile(
 
   const type = file.type as BottEventAttachmentType;
   const rawExtension = BOTT_ATTACHMENT_TYPE_LOOKUP[type].toLowerCase();
-  const rawFileName = `${name || UNNAMED_FILE_PREFIX
-    }.${attachmentId}.raw.${rawExtension}`;
+  const rawFileName = `${
+    name || UNNAMED_FILE_PREFIX
+  }.${attachmentId}.raw.${rawExtension}`;
   const rawPath = join(fileSystemRoot, rawFileName);
 
   // Save raw file
@@ -168,8 +169,9 @@ export async function prepareAttachmentFromFile(
   const compressedExtension = BOTT_ATTACHMENT_TYPE_LOOKUP[
     compressedFile.type as BottEventAttachmentType
   ].toLowerCase();
-  const compressedFileName = `${name || UNNAMED_FILE_PREFIX
-    }.${attachmentId}.compressed.${compressedExtension}`;
+  const compressedFileName = `${
+    name || UNNAMED_FILE_PREFIX
+  }.${attachmentId}.compressed.${compressedExtension}`;
   const compressedPath = join(fileSystemRoot, compressedFileName);
 
   log.debug(

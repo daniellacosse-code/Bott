@@ -64,15 +64,12 @@ export class BottSystemManager {
   }
 
   get rootServiceContext(): Omit<BottServiceContext, "settings"> {
-    const context: Partial<BottServiceContext> = {
+    return {
       system: this.context,
+      dispatchEvent: this.dispatchEvent.bind(this),
+      addEventListener: this.addEventListener.bind(this),
+      removeEventListener: this.removeEventListener.bind(this),
     };
-
-    context.dispatchEvent = this.dispatchEvent.bind(context);
-    context.addEventListener = this.addEventListener.bind(context);
-    context.removeEventListener = this.removeEventListener.bind(context);
-
-    return context;
   }
 
   registerService(service: BottService) {
@@ -96,16 +93,21 @@ export class BottSystemManager {
       throw new Error(`Service "${serviceName}" not found`);
     }
 
-    const context = this.rootServiceContext;
-
-    context.settings.name = serviceName;
+    const context: BottServiceContext = {
+      ...this.rootServiceContext,
+      settings: {
+        name: serviceName,
+        user: service.user ??
+          { id: `service:${serviceName}`, name: serviceName },
+      },
+    };
 
     service.call(context);
 
     log.info(`Service "${serviceName}" started`);
   }
 
-  isSystemUser(user: BottUser) {
+  isSystemUser(user: BottUser): boolean {
     let result = false;
 
     for (const service of this.services.values()) {
@@ -120,8 +122,9 @@ export class BottSystemManager {
 
   private listeners = new Map<
     (
-      event: never,
-      context?: BottSystemContext,
+      // deno-lint-ignore no-explicit-any
+      event: any,
+      context?: BottServiceContext,
     ) => unknown | Promise<unknown>,
     EventListener
   >();
@@ -130,7 +133,7 @@ export class BottSystemManager {
     eventType: BottEventType,
     handler: (
       event: E,
-      context?: BottSystemContext,
+      context?: BottServiceContext,
     ) => unknown | Promise<unknown>,
   ): void {
     const listener = async (event: Event) => {
@@ -139,13 +142,14 @@ export class BottSystemManager {
       if (this.nonce !== this.getCurrentDeployNonce()) return;
 
       try {
-        await handler(bottEvent, this.rootContext);
+        await handler(bottEvent, undefined);
       } catch (error) {
         log.error("Failed to handle event:", event, error);
       }
     };
 
-    this.listeners.set(handler, listener);
+    // deno-lint-ignore no-explicit-any
+    this.listeners.set(handler as any, listener);
     globalThis.addEventListener(eventType, listener);
   }
 
@@ -153,13 +157,19 @@ export class BottSystemManager {
     eventType: BottEventType,
     handler: (
       event: E,
-      context?: BottSystemContext,
+      context?: BottServiceContext,
     ) => unknown | Promise<unknown>,
   ): void {
-    if (!this.listeners.has(handler)) return;
+    // deno-lint-ignore no-explicit-any
+    if (!this.listeners.has(handler as any)) return;
 
-    globalThis.removeEventListener(eventType, this.listeners.get(handler)!);
-    this.listeners.delete(handler);
+    globalThis.removeEventListener(
+      eventType,
+      // deno-lint-ignore no-explicit-any
+      this.listeners.get(handler as any)!,
+    );
+    // deno-lint-ignore no-explicit-any
+    this.listeners.delete(handler as any);
   }
 
   dispatchEvent(event: BottEvent) {

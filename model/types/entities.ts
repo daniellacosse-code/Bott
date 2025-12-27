@@ -9,9 +9,13 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+/**
+ * Defines the structure for a "Entity" in Bott.
+ * An Entity is a generic object with an ID and a name.
+ */
 export interface BottEntity {
   id: string;
-  originId?: string;
+  name: string;
 }
 
 /**
@@ -19,7 +23,6 @@ export interface BottEntity {
  * A Space is a top-level container, similar to a server or guild in Discord.
  */
 export interface BottSpace extends BottEntity {
-  name: string;
   description?: string;
   channels?: BottChannel[];
 }
@@ -29,15 +32,12 @@ export interface BottSpace extends BottEntity {
  * A Channel is a specific communication context within a Space, like a text channel.
  */
 export interface BottChannel extends BottEntity {
-  name: string;
-  space: BottSpace;
   description?: string;
+  space: BottSpace;
 }
 
 /**
  * Defines the structure for a "User" in Bott.
  * Represents an individual interacting with the bot.
  */
-export interface BottUser extends BottEntity {
-  name: string;
-}
+export interface BottUser extends BottEntity {}

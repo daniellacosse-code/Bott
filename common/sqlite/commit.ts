@@ -9,6 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
+import type { DatabaseSync } from "node:sqlite";
 
 import type { SqlInstructions } from "./sql.ts";
 
@@ -23,7 +24,7 @@ export type TransactionResults = {
 };
 
 export const commit = (
-  client: any, // TODO: Type this
+  client: DatabaseSync,
   ...instructions: (SqlInstructions | undefined)[]
 ): TransactionResults => {
   if (!client) {
@@ -78,7 +79,8 @@ export const commit = (
         .slice(0, QUERY_DEBUG_MAX_LENGTH);
       const paramsString = JSON.stringify(currentInstruction.params);
       messageParts.push(
-        `Failed on instruction: "${querySnippet}${querySnippet.length === QUERY_DEBUG_MAX_LENGTH ? "…" : ""
+        `Failed on instruction: "${querySnippet}${
+          querySnippet.length === QUERY_DEBUG_MAX_LENGTH ? "…" : ""
         }" with parameters: ${paramsString}.`,
       );
     }

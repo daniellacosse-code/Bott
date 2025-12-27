@@ -7,13 +7,9 @@ import {
   APP_USER,
 } from "@bott/common";
 import { BottEventAttachmentType, type ShallowBottEvent } from "@bott/system";
-import type {
-  Content,
-  Part,
-} from "@google/genai";
+import type { Content, Part } from "@google/genai";
 import { encodeBase64 } from "@std/encoding/base64";
 import type { EventPipelineContext } from "../../actions/response/pipeline/types.ts";
-
 
 export const prepareContents = async (
   events: ShallowBottEvent[],
@@ -120,8 +116,6 @@ export const prepareContents = async (
 
   return preparedInput;
 };
-
-
 
 /**
  * Formats an ISO timestamp as a human-readable relative time string.

@@ -11,12 +11,14 @@
 
 import type { AnyShape, BottChannel, BottUser } from "@bott/model";
 import type {
-  BottEventInterface,
   BottEventActionParameterRecord,
   BottEventAttachment,
+  BottEventInterface,
   ShallowBottEvent,
 } from "../types.ts";
 import { BottEventType } from "../types.ts";
+
+// TODO: createEvent. solves weird BottEventInterface<T, D> issue
 
 type BottEventConstructorProperties<
   T extends BottEventType,
@@ -97,7 +99,7 @@ export class BottEvent<
             for (
               const [key, value] of Object.entries(
                 (this.detail.parameters as BottEventActionParameterRecord) ??
-                {},
+                  {},
               )
             ) {
               if (value instanceof File) {

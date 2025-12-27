@@ -4,6 +4,7 @@ export * from "./actions/service.ts";
 export * from "./manager.ts";
 export * from "./types.ts";
 export * from "./events/create.ts";
+export * from "./events/attachments/main.ts";
 
 export * from "./events/validation.ts";
 export { eventStorageService } from "./events/storage/service.ts";
@@ -14,4 +15,3 @@ export {
   prepareAttachmentFromUrl,
 } from "./events/attachments/prepare.ts";
 export * from "./services/create.ts";
-

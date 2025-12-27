@@ -12,7 +12,11 @@
 import { assert, assertEquals } from "@std/assert";
 import { type Stub, stub } from "@std/testing/mock";
 
-import { BottEventAttachmentType, BottEventType, type ShallowBottEvent } from "../types.ts";
+import {
+  BottEventAttachmentType,
+  BottEventType,
+  type ShallowBottEvent,
+} from "../types.ts";
 import { BottEvent } from "./create.ts";
 
 const MOCK_USER = {

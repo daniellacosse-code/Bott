@@ -13,8 +13,8 @@ import { sql, type TransactionResults } from "@bott/common";
 import type { BottChannel, BottSpace, BottUser } from "@bott/model";
 
 import type {
-  BottEventInterface as BottEvent,
   BottEventAttachment,
+  BottEventInterface as BottEvent,
 } from "../../types.ts";
 import { commit } from "./client.ts";
 
@@ -47,9 +47,11 @@ const getAddEventsSql = (...events: BottEvent[]) => {
   const values = events.map((event) => {
     const shallowEvent = event.toJSON();
 
-    return sql`(${shallowEvent.id}, ${shallowEvent.type}, ${JSON.stringify(shallowEvent.detail)
-      }, ${shallowEvent.parent?.id}, ${shallowEvent.channel?.id}, ${shallowEvent.user.id}, ${shallowEvent.createdAt}, ${shallowEvent.lastProcessedAt ?? null
-      })`;
+    return sql`(${shallowEvent.id}, ${shallowEvent.type}, ${
+      JSON.stringify(shallowEvent.detail)
+    }, ${shallowEvent.parent?.id}, ${shallowEvent.channel?.id}, ${shallowEvent.user.id}, ${shallowEvent.createdAt}, ${
+      shallowEvent.lastProcessedAt ?? null
+    })`;
   });
 
   return sql`

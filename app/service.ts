@@ -20,8 +20,8 @@ import {
   type BottActionOutputEvent,
   BottEvent,
   BottEventType,
-  createService,
   type BottService,
+  createService,
 } from "@bott/system";
 
 import { debounce } from "@std/async";
@@ -159,5 +159,4 @@ export const appService: BottService = createService({
       cleanupChannelResponseActionIndex(event);
     },
   );
-}
-);
+});

@@ -1,7 +1,4 @@
-import type {
-  GenerateContentResponse,
-} from "@google/genai";
-
+import type { GenerateContentResponse } from "@google/genai";
 
 export const parseResult = <O>(response: GenerateContentResponse): O => {
   const [candidate] = response.candidates ?? [];

@@ -9,11 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { APP_USER } from "@bott/constants";
+import { APP_USER } from "../../../../common/constants.ts";
 import { BottEvent, BottEventType } from "@bott/system";
 import { assert, assertEquals } from "@std/assert";
 import type { EventPipelineContext } from "../pipeline/types.ts";
-import { formatTimestampAsRelative, prepareContents } from "./main.ts";
+import { formatTimestampAsRelative, prepareContents } from "./queryGemini.ts";
 
 Deno.test("formatTimestampAsRelative - just now", () => {
   const result = formatTimestampAsRelative(new Date().toISOString());

@@ -9,11 +9,11 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { LOG_CHARACTER_LIMIT, LOG_TOPICS } from "../constants.ts";
 import { magenta } from "@std/fmt/colors";
 import { parse as parseJsonc } from "@std/jsonc";
 import { ConsoleHandler, getLogger, type LogRecord, setup } from "@std/log";
 import { dirname, fromFileUrl, relative, resolve } from "@std/path";
+import { LOG_CHARACTER_LIMIT, LOG_TOPICS } from "../constants.ts";
 import { budgetedJoin } from "./budgetedJoin.ts";
 
 /** @internal - for testing only*/
@@ -55,8 +55,9 @@ export const formatter = (record: LogRecord): string => {
     return `${record.levelName} ${metadata.join(" ")} ${formattedArgs}`;
   }
 
-  return `${record.levelName} ${metadata.join(" ")} ${budgetedJoin(allArgs, LOG_CHARACTER_LIMIT)
-    }`;
+  return `${record.levelName} ${metadata.join(" ")} ${
+    budgetedJoin(allArgs, LOG_CHARACTER_LIMIT)
+  }`;
 };
 
 const getCircularReplacer = () => {

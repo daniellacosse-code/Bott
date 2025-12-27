@@ -50,79 +50,77 @@ export const songAction: BottAction = createAction({
     description: "Description of the music/song to generate",
     required: true,
   }],
-},
-  async function* ({ prompt }) {
-    if (!GEMINI_SONG_MODEL) {
-      throw new Error(
-        "Gemini song model is not configured. Please ensure `GEMINI_SONG_MODEL` is set in your environment.",
-      );
-    }
-
-    const promptString = prompt as string;
-
-    // Pre-allocate the entire file buffer
-    const fileData = new Uint8Array(SONG_FILE_SIZE);
-    fileData.set(WAV_HEADER);
-
-    let writeOffset = WAV_HEADER.length;
-    const stream = await geminiStudio.live.music.connect({
-      model: GEMINI_SONG_MODEL,
-      callbacks: {
-        onmessage: (message) => {
-          if (!message.serverContent?.audioChunks) {
-            return;
-          }
-
-          log.debug("Song job progress", message);
-
-          for (const chunk of message.serverContent.audioChunks) {
-            for (const char of atob(chunk?.data ?? "")) {
-              if (writeOffset >= SONG_FILE_SIZE) break;
-              fileData[writeOffset] = char.charCodeAt(0);
-              writeOffset++;
-            }
-          }
-        },
-      },
-    });
-
-    await stream.setWeightedPrompts({
-      weightedPrompts: [{
-        text: promptString,
-      }],
-    });
-
-    await stream.play();
-
-    await delay(SONG_DURATION_SECONDS * SECOND_TO_MS, { signal: this.signal });
-
-    stream.stop();
-
-    if (this.signal.aborted) {
-      return;
-    }
-
-    const file = new File(
-      [fileData],
-      generateFilename("wav", promptString),
-      { type: "audio/wav" },
+}, async function* ({ prompt }) {
+  if (!GEMINI_SONG_MODEL) {
+    throw new Error(
+      "Gemini song model is not configured. Please ensure `GEMINI_SONG_MODEL` is set in your environment.",
     );
+  }
 
-    const resultEvent = new BottEvent(
-      BottEventType.MESSAGE,
-      {
-        user: APP_USER,
-        channel: this.channel,
+  const promptString = prompt as string;
+
+  // Pre-allocate the entire file buffer
+  const fileData = new Uint8Array(SONG_FILE_SIZE);
+  fileData.set(WAV_HEADER);
+
+  let writeOffset = WAV_HEADER.length;
+  const stream = await geminiStudio.live.music.connect({
+    model: GEMINI_SONG_MODEL,
+    callbacks: {
+      onmessage: (message) => {
+        if (!message.serverContent?.audioChunks) {
+          return;
+        }
+
+        log.debug("Song job progress", message);
+
+        for (const chunk of message.serverContent.audioChunks) {
+          for (const char of atob(chunk?.data ?? "")) {
+            if (writeOffset >= SONG_FILE_SIZE) break;
+            fileData[writeOffset] = char.charCodeAt(0);
+            writeOffset++;
+          }
+        }
       },
-    );
+    },
+  });
 
-    resultEvent.attachments = [
-      await prepareAttachmentFromFile(
-        file,
-        resultEvent,
-      ),
-    ];
+  await stream.setWeightedPrompts({
+    weightedPrompts: [{
+      text: promptString,
+    }],
+  });
 
-    yield resultEvent;
-  },
-);
+  await stream.play();
+
+  await delay(SONG_DURATION_SECONDS * SECOND_TO_MS, { signal: this.signal });
+
+  stream.stop();
+
+  if (this.signal.aborted) {
+    return;
+  }
+
+  const file = new File(
+    [fileData],
+    generateFilename("wav", promptString),
+    { type: "audio/wav" },
+  );
+
+  const resultEvent = new BottEvent(
+    BottEventType.MESSAGE,
+    {
+      user: APP_USER,
+      channel: this.channel,
+    },
+  );
+
+  resultEvent.attachments = [
+    await prepareAttachmentFromFile(
+      file,
+      resultEvent,
+    ),
+  ];
+
+  yield resultEvent;
+});

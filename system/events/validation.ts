@@ -73,7 +73,8 @@ export function validateParameters(
         )
       ) {
         throw new Error(
-          `validateParameters: Parameter '${field.name}' has invalid value '${param}'. Allowed values: ${field.allowedValues.join(", ")
+          `validateParameters: Parameter '${field.name}' has invalid value '${param}'. Allowed values: ${
+            field.allowedValues.join(", ")
           }`,
         );
       }

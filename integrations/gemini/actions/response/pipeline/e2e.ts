@@ -9,8 +9,8 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { BottEvent, BottEventType } from "@bott/events";
 import { log } from "@bott/common";
+import { BottEvent, BottEventType } from "@bott/events";
 import type {
   BottChannel,
   BottRatingScale,

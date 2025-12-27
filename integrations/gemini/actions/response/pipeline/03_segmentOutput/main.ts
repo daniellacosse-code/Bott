@@ -12,12 +12,9 @@
 import { log } from "@bott/common";
 import type { ShallowBottEvent } from "@bott/system";
 import { BottEventType } from "@bott/system";
-import {
-  getEventSkeletonSchema,
-  skeletonToShallowEvent,
-} from "../../common/getSchema.ts";
-import type { GeminiBottEventSkeleton } from "../../common/getSchema.ts";
-import { queryGemini } from "../../common/queryGemini.ts";
+import { generateFromEvents } from "../../../../generate/fromEvents/main.ts";
+import { getEventSkeletonSchema } from "../../../../generate/fromEvents/skeleton/schema.ts";
+import { skeletonToShallowEvent } from "../../../../generate/fromEvents/skeleton/shallowEvent.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
 const systemPrompt = await Deno.readTextFile(
@@ -47,7 +44,7 @@ export const segmentOutput: EventPipelineProcessor = async function () {
 
     segmentPromises.push(
       new Promise((resolve) => {
-        queryGemini<GeminiBottEventSkeleton[]>(
+        generateFromEvents(
           [event],
           {
             systemPrompt,

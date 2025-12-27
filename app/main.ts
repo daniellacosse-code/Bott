@@ -30,7 +30,7 @@ if (import.meta.main) {
 
   const systemManager = new BottSystemManager({ settings, actions });
 
-  systemManager.registerService(discordService)
+  systemManager.registerService(discordService);
   systemManager.registerService(appService);
 
   for (const serviceName of SERVICE_LIST) {

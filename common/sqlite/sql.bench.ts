@@ -39,10 +39,12 @@ Deno.bench("sql - complex query with many parameters", () => {
   const values = Array.from({ length: 20 }, (_, i) => i);
   sql`
     INSERT INTO logs (user_id, action, metadata, timestamp, value1, value2, value3)
-    VALUES ${values.map((v) =>
-    sql`(${v}, ${"action"}, ${"meta"}, ${Date.now()}, ${v * 2}, ${v * 3}, ${v * 4
+    VALUES ${
+    values.map((v) =>
+      sql`(${v}, ${"action"}, ${"meta"}, ${Date.now()}, ${v * 2}, ${v * 3}, ${
+        v * 4
       })`
-  )
-    }
+    )
+  }
   `;
 });

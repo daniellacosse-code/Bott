@@ -1,8 +1,6 @@
 import { APP_USER } from "@bott/common";
 import type { ShallowBottAttachment, ShallowBottEvent } from "@bott/system";
-import {
-  BottEventType,
-} from "@bott/system";
+import { BottEventType } from "@bott/system";
 import type { EventPipelineContext } from "../../../actions/response/pipeline/types.ts";
 import type { GeminiEventSkeleton } from "../types.ts";
 
@@ -36,7 +34,7 @@ export const skeletonToShallowEvent = (
 
         for (
           const attachment
-          of (event.detail.attachments as ShallowBottAttachment[])
+            of (event.detail.attachments as ShallowBottAttachment[])
         ) {
           if (attachment.id === attachmentId) {
             foundAttachment = attachment;

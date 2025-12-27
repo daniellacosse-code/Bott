@@ -12,9 +12,7 @@
 import { STORAGE_FILE_SIZE_LIMIT } from "@bott/common";
 import { extractFromHtml } from "@extractus/article-extractor";
 import TurndownService from "turndown";
-import {
-  BottEventAttachmentType,
-} from "../../types.ts";
+import { BottEventAttachmentType } from "../../types.ts";
 
 const turndownService = new TurndownService({
   headingStyle: "atx", // Use # for headings.

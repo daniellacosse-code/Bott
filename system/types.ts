@@ -204,35 +204,53 @@ export type BottEventActionParameterRecord = Record<
   BottEventActionParameterValue | undefined
 >;
 
-export type BottActionCallEvent = BottEventInterface<BottEventType.ACTION_CALL, {
-  name: string;
-  parameters: BottEventActionParameterRecord;
-}>;
+export type BottActionCallEvent = BottEventInterface<
+  BottEventType.ACTION_CALL,
+  {
+    name: string;
+    parameters: BottEventActionParameterRecord;
+  }
+>;
 
-export type BottActionStartEvent = BottEventInterface<BottEventType.ACTION_START, {
-  name: string;
-  id: string;
-}>;
+export type BottActionStartEvent = BottEventInterface<
+  BottEventType.ACTION_START,
+  {
+    name: string;
+    id: string;
+  }
+>;
 
-export type BottActionOutputEvent = BottEventInterface<BottEventType.ACTION_OUTPUT, {
-  id: string;
-  event: BottEventInterface;
-  shouldInterpretOutput?: boolean;
-  shouldForwardOutput?: boolean;
-}>;
+export type BottActionOutputEvent = BottEventInterface<
+  BottEventType.ACTION_OUTPUT,
+  {
+    id: string;
+    event: BottEventInterface;
+    shouldInterpretOutput?: boolean;
+    shouldForwardOutput?: boolean;
+  }
+>;
 
-export type BottActionErrorEvent = BottEventInterface<BottEventType.ACTION_ERROR, {
-  id: string;
-  error: Error;
-}>;
+export type BottActionErrorEvent = BottEventInterface<
+  BottEventType.ACTION_ERROR,
+  {
+    id: string;
+    error: Error;
+  }
+>;
 
-export type BottActionCompleteEvent = BottEventInterface<BottEventType.ACTION_COMPLETE, {
-  id: string;
-}>;
+export type BottActionCompleteEvent = BottEventInterface<
+  BottEventType.ACTION_COMPLETE,
+  {
+    id: string;
+  }
+>;
 
-export type BottActionAbortEvent = BottEventInterface<BottEventType.ACTION_ABORT, {
-  id: string;
-}>;
+export type BottActionAbortEvent = BottEventInterface<
+  BottEventType.ACTION_ABORT,
+  {
+    id: string;
+  }
+>;
 
 // =============================================================================
 // Actions

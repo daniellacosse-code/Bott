@@ -9,14 +9,9 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import {
-  GEMINI_EVENT_MODEL,
-} from "@bott/common";
+import { GEMINI_EVENT_MODEL } from "@bott/common";
 import type { ShallowBottEvent } from "@bott/system";
-import type {
-  Part,
-  Schema,
-} from "@google/genai";
+import type { Part, Schema } from "@google/genai";
 import ejs from "ejs";
 import type { EventPipelineContext } from "../../actions/response/pipeline/types.ts";
 import gemini from "../client.ts";

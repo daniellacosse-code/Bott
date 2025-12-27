@@ -12,12 +12,9 @@
 import { sql } from "@bott/common";
 import type { BottChannel } from "@bott/model";
 
-import { commit } from "./client.ts";
+import { type BottEventAttachment, BottEventType } from "../../types.ts";
 import { BottEvent } from "../create.ts";
-import {
-  type BottEventAttachment,
-  BottEventType,
-} from "../../types.ts";
+import { commit } from "./client.ts";
 
 export const getEvents = async (
   ...ids: string[]

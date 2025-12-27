@@ -13,12 +13,9 @@ import { log } from "@bott/common";
 
 import { join } from "@std/path";
 import ejs from "ejs";
-import {
-  type GeminiBottEventSkeleton,
-  getEventSkeletonSchema,
-  skeletonToShallowEvent,
-} from "../../common/getSchema.ts";
-import { queryGemini } from "../../common/queryGemini.ts";
+import { generateFromEvents } from "../../../../generate/fromEvents/main.ts";
+import { getEventSkeletonSchema } from "../../../../generate/fromEvents/skeleton/schema.ts";
+import { skeletonToShallowEvent } from "../../../../generate/fromEvents/skeleton/shallowEvent.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
 const systemPromptTemplate = await Deno.readTextFile(
@@ -39,7 +36,7 @@ export const generateOutput: EventPipelineProcessor = async function () {
     filename: join(import.meta.url, "./systemPrompt.md.ejs"),
   });
 
-  const generatedEventSkeletons = await queryGemini<GeminiBottEventSkeleton[]>(
+  const generatedEventSkeletons = await generateFromEvents(
     this.data.input,
     {
       systemPrompt,

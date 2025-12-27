@@ -10,14 +10,12 @@
 
 create table if not exists spaces (
   id varchar(36) primary key not null,
-  origin_id varchar(36),
   name text not null,
   description text
 );
 
 create table if not exists channels (
   id varchar(36) primary key not null,
-  origin_id varchar(36),
   space_id varchar(36),
   name text not null,
   description text,
@@ -27,6 +25,5 @@ create table if not exists channels (
 
 create table if not exists users (
   id varchar(36) primary key not null,
-  origin_id varchar(36),
   name text not null
 );

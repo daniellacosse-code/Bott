@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { log, commit, sql } from "@bott/common";
+import { commit, log, sql } from "@bott/common";
 import type { BottUser } from "@bott/model";
 import { BottEvent } from "../events/create.ts";
 
@@ -138,7 +138,7 @@ export const actionService: BottService = createService(
             id: callId,
             signal: controller.signal,
             settings: action,
-            service: this,
+            service: this.system,
             user: callEvent.user,
             channel: callEvent.channel,
           },
@@ -173,5 +173,5 @@ export const actionService: BottService = createService(
       (event: BottActionAbortEvent) =>
         controllerMap.get(event.detail.id)?.abort(),
     );
-  }
+  },
 );
