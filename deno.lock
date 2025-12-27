@@ -34,6 +34,7 @@
     "npm:ejs@^3.1.7": "3.1.10",
     "npm:mdast-util-from-markdown@^2.0.2": "2.0.2",
     "npm:mdast@3": "3.0.0",
+    "npm:pdf-parse@^1.1.1": "1.1.4",
     "npm:turndown@^7.2.0": "7.2.1",
     "npm:unist-util-visit@5": "5.0.0"
   },
@@ -997,6 +998,9 @@
       "integrity": "sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==",
       "deprecated": true
     },
+    "node-ensure@0.0.0": {
+      "integrity": "sha512-DRI60hzo2oKN1ma0ckc6nQWlHU69RH6xN0sjQTjMpChPfTYvKZdcQFfdYK2RWbJcKyUizSIy/l8OTGxMAM1QDw=="
+    },
     "node-fetch@2.7.0": {
       "integrity": "sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==",
       "dependencies": [
@@ -1040,6 +1044,12 @@
       "dependencies": [
         "lru-cache",
         "minipass"
+      ]
+    },
+    "pdf-parse@1.1.4": {
+      "integrity": "sha512-XRIRcLgk6ZnUbsHsYXExMw+krrPE81hJ6FQPLdBNhhBefqIQKXu/WeTgNBGSwPrfU0v+UCEwn7AoAUOsVKHFvQ==",
+      "dependencies": [
+        "node-ensure"
       ]
     },
     "picocolors@1.1.1": {
@@ -1321,6 +1331,7 @@
       "npm:ejs@^3.1.7",
       "npm:mdast-util-from-markdown@^2.0.2",
       "npm:mdast@3",
+      "npm:pdf-parse@^1.1.1",
       "npm:turndown@^7.2.0",
       "npm:unist-util-visit@5"
     ]

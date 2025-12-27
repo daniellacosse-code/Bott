@@ -23,7 +23,7 @@ Bott: the autonomous groupchat agent!
   [`Reasons`](./app/settings/reasons.ts) to determine when to engage with server
   members.
 - They view and can discuss most types of media posted in chat. _(See:
-  [Supported Attachment Types](./model/types/events.ts))_
+  [Supported Attachment Types](./system/types.ts))_
 - They asynchronously perform tasks as requested:
   - Generates photos, movies, songs and essays as requested.
   - _(TBD)_
@@ -32,11 +32,11 @@ Bott: the autonomous groupchat agent!
 
 #### AI Models
 
-- [Gemini](./libraries/aiModels/gemini)
+- [Gemini](./integrations/gemini)
 
 #### Chat Spaces
 
-- [Discord](./libraries/chatSpaces/discord)
+- [Discord](./integrations/discord)
 
 ## Contributing
 
