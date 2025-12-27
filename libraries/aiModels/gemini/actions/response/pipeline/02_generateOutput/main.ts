@@ -9,14 +9,15 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import type { BottEvent } from "@bott/events";
-
 import { log } from "@bott/log";
-import { join } from "@std/path";
 
+import { join } from "@std/path";
 import ejs from "ejs";
-import { resolveOutputEvents } from "../../common/events.ts";
-import { getEventSchema } from "../../common/getSchema.ts";
+import {
+  type GeminiBottEventSkeleton,
+  getEventSkeletonSchema,
+  skeletonToShallowEvent,
+} from "../../common/getSchema.ts";
 import { queryGemini } from "../../common/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
 
@@ -28,7 +29,7 @@ export const generateOutput: EventPipelineProcessor = async function () {
   // If there's nothing to focus on, skip this step.
   if (
     !this.data.input.some((event) =>
-      this.evaluationState.get(event)?.focusReasons?.length
+      this.evaluationState.get(event.id)?.focusReasons?.length
     )
   ) {
     return;
@@ -38,16 +39,18 @@ export const generateOutput: EventPipelineProcessor = async function () {
     filename: join(import.meta.url, "./systemPrompt.md.ejs"),
   });
 
-  this.data.output = await queryGemini<BottEvent[]>(
+  const generatedEventSkeletons = await queryGemini<GeminiBottEventSkeleton[]>(
     this.data.input,
     {
       systemPrompt,
-      responseSchema: getEventSchema(this.action.service.settings),
+      responseSchema: getEventSkeletonSchema(this.action.service.settings),
       pipeline: this,
     },
   );
 
-  this.data.output = await resolveOutputEvents(this);
+  this.data.output = generatedEventSkeletons.map((skeleton) =>
+    skeletonToShallowEvent(skeleton, this)
+  );
 
   log.debug(this.data.output);
 };

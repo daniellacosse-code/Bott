@@ -21,7 +21,7 @@ import { getEventHistory, upsertEvents } from "@bott/storage";
 
 import { delay } from "@std/async";
 
-import { prepareInputEvents } from "./common/events.ts";
+import { BottEvent } from "../../../../system/events/event.ts";
 import pipelineProcess, { type EventPipelineContext } from "./pipeline/main.ts";
 
 const settings: BottActionSettings = {
@@ -32,11 +32,13 @@ const settings: BottActionSettings = {
 
 export const responseAction: BottAction = createAction(
   async function* () {
-    const channelHistory = await getEventHistory(this.channel!);
+    if (!this.channel) {
+      throw new Error("Channel not found");
+    }
 
     const pipeline: EventPipelineContext = {
       data: {
-        input: prepareInputEvents(channelHistory),
+        input: (await getEventHistory(this.channel)).map((e) => e.toJSON()),
         output: [],
       },
       evaluationState: new Map(),
@@ -50,14 +52,23 @@ export const responseAction: BottAction = createAction(
     }
 
     // Update processed input events
-    const result = await upsertEvents(...pipeline.data.input);
+    const processedInputEvents: Promise<BottEvent>[] = [];
+    for (const inputEvent of pipeline.data.input) {
+      if (!pipeline.evaluationState.has(inputEvent.id)) continue;
 
-    if ("error" in result) {
-      log.error("Failed to update processed events", result.error);
+      processedInputEvents.push(BottEvent.fromShallow({
+        ...inputEvent,
+        lastProcessedAt: pipeline.evaluationState.get(inputEvent.id)
+          ?.evaluationTime?.toISOString(),
+      }));
     }
 
+    await upsertEvents(...await Promise.all(processedInputEvents));
+
     for (const event of pipeline.data.output) {
-      if (!pipeline.evaluationState.get(event)?.outputReasons?.length) {
+      const metadata = pipeline.evaluationState.get(event.id);
+
+      if (!metadata?.outputReasons?.length) {
         continue;
       }
 
@@ -67,7 +78,7 @@ export const responseAction: BottAction = createAction(
         });
       }
 
-      yield event;
+      yield BottEvent.fromShallow(event);
     }
   },
   settings,

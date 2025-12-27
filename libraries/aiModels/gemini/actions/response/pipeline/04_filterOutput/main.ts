@@ -12,8 +12,6 @@
 import { GEMINI_RATING_MODEL } from "@bott/constants";
 
 import { BottEventType } from "@bott/events";
-import { log } from "@bott/log";
-import type { AnyShape } from "@bott/model";
 import { type Schema, Type } from "@google/genai";
 import { queryGemini } from "../../common/queryGemini.ts";
 import type { EventPipelineProcessor } from "../types.ts";
@@ -36,7 +34,7 @@ export const filterOutput: EventPipelineProcessor = async function () {
   // If we have no rating scales, just mark all events as focused.
   if (outputRatingScales.length === 0) {
     for (const event of output) {
-      this.evaluationState.set(event, {
+      this.evaluationState.set(event.id, {
         outputReasons: Object.values(outputReasons)
           .filter((reason) => reason.validator()),
       });
@@ -72,21 +70,6 @@ export const filterOutput: EventPipelineProcessor = async function () {
   };
 
   const geminiCalls: Promise<void>[] = [];
-  const filteredLogQueue: {
-    id: string;
-    type: string;
-    detail: AnyShape;
-    output: false;
-    ratings: Record<string, { rating: string; rationale: string | undefined }>;
-  }[] = [];
-  const outputLogQueue: {
-    id: string;
-    type: string;
-    detail: AnyShape;
-    outputReasons: string[];
-    ratings: Record<string, { rating: string; rationale: string | undefined }>;
-  }[] = [];
-
   let pointer = 0;
   while (pointer < output.length) {
     const event = output[pointer];
@@ -99,28 +82,27 @@ export const filterOutput: EventPipelineProcessor = async function () {
     // No need to filter reactions, really.
     if (event.type === BottEventType.REACTION) {
       pointer++;
-      outputLogQueue.push({
-        id: event.id,
-        type: event.type,
-        detail: event.detail,
-        outputReasons: outputReasons.map((reason) => reason.name),
-        ratings: {},
-      });
       continue;
     }
+
     const currentPointer = pointer;
     geminiCalls.push((async () => {
+      // combine input and output slice
+      const contents = [
+        ...this.data.input,
+        ...output.slice(0, currentPointer + 1),
+      ];
+
       const scoresWithRationale = await queryGemini<
         Record<string, { rating: string; rationale: string | undefined }>
       >(
-        // Provide the current event and all subsequent events as context for scoring.
-        [...this.data.input, ...output.slice(0, currentPointer + 1)],
+        contents,
         {
           systemPrompt,
           responseSchema,
           pipeline: this,
           model: GEMINI_RATING_MODEL,
-          useIdentity: false,
+          useThirdPersonAnalysis: true,
         },
       );
 
@@ -136,35 +118,15 @@ export const filterOutput: EventPipelineProcessor = async function () {
       const triggeredOutputReasons = Object.values(outputReasons)
         .filter((reason) => reason.validator({ ratings }));
 
-      this.evaluationState.set(event, {
+      this.evaluationState.set(event.id, {
+        evaluationTime: new Date(),
         ratings,
         outputReasons: triggeredOutputReasons,
       });
-
-      if (!triggeredOutputReasons.length) {
-        filteredLogQueue.push({
-          id: event.id,
-          type: event.type,
-          detail: event.detail,
-          ratings: scoresWithRationale ?? {},
-          output: false,
-        });
-      } else {
-        outputLogQueue.push({
-          id: event.id,
-          type: event.type,
-          detail: event.detail,
-          outputReasons: triggeredOutputReasons.map((reason) => reason.name),
-          ratings: scoresWithRationale ?? {},
-        });
-      }
     })());
 
     pointer++;
   }
 
   await Promise.all(geminiCalls);
-
-  log.debug("filtered", this.action.id, filteredLogQueue);
-  log.debug("output", this.action.id, outputLogQueue);
 };

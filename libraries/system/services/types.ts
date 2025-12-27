@@ -10,7 +10,7 @@
  */
 
 import type { BottAction } from "@bott/actions";
-import type { BottEvent, BottEventType } from "@bott/events";
+import type { BottEvent } from "@bott/events";
 import type { BottResponseSettings } from "@bott/model";
 
 export type BottService = BottServiceFunction & BottServiceSettings;
@@ -30,11 +30,11 @@ export interface BottServiceContext {
   app: BottResponseSettings;
   dispatchEvent: (event: BottEvent) => void;
   addEventListener<E extends BottEvent>(
-    type: BottEventType,
+    type: E["type"],
     listener: (event: E, context?: BottServiceContext) => unknown,
   ): void;
   removeEventListener<E extends BottEvent>(
-    type: BottEventType,
+    type: E["type"],
     listener: (event: E, context?: BottServiceContext) => unknown,
   ): void;
 }
