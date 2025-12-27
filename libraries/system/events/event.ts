@@ -65,6 +65,7 @@ export class BottEvent<
       id: this.id,
       createdAt: this.createdAt.toJSON(),
       type: this.type,
+      parent: this.parent?.toJSON(),
       detail: {},
       user: {
         id: this.user.id,
@@ -142,29 +143,13 @@ export class BottEvent<
         break;
       }
       case BottEventType.ACTION_COMPLETE:
-        result.detail = {
-          id: this.detail.id,
-        };
-        break;
       case BottEventType.ACTION_ABORT:
         result.detail = {
           id: this.detail.id,
         };
         break;
-    }
-
-    if (this.parent) {
-      result.parent = {
-        id: this.parent.id,
-        type: this.parent.type,
-        detail: this.parent.detail,
-        createdAt: this.parent.createdAt.toJSON(),
-        lastProcessedAt: this.parent.lastProcessedAt?.toJSON(),
-        user: {
-          id: this.parent.user.id,
-          name: this.parent.user.name,
-        },
-      };
+      default:
+        throw new Error("Invalid event type");
     }
 
     if (this.channel) {
@@ -217,19 +202,69 @@ export class BottEvent<
       ? await BottEvent.fromShallow(shallow.parent as ShallowBottEvent)
       : undefined;
 
-    const properties: BottEventConstructorProperties<T, D> = {
+    let detail: unknown;
+    switch (shallow.type) {
+      case BottEventType.MESSAGE:
+      case BottEventType.REACTION:
+      case BottEventType.REPLY:
+        detail = {
+          content: shallow.detail.content,
+        };
+        break;
+      case BottEventType.ACTION_CALL:
+        detail = {
+          name: shallow.detail.name,
+          parameters: {
+            ...(shallow.detail.parameters as BottEventActionParameterRecord),
+          },
+        };
+        break;
+      case BottEventType.ACTION_OUTPUT:
+        detail = {
+          id: shallow.detail.id,
+          event: await BottEvent.fromShallow(
+            shallow.detail.event as ShallowBottEvent,
+          ),
+          shouldInterpretOutput: shallow.detail.shouldInterpretOutput,
+          shouldForwardOutput: shallow.detail.shouldForwardOutput,
+        };
+        break;
+      case BottEventType.ACTION_START:
+        detail = {
+          id: shallow.detail.id,
+          name: shallow.detail.name,
+        };
+        break;
+      case BottEventType.ACTION_ERROR: {
+        const { message, ...options } = shallow.detail.error as Error;
+
+        detail = {
+          id: shallow.detail.id,
+          error: new Error(message, options),
+        };
+        break;
+      }
+      case BottEventType.ACTION_COMPLETE:
+      case BottEventType.ACTION_ABORT:
+        detail = {
+          id: shallow.detail.id,
+        };
+        break;
+      default:
+        throw new Error("Invalid event type");
+    }
+
+    const event = new BottEvent(shallow.type as T, {
       id: shallow.id,
+      detail: detail as D,
       createdAt: new Date(shallow.createdAt),
       lastProcessedAt: shallow.lastProcessedAt
         ? new Date(shallow.lastProcessedAt)
         : undefined,
-      detail: shallow.detail as D,
       user: shallow.user,
       channel: shallow.channel,
       parent,
-    };
-
-    const event = new BottEvent(shallow.type as T, properties);
+    });
 
     if (shallow.attachments) {
       event.attachments = [];

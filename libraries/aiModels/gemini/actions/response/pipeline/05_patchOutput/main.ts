@@ -19,40 +19,45 @@ const systemPrompt = await Deno.readTextFile(
   new URL("./systemPrompt.md", import.meta.url),
 );
 
+const patchOutputReason = {
+  name: "patchOutput",
+  description: "This event was patched by the patchOutput step.",
+  validator: () => true,
+};
+
 export const patchOutput: EventPipelineProcessor = async function () {
   if (!this.data.output.length) {
     return;
   }
 
-  const patchableOutputs = [];
-  const remainingOutputs = [];
+  const unpatchedSequence = [];
+  const unsequencedOutputs = [];
 
   for (const event of this.data.output) {
     if (
       event.type === BottEventType.REACTION ||
       event.type === BottEventType.ACTION_CALL
     ) {
-      patchableOutputs.push(event);
+      unsequencedOutputs.push(event);
       continue;
     }
 
-    remainingOutputs.push(event);
+    unpatchedSequence.push(event);
   }
-  let patchedEvents: ShallowBottEvent[] = [];
-
-  if (!patchableOutputs.length) {
+  1
+  if (!unpatchedSequence.length) {
     return;
   }
 
-  log.debug(this.action.id, patchableOutputs);
+  log.debug(this.action.id, unsequencedOutputs);
 
-  patchedEvents = await queryGemini<ShallowBottEvent[]>(
-    patchableOutputs,
+  const patchedSequence = await queryGemini<ShallowBottEvent[]>(
+    unpatchedSequence,
     {
       systemPrompt,
       responseSchema: getEventSchema(this.action.service.settings),
       pipeline: this,
-      useIdentity: false,
+      useThirdPersonAnalysis: true,
     },
   );
 
@@ -60,17 +65,13 @@ export const patchOutput: EventPipelineProcessor = async function () {
   // Since this step is explicitly designed to fix issues, we treat its output as "trusted".
   // We automatically inject all active output reasons as "passed" for these events,
   // bypassing the need for a re-evaluation loop.
-  for (const event of patchedEvents) {
+  for (const event of patchedSequence) {
     this.evaluationState.set(event.id, {
-      outputReasons: [{
-        name: "patchOutput",
-        description: "This event was patched by the patchOutput step.",
-        validator: () => true,
-      }],
+      outputReasons: [patchOutputReason],
     });
   }
 
-  this.data.output = [...patchedEvents, ...remainingOutputs];
+  this.data.output = [...patchedSequence, ...unsequencedOutputs];
 
   log.debug(this.data.output);
 };

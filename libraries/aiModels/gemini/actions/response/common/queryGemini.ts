@@ -41,7 +41,7 @@ export interface QueryGeminiOptions {
   pipeline: EventPipelineContext;
   responseSchema: Schema;
   systemPrompt: string;
-  useIdentity?: boolean;
+  useThirdPersonAnalysis?: boolean;
 }
 
 export const queryGemini = async <O>(
@@ -51,7 +51,7 @@ export const queryGemini = async <O>(
     responseSchema,
     pipeline,
     model = GEMINI_EVENT_MODEL,
-    useIdentity = true,
+    useThirdPersonAnalysis,
   }: QueryGeminiOptions,
 ): Promise<O> => {
   if (!model) {
@@ -64,7 +64,7 @@ export const queryGemini = async <O>(
     parts: [],
   };
 
-  if (useIdentity) {
+  if (!useThirdPersonAnalysis) {
     systemInstruction.parts.push({
       text: pipeline.action.service.app.identity,
     });
@@ -79,7 +79,11 @@ export const queryGemini = async <O>(
     },
   );
 
-  const contents = await prepareContents(input, pipeline, useIdentity);
+  const contents = await prepareContents(
+    input,
+    pipeline,
+    useThirdPersonAnalysis,
+  );
 
   const result = await gemini.models.generateContent({
     model,
@@ -100,7 +104,7 @@ export const queryGemini = async <O>(
 export const prepareContents = async (
   events: ShallowBottEvent[],
   context: EventPipelineContext,
-  hasIdentity: boolean = true,
+  useThirdPersonAnalysis?: boolean,
 ): Promise<Content[]> => {
   const preparedInput: Content[] = [];
   const timeCutoff = Date.now() - ACTION_RESPONSE_HISTORY_SIZE_MS;
@@ -121,23 +125,25 @@ export const prepareContents = async (
 
     const eventPart = {
       ...event,
-      createdAt: formatTimestampAsRelative(event.createdAt),
+      createdAt: formatTimestampAsRelative(event.createdAt) as string,
       lastProcessedAt: formatTimestampAsRelative(event.lastProcessedAt),
+      attachments: undefined, // Handled below
       _pipelineEvaluationMetadata: context?.evaluationState.get(event.id),
     };
 
     if (event.parent) {
       eventPart.parent = {
         ...event.parent,
-        createdAt: formatTimestampAsRelative(event.parent.createdAt),
+        createdAt: formatTimestampAsRelative(event.parent.createdAt) as string,
         lastProcessedAt: formatTimestampAsRelative(
           event.parent.lastProcessedAt,
         ),
+        attachments: undefined,
       };
     }
 
     const parts: Part[] = [{ text: JSON.stringify(eventPart) }];
-    for (const attachment of eventPart?.attachments ?? []) {
+    for (const attachment of event?.attachments ?? []) {
       const newTotalTokens = resourceAccumulator.tokens +
         attachment.compressed.file.size;
 
@@ -176,11 +182,19 @@ export const prepareContents = async (
       if (isVideo) resourceAccumulator.videoFiles++;
     }
 
-    const isModel = eventPart.user.id === APP_USER.id ||
+    let speaker = "user";
+
+    const fromSystem = eventPart.user.id === APP_USER.id ||
       eventPart.user.id === "service:action";
 
+    if (useThirdPersonAnalysis) {
+      speaker = "user";
+    } else if (fromSystem) {
+      speaker = "model";
+    }
+
     preparedInput.unshift({
-      role: isModel ? hasIdentity ? "model" : "user" : "user",
+      role: speaker,
       parts,
     });
   }

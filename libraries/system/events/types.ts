@@ -102,17 +102,7 @@ export type ShallowBottEvent = {
       description?: string;
     };
   };
-  parent?: {
-    id: string;
-    type: BottEventType;
-    detail: AnyShape;
-    createdAt: string;
-    lastProcessedAt?: string;
-    user: {
-      id: string;
-      name: string;
-    };
-  };
+  parent?: ShallowBottEvent;
   user: {
     id: string;
     name: string;

@@ -102,7 +102,7 @@ export const filterOutput: EventPipelineProcessor = async function () {
           responseSchema,
           pipeline: this,
           model: GEMINI_RATING_MODEL,
-          useIdentity: false,
+          useThirdPersonAnalysis: true,
         },
       );
 

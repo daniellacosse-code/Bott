@@ -56,10 +56,11 @@ export const responseAction: BottAction = createAction(
     for (const inputEvent of pipeline.data.input) {
       if (!pipeline.evaluationState.has(inputEvent.id)) continue;
 
-      inputEvent.lastProcessedAt = pipeline.evaluationState.get(inputEvent.id)
-        ?.evaluationTime?.toISOString();
-
-      processedInputEvents.push(BottEvent.fromShallow(inputEvent));
+      processedInputEvents.push(BottEvent.fromShallow({
+        ...inputEvent,
+        lastProcessedAt: pipeline.evaluationState.get(inputEvent.id)
+          ?.evaluationTime?.toISOString(),
+      }));
     }
 
     await upsertEvents(...await Promise.all(processedInputEvents));

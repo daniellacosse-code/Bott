@@ -16,7 +16,6 @@ import type { EventPipelineContext } from "../pipeline/types.ts";
 import {
   formatTimestampAsRelative,
   prepareContents,
-  queryGemini,
 } from "./queryGemini.ts";
 
 Deno.test("formatTimestampAsRelative - just now", () => {
@@ -114,9 +113,4 @@ Deno.test("prepareContents - with metadata", async () => {
   const contents = await prepareContents([shallow], context);
   const parts = contents[0].parts;
   assert(parts?.some((p) => p.text?.includes("relevance")));
-});
-
-Deno.test("queryGemini - basic usage check", () => {
-  // Verifying import is used/exists
-  assert(typeof queryGemini === "function");
 });

@@ -104,7 +104,7 @@ export const focusInput: EventPipelineProcessor = async function () {
           responseSchema,
           pipeline: this,
           model: GEMINI_RATING_MODEL,
-          useIdentity: false,
+          useThirdPersonAnalysis: true,
         },
       );
 
