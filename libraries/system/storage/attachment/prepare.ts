@@ -30,6 +30,7 @@ import {
   prepareStaticImageAsWebp,
 } from "./ffmpeg.ts";
 import { prepareHtmlAsMarkdown } from "./html.ts";
+import { preparePdfAsText } from "./pdf.ts";
 
 const UNNAMED_FILE_PREFIX = "unnamed";
 
@@ -249,11 +250,11 @@ async function compressFile(
         rawFile,
         attachmentId,
       );
-    // TODO: compression
     case BottAttachmentType.PDF:
-      return new File([rawFile], `${attachmentId}.compressed.pdf`, {
-        type: BottAttachmentType.PDF,
-      });
+      return await preparePdfAsText(
+        rawFile,
+        attachmentId,
+      );
     default:
       throw new Error(`Unsupported source type: ${rawFile.type}`);
   }

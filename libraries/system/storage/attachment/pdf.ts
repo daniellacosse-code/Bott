@@ -1,0 +1,36 @@
+/**
+ * @license
+ * This file is part of Bott.
+ *
+ * This project is dual-licensed:
+ * - Non-commercial use: AGPLv3 (see LICENSE file for full text).
+ * - Commercial use: Proprietary License (contact D@nielLaCos.se for details).
+ *
+ * Copyright (C) 2025 DanielLaCos.se
+ */
+
+import { STORAGE_FILE_SIZE_LIMIT } from "@bott/constants";
+import { BottAttachmentType } from "@bott/events";
+import pdfParse from "npm:pdf-parse@1.1.1";
+
+export const preparePdfAsText = async (
+  file: File,
+  attachmentId: string,
+): Promise<File> => {
+  const pdfData = await file.arrayBuffer();
+
+  const parsed = await pdfParse(Buffer.from(pdfData));
+
+  let result = parsed.text;
+
+  if (result.length > STORAGE_FILE_SIZE_LIMIT) {
+    result = result.substring(0, STORAGE_FILE_SIZE_LIMIT) +
+      "\n\n...(truncated)";
+  }
+
+  return new File(
+    [new TextEncoder().encode(result)],
+    `${attachmentId}.compressed.txt`,
+    { type: BottAttachmentType.TXT },
+  );
+};
