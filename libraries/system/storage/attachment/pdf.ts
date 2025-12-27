@@ -20,7 +20,7 @@ export const preparePdfAsText = async (
 ): Promise<File> => {
   const pdfData = await file.arrayBuffer();
 
-  const parsed = await pdfParse(pdfData);
+  const parsed = await pdfParse(Buffer.from(pdfData));
 
   if (!parsed || !parsed.text) {
     throw new Error("No text extracted from PDF.");
