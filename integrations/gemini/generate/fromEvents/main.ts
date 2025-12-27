@@ -55,7 +55,7 @@ export const generateFromEvents = async <O = GeminiEventSkeleton[]>(
 
   if (!useThirdPersonAnalysis) {
     systemInstruction.parts.push({
-      text: pipeline.action.service.settings.identity,
+      text: pipeline.action.service.system.settings.identity,
     });
   }
 

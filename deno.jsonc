@@ -6,7 +6,8 @@
     "semiColons": true,
     "singleQuote": false,
     "exclude": [
-      "**/*.md.ejs"
+      "**/*.md.ejs",
+      "docs/index.html"
     ]
   },
   "lint": {

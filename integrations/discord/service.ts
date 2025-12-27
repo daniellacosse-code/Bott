@@ -10,7 +10,6 @@
  */
 
 import {
-  APP_USER,
   SERVICE_DISCORD_ATTACHMENT_SIZE_LIMIT,
   SERVICE_DISCORD_TOKEN,
 } from "@bott/common";
@@ -46,7 +45,6 @@ const REQUIRED_INTENTS = [
 
 export const discordService: BottService = BottSystem.Services.create({
   name: "discord",
-  // TODO: resolve user
 }, async function () {
   const client = new Client({ intents: REQUIRED_INTENTS });
 
@@ -63,6 +61,12 @@ export const discordService: BottService = BottSystem.Services.create({
       "Failed to start: the `client.user` was not set",
     );
   }
+
+  // Resolve the user from the client
+  this.settings.user = {
+    id: client.user.id,
+    name: client.user.username,
+  };
 
   const api = new REST({ version: "10" }).setToken(SERVICE_DISCORD_TOKEN);
 
@@ -171,8 +175,7 @@ export const discordService: BottService = BottSystem.Services.create({
 
   // Forward events from Bott (App) to Discord
   const forwardAppEventToChannel = async (event: BottEvent) => {
-    if (!event.channel) return;
-    if (event.user.id !== APP_USER.id) return;
+    if (!event.channel || !this.system.isSystemUser(event.user)) return;
 
     const targetChannel = await client.channels.fetch(event.channel.id);
 

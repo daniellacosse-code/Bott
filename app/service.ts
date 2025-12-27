@@ -51,7 +51,7 @@ export const appService: BottService = BottSystem.Services.create({
             detail: {
               id: currentResponse.id,
             },
-            user: APP_USER,
+            user: this.settings.user,
             channel: event.channel,
             parent: currentResponse,
           },
@@ -65,7 +65,7 @@ export const appService: BottService = BottSystem.Services.create({
         detail: {
           name: ACTION_RESPONSE_NAME,
         },
-        user: APP_USER,
+        user: this.settings.user,
         channel: event.channel,
       },
     ) as BottActionCallEvent;
@@ -102,10 +102,12 @@ export const appService: BottService = BottSystem.Services.create({
 
   const respondIfNotSelf = (event: BottEvent) => {
     if (
-      !ACTION_RESPONSE_NAME || !event.user || event.user.id === APP_USER.id
+      !ACTION_RESPONSE_NAME ||
+      this.system.isSystemUser(event.user) &&
+        event.type !== BottEventType.ACTION_ERROR // Respond to system errors
     ) return;
 
-    // Don't respond to errors/aborts from response actions to prevent loops
+    // But, don't respond to errors from response actions to prevent loops
     if (
       event.type === BottEventType.ACTION_ERROR &&
       event.parent?.detail?.name === ACTION_RESPONSE_NAME

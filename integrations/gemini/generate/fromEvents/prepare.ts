@@ -1,10 +1,20 @@
+/**
+ * @license
+ * This file is part of Bott.
+ *
+ * This project is dual-licensed:
+ * - Non-commercial use: AGPLv3 (see LICENSE file for full text).
+ * - Commercial use: Proprietary License (contact D@nielLaCos.se for details).
+ *
+ * Copyright (C) 2025 DanielLaCos.se
+ */
+
 import {
   ACTION_RESPONSE_AUDIO_COUNT_LIMIT,
   ACTION_RESPONSE_EVENT_COUNT_LIMIT,
   ACTION_RESPONSE_FILE_TOKEN_LIMIT,
   ACTION_RESPONSE_HISTORY_SIZE_MS,
   ACTION_RESPONSE_VIDEO_COUNT_LIMIT,
-  APP_USER,
 } from "@bott/common";
 import { BottEventAttachmentType, type ShallowBottEvent } from "@bott/system";
 import type { Content, Part } from "@google/genai";
@@ -99,8 +109,9 @@ export const prepareContents = async (
 
     let speaker = "user";
 
-    const fromSystem = eventPart.user.id === APP_USER.id ||
-      eventPart.user.id === "service:action";
+    const fromSystem = context.action.service.system.isSystemUser(
+      eventPart.user,
+    );
 
     if (useThirdPersonAnalysis) {
       speaker = "user";

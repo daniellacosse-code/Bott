@@ -59,7 +59,7 @@ export const patchOutput: EventPipelineProcessor = async function () {
   }
 
   const responseSchema = getEventSkeletonSchema(
-    this.action.service.actions,
+    this.action.service.system.actions,
   );
 
   responseSchema.items!.anyOf = responseSchema.items!.anyOf!.map((schema) => {

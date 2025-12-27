@@ -1,1 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bott Architecture</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            color: #333;
+        }
+        h1 { margin-bottom: 2rem; }
+    </style>
+</head>
+<body>
+    <h1>Bott Architecture</h1>
+    
+    <div class="mermaid">
+    flowchart TD
+      System[System Manager]
+    
+      subgraph Services
+        Discord[Discord Service]
+        App[App Service]
+        Actions[Action Service]
+        Storage[Storage Service]
+      end
+    
+      subgraph External
+        DiscordAPI(Discord API)
+        GeminiAPI(Gemini API)
+        DB[(SQLite)]
+      end
+    
+      System --> Services
+    
+      Discord <--> DiscordAPI
+      Discord -- "Events (Message, Reaction)" --> App
+      App -- "Events (Reply, Reaction)" --> Discord
+    
+      App -- "Events (Action Call)" --> Actions
+      Actions -- "Events (Action Output)" --> App
+    
+      App -- "Events (All)" --> Storage
+      Storage <--> DB
+    
+      Actions -- "API Calls" --> GeminiAPI
+      
+      click Discord href "../integrations/discord" "Discord Integration"
+      click App href "../app" "App Core"
+      click Actions href "../system/actions" "Action System"
+      click Storage href "../system/storage" "Storage System"
+    </div>
 
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

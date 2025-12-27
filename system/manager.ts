@@ -20,18 +20,17 @@ import type {
   BottEventType,
   BottService,
   BottServiceContext,
-  BottSystemContext,
 } from "./types.ts";
 
 const deploymentNonce = crypto.randomUUID();
 Deno.mkdirSync(STORAGE_ROOT, { recursive: true });
 Deno.writeTextFileSync(STORAGE_DEPLOY_NONCE_LOCATION, deploymentNonce);
 
-export class BottSystemManager {
-  private nonce: string;
-  private settings: BottSettings;
-  private services: Map<string, BottService> = new Map();
-  private actions: Map<string, BottAction> = new Map();
+export class BottSystemManager implements BottSystemManager {
+  readonly nonce: string;
+  readonly settings: BottSettings;
+  private _services: Map<string, BottService> = new Map();
+  private _actions: Map<string, BottAction> = new Map();
 
   constructor({
     settings,
@@ -46,26 +45,25 @@ export class BottSystemManager {
     this.settings = settings;
 
     services.forEach((service) => {
-      this.services.set(service.name, service);
+      this._services.set(service.name, service);
     });
 
     actions?.forEach((action) => {
-      this.actions.set(action.name, action);
+      this._actions.set(action.name, action);
     });
   }
 
-  get context(): BottSystemContext {
-    return {
-      nonce: this.nonce,
-      services: Object.fromEntries(this.services),
-      actions: Object.fromEntries(this.actions),
-      settings: this.settings,
-    };
+  get services(): Record<string, BottService> {
+    return Object.fromEntries(this._services);
+  }
+
+  get actions(): Record<string, BottAction> {
+    return Object.fromEntries(this._actions);
   }
 
   get rootServiceContext(): Omit<BottServiceContext, "settings"> {
     return {
-      system: this.context,
+      system: this,
       dispatchEvent: this.dispatchEvent.bind(this),
       addEventListener: this.addEventListener.bind(this),
       removeEventListener: this.removeEventListener.bind(this),
@@ -73,22 +71,22 @@ export class BottSystemManager {
   }
 
   registerService(service: BottService) {
-    if (this.services.has(service.name)) {
+    if (this._services.has(service.name)) {
       throw new Error(`Service "${service.name}" already registered`);
     }
 
-    this.services.set(service.name, service);
+    this._services.set(service.name, service);
   }
 
   registerAction(action: BottAction) {
-    if (this.actions.has(action.name)) {
+    if (this._actions.has(action.name)) {
       throw new Error(`Action "${action.name}" already registered`);
     }
-    this.actions.set(action.name, action);
+    this._actions.set(action.name, action);
   }
 
   start(serviceName: string) {
-    const service = this.services.get(serviceName);
+    const service = this._services.get(serviceName);
     if (!service) {
       throw new Error(`Service "${serviceName}" not found`);
     }
@@ -110,7 +108,7 @@ export class BottSystemManager {
   isSystemUser(user: BottUser): boolean {
     let result = false;
 
-    for (const service of this.services.values()) {
+    for (const service of this._services.values()) {
       if (service.user?.id === user.id) {
         result = true;
         break;

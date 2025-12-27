@@ -139,7 +139,7 @@ export const actionService: BottService = createService(
             id: callId,
             signal: controller.signal,
             settings: action,
-            service: this.system,
+            service: this,
             user: callEvent.user,
             channel: callEvent.channel,
           },

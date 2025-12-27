@@ -94,5 +94,5 @@ docker pull ghcr.io/daniellacosse/bott:VERSION
 
 ## Architecture
 
-Want to learn more about how Bott ticks? See
-[ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+Want to learn more about how Bott ticks? See the
+[GitHub Page](https://github.com/daniellacosse-code/Bott).

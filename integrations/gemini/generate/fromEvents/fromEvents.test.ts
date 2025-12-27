@@ -9,12 +9,16 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { APP_USER } from "@bott/common";
 import BottSystem, { BottEventType } from "@bott/system";
 import type { Part } from "@google/genai";
 import { assert, assertEquals } from "@std/assert";
 import type { EventPipelineContext } from "../../actions/response/pipeline/types.ts";
 import { formatTimestampAsRelative, prepareContents } from "./prepare.ts";
+
+const TEST_USER = {
+  id: "test-user",
+  name: "Test User",
+};
 
 Deno.test("formatTimestampAsRelative - just now", () => {
   const result = formatTimestampAsRelative(new Date().toISOString());
@@ -72,13 +76,21 @@ Deno.test("formatTimestampAsRelative - ISO string format", () => {
 Deno.test("prepareContents - basic event", async () => {
   const event = BottSystem.Events.create(BottEventType.MESSAGE, {
     detail: { content: "Hello", channel: { id: "123", name: "test" } },
-    user: APP_USER,
+    user: TEST_USER,
   });
   const shallow = event.toJSON();
 
   // Creating context stub
   const context = {
     evaluationState: new Map(),
+    action: {
+      service: {
+        system: {
+          services: {},
+          isSystemUser: () => false,
+        },
+      },
+    },
   } as unknown as EventPipelineContext;
 
   const contents = await prepareContents([shallow], context);
@@ -95,12 +107,20 @@ Deno.test("prepareContents - basic event", async () => {
 Deno.test("prepareContents - with metadata", async () => {
   const event = BottSystem.Events.create(BottEventType.MESSAGE, {
     detail: { content: "Hello", channel: { id: "123", name: "test" } },
-    user: APP_USER,
+    user: TEST_USER,
   });
   const shallow = event.toJSON();
 
   const context = {
     evaluationState: new Map(),
+    action: {
+      service: {
+        system: {
+          services: {},
+          isSystemUser: () => false,
+        },
+      },
+    },
   } as unknown as EventPipelineContext;
 
   // Use ID key

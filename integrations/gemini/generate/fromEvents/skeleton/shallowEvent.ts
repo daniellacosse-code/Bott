@@ -1,4 +1,14 @@
-import { APP_USER } from "@bott/common";
+/**
+ * @license
+ * This file is part of Bott.
+ *
+ * This project is dual-licensed:
+ * - Non-commercial use: AGPLv3 (see LICENSE file for full text).
+ * - Commercial use: Proprietary License (contact D@nielLaCos.se for details).
+ *
+ * Copyright (C) 2025 DanielLaCos.se
+ */
+
 import type { ShallowBottAttachment, ShallowBottEvent } from "@bott/system";
 import { BottEventType } from "@bott/system";
 import type { EventPipelineContext } from "../../../actions/response/pipeline/types.ts";
@@ -20,7 +30,7 @@ export const skeletonToShallowEvent = (
     skeleton.type === BottEventType.ACTION_CALL && "parameters" in detail &&
     detail.parameters !== undefined
   ) {
-    const action = pipeline.action.service.actions?.[detail.name];
+    const action = pipeline.action.service.system.actions?.[detail.name];
     for (const parameter of action?.parameters ?? []) {
       if (parameter.type !== "file") {
         continue;
@@ -60,10 +70,7 @@ export const skeletonToShallowEvent = (
     createdAt: new Date().toISOString(),
     type: skeleton.type,
     detail: skeleton.detail,
-    user: {
-      id: APP_USER.id,
-      name: APP_USER.name,
-    }, // this.action.user?
+    user: pipeline.action.service.settings.user, // this.action.user?
     channel: {
       id: pipeline.action.channel?.id,
       name: pipeline.action.channel?.name,

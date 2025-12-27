@@ -51,7 +51,7 @@ export const segmentOutput: EventPipelineProcessor = async function () {
           {
             systemPrompt,
             responseSchema: getEventSkeletonSchema(
-              this.action.service.actions,
+              this.action.service.system.actions,
             ),
             pipeline: this,
             useThirdPersonAnalysis: true,

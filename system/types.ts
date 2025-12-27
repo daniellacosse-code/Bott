@@ -21,11 +21,12 @@ import type {
 // System
 // =============================================================================
 
-export interface BottSystemContext {
+export interface BottSystemManager {
   nonce: string;
   services: Record<string, BottService>;
   actions: Record<string, BottAction>;
   settings: BottSettings;
+  isSystemUser(user: BottUser): boolean;
 }
 
 // =============================================================================
@@ -45,7 +46,7 @@ export interface BottServiceSettings {
 
 export interface BottServiceContext {
   settings: Required<BottServiceSettings>;
-  system: BottSystemContext;
+  system: BottSystemManager;
   dispatchEvent: (event: BottEventInterface) => void;
   addEventListener<E extends BottEventInterface>(
     type: E["type"],
@@ -80,7 +81,7 @@ export type BottActionSettings = {
 export type BottActionContext = {
   channel?: BottChannel;
   id: string;
-  service: BottSystemContext;
+  service: BottServiceContext;
   settings: BottActionSettings;
   signal: AbortSignal;
   user?: BottUser;

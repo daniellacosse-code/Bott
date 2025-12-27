@@ -42,7 +42,9 @@ export const generateOutput: EventPipelineProcessor = async function () {
     this.data.input,
     {
       systemPrompt,
-      responseSchema: getEventSkeletonSchema(this.action.service.actions),
+      responseSchema: getEventSkeletonSchema(
+        this.action.service.system.actions,
+      ),
       pipeline: this,
     },
   );

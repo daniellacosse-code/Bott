@@ -9,7 +9,7 @@
  * Copyright (C) 2025 DanielLaCos.se
  */
 
-import { APP_USER, GEMINI_RATING_MODEL } from "@bott/common";
+import { GEMINI_RATING_MODEL } from "@bott/common";
 import { BottEventType } from "@bott/system";
 import { type Schema, Type } from "@google/genai";
 
@@ -22,7 +22,7 @@ const systemPrompt = await Deno.readTextFile(
 
 export const focusInput: EventPipelineProcessor = async function () {
   const input = this.data.input;
-  const inputReasons = this.action.service.settings.reasons.input;
+  const inputReasons = this.action.service.system.settings.reasons.input;
   const inputRatingScales = [
     ...new Set(inputReasons.flatMap((reason) => reason.ratingScales ?? [])),
   ];
@@ -76,13 +76,8 @@ export const focusInput: EventPipelineProcessor = async function () {
     }
 
     if (
-      event.user?.id === this.action.user?.id || event.user?.id === APP_USER.id
-    ) {
-      pointer++;
-      continue;
-    }
-
-    if (
+      event.user?.id === this.action.user?.id ||
+      this.action.service.system.isSystemUser(event.user) ||
       [
         BottEventType.ACTION_START,
         BottEventType.ACTION_OUTPUT,
@@ -90,6 +85,8 @@ export const focusInput: EventPipelineProcessor = async function () {
         BottEventType.ACTION_ABORT,
       ].includes(event.type as BottEventType)
     ) {
+      // We still want to see our own messages in the context window
+      // But we don't need to rate them
       pointer++;
       continue;
     }
